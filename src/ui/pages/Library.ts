@@ -733,6 +733,30 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
       },
     },
     {
+      text: "Download Charinfo file",
+      async callback() {
+        //if (!(await miiColorConversionWarning(miiData))) return;
+        const blob = new Blob([miiData.encodeCharinfo()]);
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.download = miiData.miiName + ".charinfo";
+        document.body.appendChild(a);
+        a.click();
+
+        requestAnimationFrame(() => {
+          a.remove();
+        });
+
+        // free URL after some time
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 2000);
+      },
+    },
+    {
       text: "Show other raw data formats",
       async callback() {
         if (!(await miiColorConversionWarning(miiData))) return;
@@ -773,6 +797,12 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
               new Html("pre")
                 .class("pre-wrap", "mb-0")
                 .text(miiData.encodeStudio().toString("hex"))
+            ),
+            new Html("div").appendMany(
+              new Html("span").class("h4").text("Charinfo data (Hex)"),
+              new Html("pre")
+                .class("pre-wrap", "mb-0")
+                .text(miiData.encodeCharinfo().toString("hex"))
             )
           );
       },

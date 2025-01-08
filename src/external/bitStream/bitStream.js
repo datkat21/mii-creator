@@ -412,6 +412,18 @@ export class BitStream {
     this._view.setBits(this._index, value, bits);
     this._index += bits;
   }
+  readByte(value) {
+    if (value < 0 || value > 255) {
+      pass
+    }
+    this.readUint8(value)
+  }
+  writeByte(value) {
+    if (value < 0 || value > 255) {
+      pass
+    }
+    this.writeUint8(value)
+  }
   readASCIIString(bytes) {
     return readASCIIString(this, bytes);
   }
