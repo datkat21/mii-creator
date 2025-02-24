@@ -13,6 +13,7 @@ import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
+  makeSeparatorGapThinLaptop,
   MiiSwitchColorTable,
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
@@ -54,7 +55,8 @@ export function GlassesTab(data: TabRenderInit) {
                 part: RenderPart.Head,
                 property: "glassColor"
               })),
-              MiiSwitchColorTable
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
             )
           ]
         },

@@ -1,5 +1,5 @@
 import localforage from "localforage";
-import type Mii from "../../../class/MiiData";
+import Mii from "../../../class/MiiData";
 import { getSetting } from "../../../util/SettingsHelper";
 import Modal, { buttonsOkCancel } from "../../components/Modal";
 import {
@@ -135,13 +135,13 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
       async callback() {
         if (!(await miiQRConversionWarning(miiData))) return;
         // hack: force FFL shader for QR codes by changing the setting
-        const setting = await getSetting("shaderType");
-        await localforage.setItem("settings_shaderType", "wiiu");
+        // const setting = await getSetting("shaderType");
+        // await localforage.setItem("settings_shaderType", "wiiu");
         const qrCodeImage = await QRCodeCanvas(
-          mii.mii,
+          miiData,
           miiData.hasExtendedColors()
         ); // extendedColors
-        await localforage.setItem("settings_shaderType", setting);
+        // await localforage.setItem("settings_shaderType", setting);
         downloadLink(qrCodeImage, `${miiData.nickname}_QR.png`);
       }
     },
@@ -168,10 +168,18 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
                 .text(miiData.exportHex("switchCharInfo"))
             ),
             new Html("div").appendMany(
-              new Html("span").class("h4").text("MiiC (Base64)"),
+              new Html("span").class("h4").text("Mii Creator data (Base64)"),
               new Html("pre")
                 .class("pre-wrap", "mb-0")
                 .text(miiData.exportBase64("miic"))
+            ),
+            new Html("div").appendMany(
+              new Html("span")
+                .class("h4")
+                .text("FFSD + Mii Creator data (Base64)"),
+              new Html("pre")
+                .class("pre-wrap", "mb-0")
+                .text(miiData.exportBase64("ffsd_append_miic"))
             ),
             new Html("div").appendMany(
               new Html("span").class("h4").text("FFSD (Base64)"),

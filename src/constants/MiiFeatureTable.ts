@@ -110,6 +110,11 @@ export const makeSeparatorGapThinDesktop: () => any = () => ({
   html: new Html("div").class("separator-gap-thin-desktop"),
   select() {}
 });
+export const makeSeparatorGapThinLaptop: () => any = () => ({
+  type: FeatureSetType.Misc,
+  html: new Html("div").class("separator-gap-thin-laptop"),
+  select() {}
+});
 export const makeSeparatorGapThin = () =>
   new Html("div").class("separator-gap-thin");
 export const makeHeaderFSI = (text: string) => ({

@@ -12,6 +12,7 @@ import type { TabRenderInit } from "../../constants/TabRenderType";
 import { numToHex } from "../../util/NumberToHexString";
 import { RenderPart } from "../../class/MiiEditor";
 import {
+  makeSeparatorGapThinLaptop,
   MiiSwitchColorTable,
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
@@ -54,7 +55,8 @@ export function FavoriteColorTab(data: TabRenderInit) {
                 part: RenderPart.Face,
                 property: "shirtColor"
               })),
-              MiiSwitchColorTable
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
             ).filter((n) => !ForbiddenShirtPantColors.includes(n.value))
           ]
         },
@@ -80,7 +82,8 @@ export function FavoriteColorTab(data: TabRenderInit) {
                 part: RenderPart.Face,
                 property: "pantsColor"
               })),
-              MiiSwitchColorTable
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
             ).filter((n) => !ForbiddenShirtPantColors.includes(n.value))
           ]
         }

@@ -86,6 +86,31 @@ export const MiiCreatorV4Data = _.struct([
   _.uint8("special")
 ]) as Struct;
 
+export const MiiCreatorV4AppendData = _.struct([
+  _.uint8("miicVersion"),
+
+  // common colors
+  _.uint8("eyebrowColor"),
+  _.uint8("eyeColor"),
+  _.uint8("facelineColor"),
+  _.uint8("glassColor"),
+  _.uint8("glassType"),
+  _.uint8("hairColor"),
+  _.uint8("mouthColor"),
+
+  // miic specific fields
+  _.uint8("birthYear"),
+  _.uint8("facePaintColor"),
+  _.uint8("hatCommonColor"),
+  _.uint8("hatFavoriteColor"),
+  _.uint8("hatType"),
+  _.uint8("hideNose"), // unused
+  _.uint8("originPlatform"), // unused
+  _.uint8("pantsColor"),
+  _.uint8("personality"),
+  _.uint8("shirtColor")
+]) as Struct;
+
 export type MiiCreatorV4Data = {
   miicVersion: number;
   originPlatform: number;
@@ -245,12 +270,14 @@ export const EmptyMiiCreatorV4Data = () => ({ ...EmptyMiiCreatorData });
 // idk what this is
 export function MiiCreatorV4DataToFFSD<B extends boolean>(
   input: MiiCreatorV4Data,
-  pack: B
+  pack: B,
+  appendBytes?: boolean
 ): B extends true ? Uint8Array : Ver3StoreData;
 
 export function MiiCreatorV4DataToFFSD(
   input: MiiCreatorV4Data,
-  pack: boolean = false
+  pack: boolean = false,
+  appendBytes: boolean = false
 ): Uint8Array | Ver3StoreData {
   // TODO
   const output: Partial<Ver3StoreData> = {
@@ -327,8 +354,20 @@ export function MiiCreatorV4DataToFFSD(
 
   output.checksum = calculateCRC16(Ver3StoreData.pack(output));
 
-  if (pack) return Ver3StoreData.pack(output);
-  else return output as Ver3StoreData;
+  if (pack) {
+    if (appendBytes) {
+      const ffsdOutput = Ver3StoreData.pack(output);
+      const appendedBytes = MiiCreatorV4AppendData.pack(input);
+
+      const finalArray = new Uint8Array(
+        ffsdOutput.length + appendedBytes.length
+      );
+      finalArray.set(ffsdOutput, 0);
+      finalArray.set(appendedBytes, ffsdOutput.length);
+      return finalArray;
+    }
+    return Ver3StoreData.pack(output);
+  } else return output as Ver3StoreData;
 }
 
 // Tables provided by David J. (thanks!)
@@ -483,7 +522,7 @@ export const validationThing: Partial<Record<keyof MiiCreatorV4Data, Prop>> = {
   hideNose: { type: PropType.Number, default: 0, min: 0, max: 1 },
   originPlatform: {
     type: PropType.Number,
-    default: 0,
+    default: MiiCreatorOriginPlatform.Mii_Creator_v4,
     min: 0,
     max: MiiCreatorOriginPlatform.Origin_Platform_Max
   },

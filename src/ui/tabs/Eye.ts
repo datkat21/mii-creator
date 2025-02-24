@@ -13,6 +13,7 @@ import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   makeSeparatorGapThinDesktop,
+  makeSeparatorGapThinLaptop,
   MiiEyeTable,
   MiiSwitchColorTable,
   rearrangeArray
@@ -54,7 +55,8 @@ export function EyeTab(data: TabRenderInit) {
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Face
               })),
-              MiiSwitchColorTable
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
             )
           ]
         },

@@ -20,6 +20,14 @@ import {
 } from "./struct/RFLStoreData";
 import { StudioData } from "./struct/StudioData";
 
+export type MiiDataExportType =
+  | "rsd"
+  | "miic"
+  | "studioData"
+  | "switchCharInfo"
+  | "ffsd"
+  | "ffsd_append_miic";
+
 export default class Mii {
   miicVersion!: number;
   originPlatform!: number;
@@ -143,11 +151,21 @@ export default class Mii {
           )
         );
         break;
-      // 106/108-byte Mii Creator Data - .miic
-      case 106:
-      case 108:
+      // 104/106/108-byte Mii Creator Data - .miic
+      case 104: // + extension colors
+      case 106: // + hat color/type
+      case 108: // + shirt color/face paint
         tempArray = allocateArray(108, input);
         data = MiiCreatorV3DataToV4(MiiCreatorV3Data.unpack(tempArray));
+        break;
+      // 114-byte mii creator v4 extension data
+      case 114:
+        tempArray = allocateArray(122, input);
+        data = MiiCreatorV3DataToV4(
+          MiiCreatorV3Data.unpack(
+            MiiCreatorV3Data.pack(Ver3StoreData.unpack(tempArray))
+          )
+        );
         break;
       // mii creator v4 data
       case 122:
@@ -351,20 +369,15 @@ export default class Mii {
   }
 
   /** outputs in specific format */
-  export(
-    outputFormat:
-      | "rsd"
-      | "miic"
-      | "studioData"
-      | "switchCharInfo"
-      | "ffsd" = "miic"
-  ): Uint8Array {
+  export(outputFormat: MiiDataExportType = "miic"): Uint8Array {
     this.validate();
     switch (outputFormat) {
       case "rsd":
         throw new Error("RSD format is not yet supported.");
       case "miic":
         return MiiCreatorV4Data.pack(this.#getObject());
+      // This is decoded studio data and also invalid if face paint is used,
+      // maybe provide a normal studio data export that is encoded properly?
       case "studioData":
         return StudioData.pack(
           this.#getObject({
@@ -378,23 +391,23 @@ export default class Mii {
         return NnMiiCharInfo.pack(this.#getObject());
       case "ffsd":
         return MiiCreatorV4DataToFFSD(this.#getObject(), true);
+      case "ffsd_append_miic":
+        return MiiCreatorV4DataToFFSD(this.#getObject(), true, true);
     }
   }
 
-  exportHex(outputFormat: "miic" | "studioData" | "switchCharInfo" | "ffsd") {
+  exportHex(outputFormat: MiiDataExportType) {
     const data = this.export(outputFormat);
     return dataToHex(data);
   }
 
-  exportBase64(
-    outputFormat: "miic" | "studioData" | "switchCharInfo" | "ffsd"
-  ) {
+  exportBase64(outputFormat: MiiDataExportType) {
     const data = this.export(outputFormat);
     return dataToBase64(data);
   }
 
   hasExtendedColors(): boolean {
-    // TODO: implement
+    // TODO: implement a check for non-ver3 colors
     return true;
   }
 }

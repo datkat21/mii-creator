@@ -15,6 +15,7 @@ import {
   makeSeparatorFSI,
   makeSeparatorGapThinDesktop,
   makeSeparatorGapThinFSI,
+  makeSeparatorGapThinLaptop,
   MiiSwitchColorTable,
   MiiSwitchSkinColorTable,
   rearrangeArray
@@ -97,7 +98,7 @@ export function HeadTab(data: TabRenderInit) {
                 part: RenderPart.Head
               })),
               MiiSwitchColorTable,
-              makeSeparatorGapThinDesktop
+              makeSeparatorGapThinLaptop
             )
           ]
         }

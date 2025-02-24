@@ -61,7 +61,7 @@ export const getFFLWorkerExists = () => FFLWorker !== undefined;
 export const getFFLWorkerMakeIcon = (
   request: Partial<RenderRequest>,
   useBlob: boolean = true
-) => {
+): Promise<string> => {
   if (FFLWorker === undefined)
     throw new Error("FFL worker told to make icon, but it wasn't initialized");
 

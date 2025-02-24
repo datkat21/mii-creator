@@ -14,6 +14,7 @@ import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   makeSeparatorGapThinDesktop,
+  makeSeparatorGapThinLaptop,
   MiiMouthTable,
   MiiSwitchColorTable,
   rearrangeArray
@@ -60,7 +61,8 @@ export function MouthTab(data: TabRenderInit) {
                 part: RenderPart.Face,
                 property: "mouthColor"
               })),
-              MiiSwitchColorTable
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
             )
           ]
         },

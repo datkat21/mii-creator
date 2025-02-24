@@ -13,6 +13,7 @@ import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   makeSeparatorGapThinDesktop,
+  makeSeparatorGapThinLaptop,
   MiiHairTable,
   MiiSwitchColorTable,
   rearrangeArray
@@ -57,7 +58,8 @@ export function HairTab(data: TabRenderInit) {
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Head
               })),
-              MiiSwitchColorTable
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
             )
           ]
         },

@@ -15,6 +15,7 @@ import {
   makeSeparatorFSI,
   makeSeparatorGapThinDesktop,
   makeSeparatorGapThinFSI,
+  makeSeparatorGapThinLaptop,
   MiiSwitchColorTable,
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
@@ -92,7 +93,7 @@ export function ExtHatTab(data: TabRenderInit) {
                 }
               })) as FeatureSetIconItem[],
               MiiSwitchColorTable,
-              makeSeparatorGapThinDesktop
+              makeSeparatorGapThinLaptop
             )
           ]
         }
