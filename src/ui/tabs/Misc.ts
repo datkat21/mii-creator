@@ -1,12 +1,12 @@
 import Html from "@datkat21/html";
 import type { TabRenderInit } from "../../constants/TabRenderType";
-import { Buffer as Buf } from "../../../node_modules/buffer/index";
 import { Input } from "../components/Input";
-import Mii from "../../external/mii-js/mii";
+import Mii from "../../class/MiiData";
 import { RenderPart } from "../../class/MiiEditor";
+import { decodeUTF16LE, encodeUTF16LE } from "../../util/dataConvert";
 
 export function MiscTab(data: TabRenderInit) {
-  let tmpMii = new Mii(data.mii.encode());
+  let tmpMii = new Mii(data.mii.export());
   const setProp = (prop: string, val: any) => {
     (tmpMii as any)[prop] = val;
     data.callback(tmpMii, false, RenderPart.Head);
@@ -23,42 +23,42 @@ export function MiscTab(data: TabRenderInit) {
       .appendMany(
         Input(
           "Name",
-          data.mii.miiName,
+          data.mii.nickname,
           // set
-          (name) => setProp("miiName", name.trim()),
+          (name) => setProp("nickname", name.trim()),
           // validate
           (name) => {
-            const nameBuffer = Buf.from(name, "utf16le");
+            const nameBuffer = encodeUTF16LE(name);
 
             // Empty string check
-            let nameStr = nameBuffer.toString("utf16le");
-            if (nameStr.trim() === "") return false;
+            let nameStr = decodeUTF16LE(nameBuffer);
+            if (nameStr.trim() === "") return "Name is empty";
 
             // Name length check
-            if (nameBuffer.length <= 0x14 && nameBuffer.length !== 0)
-              return true;
+            if (nameBuffer.length >= 0x14) return "Name is too long";
+            if (nameBuffer.length === 0) return "Name is too short";
 
-            return false;
+            return true;
           },
           data.editor
         ),
         Input(
           "Creator",
-          data.mii.creatorName,
+          data.mii.creator,
           // set
           (creator) => setProp("creatorName", creator.trim()),
           // validate
           (name) => {
-            const nameBuffer = Buf.from(name, "utf16le");
+            const nameBuffer = encodeUTF16LE(name);
 
             // Empty string check
-            let nameStr = nameBuffer.toString("utf16le");
-            if (nameStr.trim() === "") return false;
+            let nameStr = decodeUTF16LE(nameBuffer);
+            if (nameStr.trim() === "") return "Creator name is empty";
 
             // Name length check
-            if (nameBuffer.length <= 0x14) return true;
+            if (nameBuffer.length >= 0x14) return "Creator name is too long";
 
-            return false;
+            return true;
           },
           data.editor
         )

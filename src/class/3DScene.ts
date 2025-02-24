@@ -7,7 +7,8 @@ import {
 // very hacky but it works to fix the shader bug...
 import { GLTFLoader } from "./3d/Custom_GLTFLoader";
 import CameraControls from "camera-controls";
-import Mii from "../external/mii-js/mii";
+// import Mii from "../external/mii-js/mii";
+import Mii from "../class/MiiData";
 import {
   MiiFavoriteColorLookupTable,
   MiiFavoriteColorVec3Table,
@@ -37,7 +38,7 @@ import { traverseAddShader, traverseMesh } from "./3d/shader/ShaderUtils";
 import { getSetting } from "../util/SettingsHelper";
 import { ShaderType } from "../constants/BodyShaderTypes";
 import { getHeadModel, getMaskTex, type ModelFlag } from "../util/MiiRendering";
-import type { CharModel } from "../external/ffl.js/ffl";
+import { makeExpressionFlag, type CharModel } from "../external/ffl.js/ffl";
 import { LUTShaderMaterial } from "../external/ffl.js/LUTShaderMaterial";
 import { FFLShaderMaterial } from "../external/ffl.js/FFLShaderMaterial";
 import JSZip from "jszip";
@@ -271,8 +272,7 @@ export class Mii3DScene {
       console.log("File:", fileList[i]);
       const url = URL.createObjectURL(resolves[i]);
       const gltf = await this.#gltfLoader.loadAsync(url);
-      // i + 1 since hat type starts from index 1.
-      this.hatModels[i + 1] = gltf;
+      this.hatModels[i] = gltf;
       URL.revokeObjectURL(url);
     }
   }
@@ -299,17 +299,26 @@ export class Mii3DScene {
 
     if (part === CameraPosition.MiiFullBody) {
       if (body !== undefined && head !== undefined) {
-        const box = new THREE.Box3().setFromObject(body);
-        const box2 = new THREE.Box3().setFromObject(head);
-        pos.y = box2.max.y / 2;
+        const box = new THREE.Box3().setFromObject(head);
+        pos.y = box.max.y / 2;
       }
       if (onlyReturn === false) {
+        let minInput = 0,
+          maxInput = 127,
+          minOutput = 38,
+          maxOutput = 40;
         this.#controls.moveTo(pos.x, pos.y, pos.z, transition);
         this.#controls.rotateTo(0, Math.PI / 2, transition);
-        this.#controls.dollyTo(40, transition);
         if (this.cameraPan === false) {
-          this.#controls.dollyTo(120, transition);
+          minOutput = 80;
+          maxOutput = 96;
         }
+        this.#controls.dollyTo(
+          minOutput +
+            ((this.mii.height - minInput) / (maxInput - minInput)) *
+              (maxOutput - minOutput),
+          transition
+        );
       }
       return pos;
     } else if (part === CameraPosition.MiiHead) {
@@ -322,6 +331,7 @@ export class Mii3DScene {
         this.#controls.rotateTo(0, Math.PI / 2, transition);
         this.#controls.dollyTo(25, transition);
         if (this.cameraPan === false) {
+          this.#controls.moveTo(pos.x, pos.y, pos.z, transition);
           this.#controls.dollyTo(65, transition);
         }
       }
@@ -335,7 +345,7 @@ export class Mii3DScene {
       this.traverseAddFaceMaterial(
         head as THREE.Mesh,
         `&data=${encodeURIComponent(
-          this.mii.encodeStudio().toString("hex")
+          this.mii.exportHex("studioData")
         )}&expression=1&width=512`
       );
     }
@@ -562,13 +572,13 @@ export class Mii3DScene {
         ? true
         : false;
 
-    if (this.mii.normalMii === false) {
-      return useLinearColors ? cPantsColorGoldLinear : cPantsColorGold;
+    if (this.mii.special) {
+      return cPantsColorGold;
     }
     if (this.mii.favorite) {
-      return useLinearColors ? cPantsColorRedLinear : cPantsColorRed;
+      return cPantsColorRed;
     }
-    return useLinearColors ? cPantsColorGrayLinear : cPantsColorGray;
+    return cPantsColorGray;
   }
   async updateBody(force?: boolean) {
     if (!this.ready) return;
@@ -825,21 +835,11 @@ export class Mii3DScene {
         //   console.log("OOOPS");
         // }
 
-        // little bit hacky lol because "simple" shader depends on linear instead of sRGB colors.
-        if (this.mii.extFacePaintColor !== 0) {
-          if (shaderSetting === "none") {
-            desiredColor =
-              SwitchMiiColorTableLinear[this.mii.extFacePaintColor - 1];
-          } else {
-            desiredColor =
-              SwitchMiiColorTableSRGB[this.mii.extFacePaintColor - 1];
-          }
+        // TODO: REMOVE ALL REFERENCES TO SIMPLE SHADER
+        if (this.mii.facePaintColor !== -1) {
+          desiredColor = SwitchMiiColorTableSRGB[this.mii.facePaintColor];
         } else {
-          if (shaderSetting === "none") {
-            desiredColor = MiiSwitchSkinColorLinear[this.mii.skinColor];
-          } else {
-            desiredColor = MiiSwitchSkinColorSRGB[this.mii.skinColor];
-          }
+          desiredColor = MiiSwitchSkinColorSRGB[this.mii.facelineColor];
         }
 
         // console.log(
@@ -852,7 +852,7 @@ export class Mii3DScene {
         if (isWiiUShader) {
           (nHands.material as THREE.ShaderMaterial).uniforms.u_const1.value =
             new THREE.Vector4(...desiredColor, 1);
-        } else if (shaderSetting === "none" || this.shaderOverride) {
+        } else if (this.shaderOverride) {
           (nHands.material as THREE.MeshBasicMaterial).color.set(
             desiredColor[0],
             desiredColor[1],
@@ -940,17 +940,11 @@ export class Mii3DScene {
 
         try {
           // CUSTOM APP-SPECIFIC DATA
-          let favoriteColor: number = this.mii.favoriteColor;
-          // console.log("fav color:", favoriteColor);
-
-          const tmpMii = new Mii(this.mii.encode());
-          if (this.mii.extHatColor !== 0) {
-            tmpMii.favoriteColor = this.mii.extHatColor - 1;
-          }
+          const tmpMii = new Mii(this.mii.export("miic"));
           let params: Record<string, string> = {};
-          if (this.mii.extHatType !== 0) {
+          if (this.mii.hatType !== -1) {
             // Custom hat model types
-            switch (HatTypeList[this.mii.extHatType]) {
+            switch (HatTypeList[this.mii.hatType]) {
               case HatType.HAT:
                 params["modelType"] = "hat";
                 break;
@@ -966,16 +960,18 @@ export class Mii3DScene {
           params["verifyCharInfo"] = "0";
           let GLB: GLTF;
           if (Config.renderer.useRendererServer) {
-            GLB = await this.#gltfLoader.loadAsync(
-              tmpMii.studioUrl({
-                ext: "glb",
-                texResolution: "512",
-                miiName: this.mii.miiName,
-                creatorName: this.mii.creatorName,
-                miic: encodeURIComponent(this.mii.encode().toString("base64")),
-                ...params
-              } as unknown as any)
-            );
+            // TODO: FIX THIS FOR SERVER RENDERING LOL
+            GLB = null as any;
+            // GLB = await this.#gltfLoader.loadAsync(
+            //   tmpMii.studioUrl({
+            //     ext: "glb",
+            //     texResolution: "512",
+            //     miiName: this.mii.miiName,
+            //     creatorName: this.mii.creatorName,
+            //     miic: encodeURIComponent(this.mii.encode().toString("base64")),
+            //     ...params
+            //   } as unknown as any)
+            // );
           } else {
             if (this.#pastCharModel) {
               // console.log("Past Char Model:", this.#pastCharModel);
@@ -997,7 +993,6 @@ export class Mii3DScene {
           }
           //@ts-expect-error
           window.GLB = GLB;
-          this.mii.favoriteColor = favoriteColor;
 
           GLB.scene.name = "MiiHead";
           // head is no longer attached to head bone physically, no more need to offset rotation
@@ -1052,9 +1047,8 @@ export class Mii3DScene {
           }
 
           try {
-            if (this.mii.extHatType !== 0) {
-              let hatModel =
-                this.hatModels[this.mii.extHatType].scene.clone(true);
+            if (this.mii.hatType !== -1) {
+              let hatModel = this.hatModels[this.mii.hatType].scene.clone(true);
 
               hatModel.name = "HatScene";
               // hatModel.scene.renderOrder = -1;
@@ -1109,8 +1103,8 @@ export class Mii3DScene {
                     cullMode: 0,
                     modulateColor:
                       MiiFavoriteColorVec3Table[
-                        this.mii.extHatColor !== 0
-                          ? this.mii.extHatColor - 1
+                        this.mii.hatFavoriteColor !== -1
+                          ? this.mii.hatFavoriteColor
                           : this.mii.favoriteColor
                       ],
                     modulateMode: 5, //5,
@@ -1151,7 +1145,7 @@ export class Mii3DScene {
             this.traverseAddFaceMaterial(
               h as THREE.Mesh,
               `&data=${encodeURIComponent(
-                this.mii.encodeStudio().toString("hex")
+                this.mii.exportHex("studioData")
               )}&width=512`
             );
           });

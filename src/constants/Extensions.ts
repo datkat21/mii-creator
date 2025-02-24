@@ -18,7 +18,6 @@ export enum HatType {
 }
 
 export const HatTypeList = [
-  HatType.HEAD, // Hat type 0 is no hat.
   HatType.HAT, // Cap
   HatType.HAT, // Beanie
   HatType.HAT, // Top Hat

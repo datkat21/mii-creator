@@ -5,6 +5,7 @@ import {
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
+import { makeSeparatorGapThinFSI } from "../../constants/MiiFeatureTable";
 
 export function OptionsTab(data: TabRenderInit) {
   data.container.append(
@@ -29,30 +30,26 @@ export function OptionsTab(data: TabRenderInit) {
           ]
         },
         favorite: {
-          label: "Favorite",
+          label: "Favorite/Special",
           items: [
             {
               type: FeatureSetType.Switch,
-              iconOff: "No",
-              iconOn: "Yes",
+              iconOff: "Normal",
+              iconOn: "Favorite",
               property: "favorite",
-              isNumber: false,
+              isNumber: true,
               forceRender: false,
               part: RenderPart.Face,
               soundOff: "select_color",
               soundOn: "select_color"
-            }
-          ]
-        },
-        isSpecial: {
-          label: "Type",
-          items: [
+            },
+            makeSeparatorGapThinFSI(),
             {
               type: FeatureSetType.Switch,
-              iconOff: "Special",
-              iconOn: "Normal",
-              property: "normalMii",
-              isNumber: false,
+              iconOff: "Normal",
+              iconOn: "Special",
+              property: "special",
+              isNumber: true,
               forceRender: false,
               part: RenderPart.Face,
               soundOff: "select_color",

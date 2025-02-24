@@ -4,7 +4,8 @@ import {
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiHairColorTable,
-  SwitchMiiColorTable
+  SwitchMiiColorTable,
+  Ver3HairColorTable
 } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -15,18 +16,12 @@ import {
   MiiSwitchColorTable,
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
-import type Mii from "../../external/mii-js/mii";
 
 export function FacialHairTab(data: TabRenderInit) {
-  let mii: Mii = data.mii;
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
-      // hacky workaround for color palette
-      onChange: (newMii, forceRender, renderPart) => {
-        data.callback(newMii, forceRender, renderPart);
-        mii = newMii;
-      },
+      onChange: data.callback,
       entries: {
         mustacheType: {
           label: "Mustache",
@@ -42,7 +37,7 @@ export function FacialHairTab(data: TabRenderInit) {
           items: [
             {
               type: FeatureSetType.Range,
-              property: "mustacheYPosition",
+              property: "mustacheY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
@@ -74,31 +69,24 @@ export function FacialHairTab(data: TabRenderInit) {
             part: RenderPart.Head
           }))
         },
-        facialHairColor: {
+        beardColor: {
           label: EditorIcons.color,
-          validationProperty: "trueFacialHairColor",
-          // EXTREMELY HACKY but works..
-          validationFunction() {
-            if (mii.trueFacialHairColor > 7) {
-              return mii.trueFacialHairColor + 8;
-            } else return mii.trueFacialHairColor;
-          },
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,
-              value: k,
-              color: MiiHairColorTable[k],
+              value: Ver3HairColorTable[k],
+              color: SwitchMiiColorTable[Ver3HairColorTable[k]],
               part: RenderPart.Head,
-              property: "fflHairColor"
+              property: "beardColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
               ArrayNum(100).map((k) => ({
                 type: FeatureSetType.Icon,
-                value: k + 8,
+                value: k,
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Head,
-                property: "extHairColor"
+                property: "beardColor"
               })),
               MiiSwitchColorTable
             )

@@ -1,5 +1,5 @@
-import _ from "../../external/struct-fu/lib";
-import type { Struct } from "../../external/struct-fu/types/Generic";
+import _ from "../../external/ffl.js/struct-fu-full";
+import type { Struct } from "../../external/ffl.js/struct-fu";
 
 export const FFLiCreateID = _.struct([
   _.ubit("flag_normal", 1),
@@ -9,13 +9,13 @@ export const FFLiCreateID = _.struct([
   _.ubit("create_date1", 14), // 28-bit field
   _.ubit("create_date2", 14), // 28-bit field
   _.byte("base", 6)
-]);
+]) as Struct;
 export const date_timestamp = function (createID: any) {
   var val28 = (createID.create_date1 << 14) | createID.create_date2;
   var timestamp = val28 * 2 + 1262304000;
   return new Date(timestamp * 1000);
 };
-export const FFLiAuthorID = _.struct([_.byte("data", 8)]);
+export const FFLiAuthorID = _.struct([_.byte("data", 8)]) as Struct;
 
 // based on arian's FFLiMiiDataCore implementation
 export const Ver3StoreData = _.struct([
@@ -28,7 +28,7 @@ export const Ver3StoreData = _.struct([
   _.ubitLE("reserved_0", 2), // Unused padding
   _.ubitLE("room_index", 4),
   _.ubitLE("position_in_room", 4),
-  _.ubitLE("author_type", 4), // _0_24_27
+  _.ubitLE("author_type", 4),
   _.ubitLE("birth_platform", 3),
   _.ubitLE("reserved_1"), // Unused (MSB)
 
@@ -242,3 +242,24 @@ export type FFLiCreateID = {
   create_date2: number;
   base: Uint8Array;
 };
+
+export function calculateCRC16(storeData: Uint8Array) {
+  const data = storeData.subarray(0, 0x5e);
+  console.log(data);
+
+  let crc = 0x0000;
+
+  for (const byte of data) {
+    for (let bit = 7; bit >= 0; bit--) {
+      const flag = (crc & 0x8000) != 0;
+      crc = ((crc << 1) | ((byte >> bit) & 0x1)) ^ (flag ? 0x1021 : 0);
+    }
+  }
+
+  for (let i = 16; i > 0; i--) {
+    const flag = (crc & 0x8000) != 0;
+    crc = (crc << 1) ^ (flag ? 0x1021 : 0);
+  }
+
+  return crc & 0xffff;
+}

@@ -3,27 +3,29 @@ import {
   MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import EditorIcons from "../../constants/EditorIcons";
-import { SwitchMiiColorTable } from "../../constants/ColorTables";
+import {
+  SwitchMiiColorTable,
+  Ver3HairColorTable
+} from "../../constants/ColorTables";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import { ArrayNum } from "../../util/Numbers";
 import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
+  makeSeparatorGapThinDesktop,
   MiiHairTable,
   MiiSwitchColorTable,
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
-import type Mii from "../../external/mii-js/mii";
+import type Mii from "../../class/MiiData";
 
 export function HairTab(data: TabRenderInit) {
-  let mii: Mii = data.mii;
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
       // hacky workaround for color palette
       onChange: (newMii, forceRender, renderPart) => {
         data.callback(newMii, forceRender, renderPart);
-        mii = newMii;
       },
       entries: {
         hairType: {
@@ -35,34 +37,26 @@ export function HairTab(data: TabRenderInit) {
               icon: data.icons.hair[k], // `<img src="./assets/images/hair/${k}.png" width="84" height="84" />`,
               part: RenderPart.Head
             })),
-            MiiHairTable
+            MiiHairTable,
+            makeSeparatorGapThinDesktop
           )
         },
         hairColor: {
           label: EditorIcons.color,
-          validationProperty: "trueHairColor",
-          // EXTREMELY HACKY but works..
-          validationFunction() {
-            if (mii.trueHairColor > 7) {
-              return mii.trueHairColor + 8;
-            } else return mii.trueHairColor;
-          },
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,
-              value: k,
-              color: SwitchMiiColorTable[k],
-              part: RenderPart.Head,
-              property: "fflHairColor"
+              value: Ver3HairColorTable[k],
+              color: SwitchMiiColorTable[Ver3HairColorTable[k]],
+              part: RenderPart.Head
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
               ArrayNum(100).map((k) => ({
                 type: FeatureSetType.Icon,
-                value: k + 8,
+                value: k,
                 color: SwitchMiiColorTable[k],
-                part: RenderPart.Head,
-                property: "extHairColor"
+                part: RenderPart.Head
               })),
               MiiSwitchColorTable
             )
@@ -75,7 +69,7 @@ export function HairTab(data: TabRenderInit) {
               type: FeatureSetType.Switch,
               iconOff: EditorIcons.positionHairFlip,
               iconOn: EditorIcons.positionHairFlipped,
-              property: "flipHair",
+              property: "hairFlip",
               part: RenderPart.Head
             }
           ]

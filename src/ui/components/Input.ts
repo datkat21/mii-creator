@@ -6,7 +6,7 @@ export function Input(
   label: string,
   value: string,
   callback: (s: string) => any,
-  validate?: (s: string) => boolean,
+  validate?: (s: string) => string | true,
   editor?: MiiEditor
 ): Html {
   let id = String(performance.now());
@@ -14,15 +14,25 @@ export function Input(
   function checkValidity(value: any) {
     if (editor) {
       editor.dirty = true;
-      if (validate)
-        if (validate(value)) {
+      if (validate) {
+        const result = validate(value);
+        if (result === true) {
           input.classOff("invalid");
-          if (editor) editor.errors.set(label, false);
+          if (editor)
+            editor.errors.set(label, {
+              valid: true,
+              reason: "Valid"
+            });
           callback(value);
         } else {
           input.classOn("invalid");
-          if (editor) editor.errors.set(label, true);
+          if (editor)
+            editor.errors.set(label, {
+              valid: false,
+              reason: String(result)
+            });
         }
+      }
     }
   }
   let input: Html = new Html("input")

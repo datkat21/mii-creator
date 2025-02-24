@@ -3,7 +3,7 @@ import { getMusicManager } from "../class/audio/MusicManager";
 import { getSoundManager } from "../class/audio/SoundManager";
 import Modal, { buttonsOkCancel } from "./components/Modal";
 import { Library } from "./pages/Library";
-import Mii from "../external/mii-js/mii";
+import Mii from "../class/MiiData";
 import { MiiEditor } from "../class/MiiEditor";
 import {
   displayUpdateNotice,
@@ -11,13 +11,6 @@ import {
   updateSettings
 } from "./pages/Settings";
 import { getMiiRender, MiiCustomRenderType } from "../util/miiImageUtils";
-import { Buffer } from "../../node_modules/buffer/index";
-import { SelectionLibrary } from "./pages/SelectionLibrary";
-import "../external/mii-frontend/all-kaitai-structs";
-import { getSetting, setSetting } from "../util/SettingsHelper";
-import { Config } from "../config";
-import Html from "@datkat21/html";
-import { AddButtonSounds } from "../util/AddButtonSounds";
 import { customRender } from "./pages/library/render/customRender";
 
 export async function setupUi() {
@@ -93,7 +86,7 @@ export async function setupUi() {
         async (data, shutdownProperly) => {
           if (window.parent !== window.self) {
             // In iframe (UNTESTED)
-            const miiData = new Mii(Buffer.from(data, "base64"));
+            const miiData = new Mii(data);
 
             let headshot: string | null = null;
             let headOnly: string | null = null;
@@ -146,8 +139,8 @@ export async function setupUi() {
                 type: "miic-data-finalize",
                 properSave: shutdownProperly,
                 data,
-                name: miiData.miiName,
-                creator: miiData.creatorName,
+                name: miiData.nickname,
+                creator: miiData.creator,
                 headshot,
                 headOnly,
                 fullBody
@@ -161,55 +154,55 @@ export async function setupUi() {
         searchParams.get("data")!
       );
     } else if (searchParams.has("select")) {
-      const miiData = await SelectionLibrary();
+      alert("Selection library is currently not implemented yet");
+      throw new Error("Selection library is currently not implemented yet");
+      // const miiData = await SelectionLibrary();
 
-      console.log("selection:", miiData);
+      // console.log("selection:", miiData);
 
-      let headshot: string | null = null;
-      let headOnly: string | null = null;
-      let fullBody: string | null = null;
+      // let headshot: string | null = null;
+      // let headOnly: string | null = null;
+      // let fullBody: string | null = null;
 
-      if (searchParams.has("renderTypes")) {
-        const renderTypes = searchParams.get("renderTypes")!.split(",");
+      // if (searchParams.has("renderTypes")) {
+      //   const renderTypes = searchParams.get("renderTypes")!.split(",");
 
-        if (renderTypes.includes("headshot")) {
-          headshot = (
-            await getMiiRender(miiData, MiiCustomRenderType.Head, true, false)
-          ).src;
-        }
-        if (renderTypes.includes("headOnly")) {
-          headOnly = (
-            await getMiiRender(
-              miiData,
-              MiiCustomRenderType.HeadOnly,
-              true,
-              false
-            )
-          ).src;
-        }
-        if (renderTypes.includes("fullBody")) {
-          fullBody = (
-            await getMiiRender(miiData, MiiCustomRenderType.Body, true, false)
-          ).src;
-        }
-      }
+      //   if (renderTypes.includes("headshot")) {
+      //     headshot = (
+      //       await getMiiRender(miiData, MiiCustomRenderType.Head, true, false)
+      //     ).src;
+      //   }
+      //   if (renderTypes.includes("headOnly")) {
+      //     headOnly = (
+      //       await getMiiRender(
+      //         miiData,
+      //         MiiCustomRenderType.HeadOnly,
+      //         true,
+      //         false
+      //       )
+      //     ).src;
+      //   }
+      //   if (renderTypes.includes("fullBody")) {
+      //     fullBody = (
+      //       await getMiiRender(miiData, MiiCustomRenderType.Body, true, false)
+      //     ).src;
+      //   }
+      // }
 
-      window.parent.postMessage(
-        {
-          type: "miic-select",
-          data: miiData.encode(),
-          name: miiData.miiName,
-          creator: miiData.creatorName,
-          headshot,
-          headOnly,
-          fullBody
-        },
-        location.origin
-      );
+      // window.parent.postMessage(
+      //   {
+      //     type: "miic-select",
+      //     data: miiData.encode(),
+      //     name: miiData.miiName,
+      //     creator: miiData.creatorName,
+      //     headshot,
+      //     headOnly,
+      //     fullBody
+      //   },
+      //   location.origin
+      // );
     } else if (searchParams.has("custom-render-preview")) {
-      const miiData = new Mii(
-        Buffer.from(searchParams.get("custom-render-preview")!, "base64")
-      );
+      const miiData = new Mii(searchParams.get("custom-render-preview")!);
       customRender(miiData);
     } else if (searchParams.has("settings")) {
       Settings();
@@ -266,42 +259,7 @@ export async function setupUi() {
   //@ts-expect-error
   window.soundManager = getSoundManager();
 
-  document.addEventListener("keydown", (e) => {
-    if (document.activeElement === document.body) {
-      if (e.ctrlKey || e.altKey || e.metaKey) return;
-      if (e.code === "KeyS") {
-        Modal.modal(
-          "sound test",
-          "choose a sound",
-          "body",
-          ...Object.keys(getSoundManager().soundBufs).map((k) => ({
-            text: k,
-            callback() {
-              getSoundManager().playSound(k);
-              //@ts-expect-error used for debugging
-              window.lastPlayedSound = k;
-            }
-          }))
-        )
-          .qs(".modal-content")!
-          .style({ "max-width": "unset", "max-height": "unset" });
-      }
-      if (e.code === "KeyD") {
-        // debug key enables debug options
-        window.localforage = localforage;
-        window.Mii = Mii;
-      }
-      if (e.code === "KeyV") {
-        const vol = Number(
-          prompt("Enter volume level from 0-1 (default is 0.35)")
-        );
-
-        if (vol < 0) return;
-        if (vol > 1) return;
-
-        getSoundManager().setVolume(vol);
-        mm.setVolume(vol);
-      }
-    }
-  });
+  // debugging options
+  window.localforage = localforage;
+  window.Mii = Mii;
 }

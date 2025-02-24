@@ -1,9 +1,10 @@
 import Html from "@datkat21/html";
-import Mii from "../../external/mii-js/mii";
+// import Mii from "../../external/mii-js/mii";
+import Mii from "../../class/MiiData";
 import { TabList, TabListType, type Tab } from "./TabList";
 import md5 from "md5";
 import { playSound } from "../../class/audio/SoundManager";
-import { RenderPart } from "../../class/MiiEditor";
+import { MiiEditor, RenderPart } from "../../class/MiiEditor";
 
 export enum FeatureSetType {
   Icon,
@@ -20,7 +21,9 @@ export interface FeatureSetIconItem {
   icon?: string;
   color?: string;
   value: number | string;
-  property?: string;
+  property?: string[] | string;
+  selectedCondition?: () => boolean;
+  selectedCallback?: (tmpMii: Mii) => void;
   forceRender?: boolean;
 }
 export interface FeatureSetTextItem {
@@ -88,9 +91,6 @@ export interface FeatureSetEntry {
   label: string;
   header?: Html | string;
   headerIsHtml?: boolean;
-  validationProperty?: string;
-  // value
-  validationFunction?: Function;
   items: FeatureSetItem[];
 }
 
@@ -107,7 +107,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
   let tmpMii: Mii | any;
   if (set.mii)
     if (set.miiIsNotMii === undefined || set.miiIsNotMii === false)
-      tmpMii = new Mii(set.mii.encode());
+      tmpMii = new Mii((set.mii as Mii).export());
     else tmpMii = set.mii;
   else tmpMii = {};
 
@@ -119,7 +119,6 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
     const entry = set.entries[key];
 
     let property = key;
-    if (entry.validationProperty) property = entry.validationProperty;
 
     tabListInit.push({
       icon: entry.label,
@@ -156,35 +155,74 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
               set.onChange(tmpMii, forceRender, item.part || RenderPart.Head);
 
             // Used for true values (Switch colors usually use this to save time)
-            let value;
-            if (entry.validationFunction !== undefined) {
-              value = await entry.validationFunction();
-            } else {
-              value = (tmpMii as Record<string, any>)[property];
-            }
+            let value = (tmpMii as Record<string, any>)[property];
 
             switch (item.type) {
               case FeatureSetType.Icon:
-                let validationProperty = property;
-                if (item.property) validationProperty = item.property;
+                let iconSelected = false;
+
+                // js moment again
+                if (item.selectedCondition)
+                  if (item.selectedCondition() === true) iconSelected = true;
+                  else iconSelected = false;
+
+                if (item.property) {
+                  if (Array.isArray(item.property)) {
+                    let tmpValue = (tmpMii as Record<string, any>)[
+                      item.property[0]
+                    ];
+                    if (
+                      item.property
+                        .map((i) => tmpMii[i])
+                        .every((i) => i === tmpValue)
+                    )
+                      value = tmpValue;
+                    else {
+                      value = false;
+                      iconSelected = false;
+                    }
+                  } else value = (tmpMii as Record<string, any>)[item.property];
+                }
                 let featureItem = new Html("div")
                   .class("feature-item")
                   .on("pointerenter", playHoverSound)
                   .on("click", async () => {
                     let value;
-                    if (entry.validationFunction) {
-                      value = await entry.validationFunction(
-                        item.property,
-                        item.value
-                      );
-                    } else {
-                      value = (tmpMii as Record<string, any>)[
-                        validationProperty
-                      ];
+
+                    // i hate this
+                    if (MiiEditor.getCurrentEditor() !== null) {
+                      tmpMii = MiiEditor.getCurrentEditor()!.mii;
                     }
+
+                    value = (tmpMii as Record<string, any>)[property];
+                    const newValue = item.value;
+
+                    if (item.selectedCondition)
+                      if (item.selectedCondition() === true)
+                        iconSelected = true;
+                      else iconSelected = false;
+
+                    console.log(
+                      `condition check: value (${value}) === newValue (${newValue}), iconSelected (${iconSelected})`
+                    );
+
                     // PREVENT DUPLICATE UPDATES
-                    if (value === item.value) return;
-                    (tmpMii as Record<string, any>)[key] = item.value;
+                    if (value === newValue || iconSelected) return;
+                    if (item.property) {
+                      if (Array.isArray(item.property)) {
+                        for (const prop of item.property) {
+                          (tmpMii as Record<string, any>)[prop] = newValue;
+                        }
+                      } else {
+                        (tmpMii as Record<string, any>)[item.property] =
+                          newValue;
+                      }
+                    } else {
+                      (tmpMii as Record<string, any>)[key] = newValue;
+                    }
+
+                    if (item.selectedCallback) item.selectedCallback(tmpMii);
+
                     update();
                     if (item.sound) playSound(item.sound);
                     else if (item.color) playSound("select_color");
@@ -203,7 +241,19 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                     .classOn("is-color")
                     .style({ "--color": item.color });
                 }
-                if (value === item.value) {
+                if (value === item.value || iconSelected) {
+                  if (item.property) {
+                    if (Array.isArray(item.property))
+                      if (
+                        item.property
+                          .map((i) => tmpMii[i])
+                          .every((i) => i === value) === false
+                      ) {
+                        console.log("FAILED CHECK, skipping");
+                        debugger;
+                        continue;
+                      }
+                  }
                   featureItem.classOn("active");
                 }
                 break;

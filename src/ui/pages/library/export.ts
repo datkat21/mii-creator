@@ -1,5 +1,5 @@
 import localforage from "localforage";
-import type Mii from "../../../external/mii-js/mii";
+import type Mii from "../../../class/MiiData";
 import { getSetting } from "../../../util/SettingsHelper";
 import Modal, { buttonsOkCancel } from "../../components/Modal";
 import {
@@ -10,6 +10,7 @@ import {
 import { QRCodeCanvas } from "../../../util/miiImageUtils";
 import { downloadLink } from "../../../util/downloadLink";
 import Html from "@datkat21/html";
+import { dataToBase64 } from "../../../util/dataConvert";
 
 export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
   Modal.modal(
@@ -22,13 +23,13 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
     {
       text: "Save MiiCreator data",
       async callback() {
-        const blob = new Blob([miiData.encode()]);
+        const blob = new Blob([miiData.export()]);
         const url = URL.createObjectURL(blob);
 
         const a = document.createElement("a");
         a.href = url;
         a.target = "_blank";
-        a.download = miiData.miiName + ".miic";
+        a.download = miiData.nickname + ".miic";
         document.body.appendChild(a);
         a.click();
 
@@ -56,16 +57,16 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
             }
           },
           {
-            text: "Download FFSD file",
+            text: "Download CharInfo (Switch) file",
             async callback() {
-              if (!(await miiFFSDWarning(miiData))) return;
-              const blob = new Blob([miiData.encodeFFSD()]);
+              //if (!(await miiColorConversionWarning(miiData))) return;
+              const blob = new Blob([miiData.export("switchCharInfo")]);
               const url = URL.createObjectURL(blob);
 
               const a = document.createElement("a");
               a.href = url;
               a.target = "_blank";
-              a.download = miiData.miiName + ".ffsd";
+              a.download = miiData.nickname + ".charinfo";
               document.body.appendChild(a);
               a.click();
 
@@ -80,16 +81,39 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
             }
           },
           {
-            text: "Download CharInfo (Switch) file",
+            text: "Download .FFSD (3DS/Wii U)",
             async callback() {
-              //if (!(await miiColorConversionWarning(miiData))) return;
-              const blob = new Blob([miiData.encodeCharInfoSwitch()]);
+              if (!(await miiFFSDWarning(miiData))) return;
+              const blob = new Blob([miiData.export("ffsd")]);
               const url = URL.createObjectURL(blob);
 
               const a = document.createElement("a");
               a.href = url;
               a.target = "_blank";
-              a.download = miiData.miiName + ".charinfo";
+              a.download = miiData.nickname + ".ffsd";
+              document.body.appendChild(a);
+              a.click();
+
+              requestAnimationFrame(() => {
+                a.remove();
+              });
+
+              // free URL after some time
+              setTimeout(() => {
+                URL.revokeObjectURL(url);
+              }, 2000);
+            }
+          },
+          {
+            text: "Download .RSD (Wii)",
+            async callback() {
+              const blob = new Blob([miiData.export("rsd")]);
+              const url = URL.createObjectURL(blob);
+
+              const a = document.createElement("a");
+              a.href = url;
+              a.target = "_blank";
+              a.download = miiData.nickname + ".rsd";
               document.body.appendChild(a);
               a.click();
 
@@ -118,7 +142,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
           miiData.hasExtendedColors()
         ); // extendedColors
         await localforage.setItem("settings_shaderType", setting);
-        downloadLink(qrCodeImage, `${miiData.miiName}_QR.png`);
+        downloadLink(qrCodeImage, `${miiData.nickname}_QR.png`);
       }
     },
     {
@@ -141,31 +165,31 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
               new Html("span").class("h4").text("CharInfo (Switch) data (Hex)"),
               new Html("pre")
                 .class("pre-wrap", "mb-0")
-                .text(miiData.encodeCharInfoSwitch().toString("hex"))
+                .text(miiData.exportHex("switchCharInfo"))
             ),
             new Html("div").appendMany(
               new Html("span").class("h4").text("MiiC (Base64)"),
               new Html("pre")
                 .class("pre-wrap", "mb-0")
-                .text(miiData.encode().toString("base64"))
+                .text(miiData.exportBase64("miic"))
             ),
             new Html("div").appendMany(
               new Html("span").class("h4").text("FFSD (Base64)"),
               new Html("pre")
                 .class("pre-wrap", "mb-0")
-                .text(miiData.encodeFFSD().toString("base64"))
+                .text(miiData.exportBase64("ffsd"))
             ),
             new Html("div").appendMany(
               new Html("span").class("h4").text("FFSD (Hex)"),
               new Html("pre")
                 .class("pre-wrap", "mb-0")
-                .text(miiData.encodeFFSD().toString("hex"))
+                .text(miiData.exportHex("ffsd"))
             ),
             new Html("div").appendMany(
               new Html("span").class("h4").text("Mii Studio data"),
               new Html("pre")
                 .class("pre-wrap", "mb-0")
-                .text(miiData.encodeStudio().toString("hex"))
+                .text(miiData.exportHex("studioData"))
             )
           );
       }

@@ -4,191 +4,87 @@ import Html from "@datkat21/html";
 import { FeatureSetType } from "../ui/components/MiiPagedFeatureSet";
 
 // for example to be used with the CSS order property.
-export const MiiEyeTable: Record<number, number> = {
-  // RealValue: DisplayedPosition
-  0: 2,
-  1: 6,
-  2: 0,
-  3: 42,
-  4: 1,
-  5: 24,
-  6: 29,
-  7: 36,
-  8: 3,
-  9: 16,
-  10: 45
-};
-export const MiiHairTable: Record<number, number> = {
-  33: 0,
-  47: 1,
-  40: 2,
-  37: 3,
-  32: 4,
-  107: 5,
-  48: 6,
-  51: 7,
-  55: 8,
-  70: 9,
-  44: 10,
-  66: 11,
-  52: 12,
-  50: 13,
-  38: 14,
-  49: 15,
-  43: 16,
-  31: 17,
-  56: 18,
-  68: 19,
-  62: 20,
-  115: 21,
-  76: 22,
-  119: 23,
-  64: 24,
-  81: 25,
-  116: 26,
-  121: 27,
-  22: 28,
-  58: 29,
-  60: 30,
-  87: 31,
-  125: 32,
-  117: 33,
-  73: 34,
-  75: 35,
-  42: 36,
-  89: 37,
-  57: 38,
-  54: 39,
-  80: 40,
-  34: 41,
-  23: 42,
-  86: 43,
-  88: 44,
-  118: 45,
-  39: 46,
-  36: 47,
-  45: 48,
-  67: 49,
-  59: 50,
-  65: 51,
-  41: 52,
-  30: 53,
-  12: 54,
-  16: 55,
-  10: 56,
-  82: 57,
-  128: 58,
-  129: 59,
-  14: 60,
-  95: 61,
-  105: 62,
-  100: 63,
-  6: 64,
-  20: 65,
-  93: 66,
-  102: 67,
-  27: 68,
-  4: 69,
-  17: 70,
-  110: 71,
-  123: 72,
-  8: 73,
-  106: 74,
-  72: 75,
-  3: 76,
-  21: 77,
-  0: 78,
-  98: 79,
-  63: 80,
-  90: 81,
-  11: 82,
-  120: 83,
-  5: 84,
-  74: 85,
-  108: 86,
-  94: 87,
-  124: 88,
-  25: 89,
-  99: 90,
-  69: 91,
-  35: 92,
-  13: 93,
-  122: 94,
-  113: 95,
-  53: 96,
-  24: 97,
-  85: 98,
-  83: 99,
-  71: 100,
-  131: 101,
-  96: 102,
-  101: 103,
-  29: 104,
-  7: 105,
-  15: 106,
-  112: 107,
-  79: 108,
-  1: 109,
-  109: 110,
-  127: 111,
-  91: 112,
-  26: 113,
-  61: 114,
-  103: 115,
-  2: 116,
-  77: 117,
-  18: 118,
-  92: 119,
-  84: 120,
-  9: 121,
-  19: 122,
-  130: 123,
-  97: 124,
-  104: 125,
-  46: 126,
-  78: 127,
-  28: 128,
-  114: 129,
-  126: 130,
-  111: 131
-};
-
-export const MiiSwitchColorTable = [
-  91, 80, 0, 81, 95, 60, 72, 74, 90, 93, 2, 61, 33, 44, 70, 4, 31, 73, 94, 83,
-  5, 6, 86, 3, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-  23, 24, 25, 26, 27, 28, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-  45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 62, 63, 64, 65,
-  66, 67, 68, 69, 71, 75, 76, 77, 78, 79, 82, 84, 85, 87, 88, 89, 92, 96, 97,
-  98, 99
+export const MiiEyeTable: number[][] = [
+  // The real value is looked up and displayed here
+  [2, 4, 0, 8, 39, 17, 1, 26, 16, 15, 27, 20],
+  [33, 11, 19, 32, 9, 12, 23, 34, 21, 25, 40, 35],
+  [5, 41, 13, 36, 37, 6, 24, 30, 31, 18, 28, 46],
+  [7, 44, 38, 42, 45, 29, 3, 43, 22, 10, 14, 47],
+  [48, 49, 50, 53, 59, 56, 54, 58, 57, 55, 51, 52]
 ];
 
-export const MiiSwitchSkinColorTable: Record<number, number> = {
-  0: 0,
-  7: 1,
-  1: 2,
-  4: 3,
-  5: 4,
-  6: 5,
-  3: 6,
-  2: 7,
-  8: 8,
-  9: 9
-};
+export const MiiEyebrowTable: number[][] = [
+  [6, 0, 12, 1, 9, 19, 7, 21, 8, 17, 5, 4],
+  [11, 10, 2, 3, 14, 20, 15, 13, 22, 18, 16, 23]
+];
+export const MiiMouthTable: number[][] = [
+  [23, 1, 19, 21, 22, 5, 0, 8, 10, 16, 6, 13],
+  [7, 9, 2, 17, 3, 4, 15, 11, 20, 18, 14, 12],
+  [27, 30, 24, 25, 29, 28, 26, 35, 31, 34, 33, 32]
+];
+export const MiiNoseTable: number[][] = [
+  [1, 10, 2, 3, 6, 0, 5, 4, 8, 9, 7, 11],
+  [13, 14, 12, 17, 16, 15]
+];
+
+export const MiiHairTable: number[][] = [
+  [33, 47, 40, 37, 32, 107, 48, 51, 55, 70, 44, 66],
+  [52, 50, 38, 49, 43, 31, 56, 68, 62, 115, 76, 119],
+  [64, 81, 116, 121, 22, 58, 60, 87, 125, 117, 73, 75],
+  [42, 89, 57, 54, 80, 34, 23, 86, 88, 118, 39, 36],
+  [45, 67, 59, 65, 41, 30, 12, 16, 10, 82, 128, 129],
+  [14, 95, 105, 100, 6, 20, 93, 102, 27, 4, 17, 110],
+  [123, 8, 106, 72, 3, 21, 0, 98, 63, 90, 11, 120],
+  [5, 74, 108, 94, 124, 25, 99, 69, 35, 13, 122, 113],
+  [53, 24, 85, 83, 71, 131, 96, 101, 29, 7, 15, 112],
+  [79, 1, 109, 127, 91, 26, 61, 103, 2, 77, 18, 92],
+  [84, 9, 19, 130, 97, 104, 46, 78, 28, 114, 126, 111]
+];
+
+export const MiiSwitchColorTable = [
+  [2, 24, 10, 23, 15, 20, 21, 25, 26, 27],
+  [28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
+  [38, 39, 40, 41, 42, 43, 44, 45, 46, 47],
+  [48, 16, 49, 12, 50, 51, 52, 53, 54, 55],
+  [56, 57, 58, 59, 13, 60, 61, 62, 63, 64],
+  [65, 66, 67, 68, 69, 70, 71, 72, 73, 74],
+  [5, 11, 75, 76, 77, 78, 79, 80, 81, 82],
+  [14, 83, 6, 17, 7, 84, 85, 86, 87, 88],
+  [1, 3, 89, 19, 90, 91, 22, 92, 93, 94],
+  [8, 0, 95, 9, 18, 4, 96, 97, 98, 99]
+];
+
+export const MiiSwitchSkinColorTable: number[][] = [
+  [0, 7, 1, 4, 5],
+  [6, 3, 2, 8, 9]
+];
 
 export function rearrangeArray(
   array: any[],
-  lookupTable: Record<number, number>
+  lookupTable: Record<number, number> | number[][],
+  separator = makeSeparatorGapThinDesktop
 ): any[] {
   let rearrangedArray: any[] = [];
 
-  for (const index in lookupTable) {
-    const newIndex = lookupTable[index];
-    rearrangedArray[newIndex] = array[parseInt(index)];
+  if (Array.isArray(lookupTable) && Array.isArray(lookupTable[0])) {
+    // 2D array case (page-based sorting with separators)
+    for (const page of lookupTable) {
+      let pageItems = page
+        .map((index) => array[index])
+        .filter((i) => i !== undefined);
+      if (rearrangedArray.length > 0 && pageItems.length > 0) {
+        rearrangedArray.push(separator()); // Add separator between pages
+      }
+      rearrangedArray.push(...pageItems);
+    }
+  } else {
+    // 1D mapping case (direct index reassignment)
+    for (const realIndex in lookupTable) {
+      const lookupIndex = (lookupTable as Record<number, number>)[realIndex];
+      rearrangedArray[parseInt(realIndex)] = array[lookupIndex];
+    }
+    rearrangedArray = rearrangedArray.filter((i) => i !== undefined);
   }
-
-  rearrangedArray = rearrangedArray.filter((i) => i !== undefined);
-
-  // console.log("rearranged:", rearrangedArray);
 
   return rearrangedArray;
 }
@@ -207,6 +103,11 @@ export const makeSeparatorGapFSI: () => any = () => ({
 export const makeSeparatorGapThinFSI: () => any = () => ({
   type: FeatureSetType.Misc,
   html: new Html("div").class("separator-gap-thin"),
+  select() {}
+});
+export const makeSeparatorGapThinDesktop: () => any = () => ({
+  type: FeatureSetType.Misc,
+  html: new Html("div").class("separator-gap-thin-desktop"),
   select() {}
 });
 export const makeSeparatorGapThin = () =>

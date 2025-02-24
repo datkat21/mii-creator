@@ -1,5 +1,5 @@
-import _ from "../../external/struct-fu/lib";
-import type { Field, Struct } from "../../external/struct-fu/types/Generic";
+import _ from "../../external/ffl.js/struct-fu-full";
+import type { Struct } from "../../external/ffl.js/struct-fu";
 
 export const NnMiiCharInfo = _.struct([
   _.byte("createId", 16),
@@ -59,7 +59,7 @@ export const NnMiiCharInfo = _.struct([
   _.uint8("reserved")
 ]) as Struct;
 export type NnMiiCharInfo = {
-  createId: object;
+  createId: Uint8Array;
   nickname: string;
   fontRegion: number;
   favoriteColor: number;

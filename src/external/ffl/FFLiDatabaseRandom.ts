@@ -12,12 +12,19 @@ import {
   RANDOM_PARTS_ARRAY_MOUTH_TYPE,
   RANDOM_PARTS_ARRAY_NOSE_TYPE
 } from "./RandomParts";
-import Mii from "../mii-js/mii";
+import Mii from "../../class/MiiData";
 import {
   FFL_MOUTH_COLOR_MAX,
   FFLFavoriteColor,
   FFLiiGetEyebrowRotateOffset
 } from "./FFLTypes";
+import { MiiCreatorOriginPlatform } from "../../class/struct/MiiCreatorV4Data";
+import {
+  Ver3EyeColorTable,
+  Ver3GlassColorTable,
+  Ver3HairColorTable,
+  Ver3MouthColorTable
+} from "../../constants/ColorTables";
 
 function DetermineParam(
   pGender: FFLGender,
@@ -135,7 +142,7 @@ export function FFLiDatabaseRandom_Get(
   console.log("Gender,age,race", gender, age, race);
 
   //     pCharInfo.miiVersion = 3;
-  pCharInfo.deviceOrigin = 3;
+  pCharInfo.originPlatform = MiiCreatorOriginPlatform.FFL_Wii_U;
   //     s32 basePositionY = 0;
   let basePositionY = 0;
   //     if (gender == FFL_GENDER_FEMALE || age == FFL_AGE_CHILD)
@@ -154,85 +161,89 @@ export function FFLiDatabaseRandom_Get(
   //     pCharInfo.eyeScale = 4;
   //     pCharInfo.eyeScaleY = 3;
   //     s32 eyeRotateOffsetTarget;
-  pCharInfo.faceType = GetRandomParts(
+  pCharInfo.facelineType = GetRandomParts(
     RANDOM_PARTS_ARRAY_FACE_TYPE[gender][age][race]
   );
-  pCharInfo.skinColor = GetRandomParts(
+  pCharInfo.facelineColor = GetRandomParts(
     RANDOM_PARTS_ARRAY_FACELINE_COLOR[gender][race]
   );
-  pCharInfo.wrinklesType = GetRandomParts(
+  pCharInfo.facelineWrinkle = GetRandomParts(
     RANDOM_PARTS_ARRAY_FACE_LINE[gender][age][race]
   );
-  pCharInfo.makeupType = GetRandomParts(
+  pCharInfo.facelineMake = GetRandomParts(
     RANDOM_PARTS_ARRAY_FACE_MAKEUP[gender][age][race]
   );
   pCharInfo.hairType = GetRandomParts(
     RANDOM_PARTS_ARRAY_HAIR_TYPE[gender][age][race]
   );
-  pCharInfo.hairColor = GetRandomParts(
-    RANDOM_PARTS_ARRAY_HAIR_COLOR[race][age]
-  );
+  pCharInfo.hairColor =
+    Ver3HairColorTable[
+      GetRandomParts(RANDOM_PARTS_ARRAY_HAIR_COLOR[race][age])
+    ];
   if (fixedSettings.hairColor !== undefined) {
-    pCharInfo.hairColor = fixedSettings.hairColor;
+    pCharInfo.hairColor = Ver3HairColorTable[fixedSettings.hairColor];
   }
-  pCharInfo.flipHair = Boolean(Math.ceil(Math.random() * 2));
+  pCharInfo.hairFlip = Math.ceil(Math.random() * 2) - 1;
   pCharInfo.eyeType = GetRandomParts(
     RANDOM_PARTS_ARRAY_EYE_TYPE[gender][age][race]
   );
-  pCharInfo.eyeColor = GetRandomParts(RANDOM_PARTS_ARRAY_EYE_COLOR[race]);
+  pCharInfo.eyeColor =
+    Ver3EyeColorTable[GetRandomParts(RANDOM_PARTS_ARRAY_EYE_COLOR[race])];
   if (fixedSettings.eyeColor !== undefined) {
-    pCharInfo.eyeColor = fixedSettings.eyeColor;
+    pCharInfo.eyeColor = Ver3EyeColorTable[fixedSettings.eyeColor];
   }
   pCharInfo.eyeScale = 4;
-  pCharInfo.eyeVerticalStretch = 3;
+  pCharInfo.eyeAspect = 3;
   let eyeRotateOffsetTarget: number;
   if (gender == FFLGender.FFL_GENDER_MALE) {
-    pCharInfo.eyeRotation = 4;
+    pCharInfo.eyeRotate = 4;
     eyeRotateOffsetTarget = FFLiiGetEyeRotateOffset(2);
   } else {
-    pCharInfo.eyeRotation = 3;
+    pCharInfo.eyeRotate = 3;
     eyeRotateOffsetTarget = FFLiiGetEyeRotateOffset(4);
   }
   const eyeRotateOffsetBase = FFLiiGetEyeRotateOffset(pCharInfo.eyeType);
-  pCharInfo.eyeSpacing = 2;
-  pCharInfo.eyeYPosition = basePositionY + 12;
-  pCharInfo.eyeRotation += eyeRotateOffsetTarget - eyeRotateOffsetBase;
+  pCharInfo.eyeX = 2;
+  pCharInfo.eyeY = basePositionY + 12;
+  pCharInfo.eyeRotate += eyeRotateOffsetTarget - eyeRotateOffsetBase;
   pCharInfo.eyebrowType = GetRandomParts(
     RANDOM_PARTS_ARRAY_EYEBROW_TYPE[gender][age][race]
   );
   pCharInfo.eyebrowColor = pCharInfo.hairColor;
   pCharInfo.eyebrowScale = 4;
-  pCharInfo.eyebrowVerticalStretch = 3;
-  pCharInfo.eyebrowRotation = 6;
-  pCharInfo.eyebrowSpacing = 2;
+  pCharInfo.eyebrowAspect = 3;
+  pCharInfo.eyebrowRotate = 6;
+  pCharInfo.eyebrowX = 2;
   let eyebrowRotateOffsetTarget;
   if (race == FFLRace.FFL_RACE_ASIAN) {
-    pCharInfo.eyebrowYPosition = basePositionY + 9;
+    pCharInfo.eyebrowY = basePositionY + 9;
     eyebrowRotateOffsetTarget = FFLiiGetEyebrowRotateOffset(6);
   } else {
-    pCharInfo.eyebrowYPosition = basePositionY + 10;
+    pCharInfo.eyebrowY = basePositionY + 10;
     eyebrowRotateOffsetTarget = FFLiiGetEyebrowRotateOffset(0);
   }
   const eyebrowRotateOffsetBase = FFLiiGetEyebrowRotateOffset(
     pCharInfo.eyebrowType
   );
-  pCharInfo.eyebrowRotation +=
+  pCharInfo.eyebrowRotate +=
     eyebrowRotateOffsetTarget - eyebrowRotateOffsetBase;
   pCharInfo.noseType = GetRandomParts(
     RANDOM_PARTS_ARRAY_NOSE_TYPE[gender][age][race]
   );
   pCharInfo.noseScale = gender == FFLGender.FFL_GENDER_MALE ? 4 : 3;
-  pCharInfo.noseYPosition = basePositionY + 9;
+  pCharInfo.noseY = basePositionY + 9;
   pCharInfo.mouthType = GetRandomParts(
     RANDOM_PARTS_ARRAY_MOUTH_TYPE[gender][age][race]
   );
   pCharInfo.mouthColor =
-    gender == FFLGender.FFL_GENDER_MALE
-      ? 0
-      : Math.floor(Math.random() * FFL_MOUTH_COLOR_MAX);
+    Ver3MouthColorTable[
+      gender == FFLGender.FFL_GENDER_MALE
+        ? 0
+        : Math.floor(Math.random() * FFL_MOUTH_COLOR_MAX)
+    ];
   pCharInfo.mouthScale = 4;
-  pCharInfo.mouthHorizontalStretch = 3;
-  pCharInfo.mouthYPosition = basePositionY + 13;
+  pCharInfo.mouthAspect = 3;
+  pCharInfo.mouthY = basePositionY + 13;
   let mustacheType, beardType, mustachePositionY;
   if (
     gender == FFLGender.FFL_GENDER_MALE &&
@@ -261,20 +272,20 @@ export function FFLiDatabaseRandom_Get(
   }
   pCharInfo.mustacheType = mustacheType;
   pCharInfo.beardType = beardType;
-  pCharInfo.facialHairColor = pCharInfo.hairColor;
+  pCharInfo.beardColor = pCharInfo.hairColor;
   pCharInfo.mustacheScale = 4;
-  pCharInfo.mustacheYPosition = mustachePositionY;
-  pCharInfo.glassesType = GetRandomGlassType(age);
-  pCharInfo.glassesColor = 0;
-  pCharInfo.glassesScale = 4;
-  pCharInfo.glassesYPosition = basePositionY + 10;
-  pCharInfo.moleEnabled = Boolean(0);
+  pCharInfo.mustacheY = mustachePositionY;
+  pCharInfo.glassType = GetRandomGlassType(age);
+  pCharInfo.glassColor = Ver3GlassColorTable[Math.floor(Math.random() * 6)];
+  pCharInfo.glassScale = 4;
+  pCharInfo.glassY = basePositionY + 10;
+  pCharInfo.moleType = 0;
   pCharInfo.moleScale = 4;
-  pCharInfo.moleXPosition = 2;
-  pCharInfo.moleYPosition = 20;
+  pCharInfo.moleX = 2;
+  pCharInfo.moleY = 20;
   pCharInfo.height = 64;
   pCharInfo.build = 64;
-  pCharInfo.miiName = "no name";
+  pCharInfo.nickname = "no name";
   // creator name is unset
   pCharInfo.gender = gender;
   pCharInfo.birthMonth = 0;
@@ -285,16 +296,7 @@ export function FFLiDatabaseRandom_Get(
   if (fixedSettings.favoriteColor !== undefined) {
     pCharInfo.favoriteColor = fixedSettings.favoriteColor;
   }
-  pCharInfo.favorite = false;
-  pCharInfo.allowCopying = true;
-  pCharInfo.profanityFlag = false;
-  // pCharInfo.nonUserMii= true;
-  pCharInfo.regionLock = 0;
-  pCharInfo.characterSet = 0; // FFL_FONT_REGION_JP_US_EU;
-  pCharInfo.pageIndex = 0;
-  pCharInfo.slotIndex = 0;
-  pCharInfo.deviceOrigin = 4; //FFL_BIRTH_PLATFORM_WII_U;
-  // pCharInfo.authorType = 0;
+  pCharInfo.favorite = 0;
 }
 
 //@ts-expect-error Debugging

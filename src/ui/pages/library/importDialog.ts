@@ -1,8 +1,9 @@
 import localforage from "localforage";
-import type Mii from "../../../external/mii-js/mii";
+import type Mii from "../../../class/MiiData";
 import Modal from "../../components/Modal";
-import { _shutdown, Library, miiIconUrl, newMiiId } from "../Library";
+import { _shutdown, Library, getMiiIcon, newMiiId } from "../Library";
 import Html from "@datkat21/html";
+import { dataToBase64 } from "../../../util/dataConvert";
 
 export async function importMiiConfirmation(
   mii: Mii,
@@ -23,7 +24,7 @@ export async function importMiiConfirmation(
       text: "Save",
       async callback(e) {
         const id = await newMiiId();
-        await localforage.setItem(id, mii.encode().toString("base64"));
+        await localforage.setItem(id, dataToBase64(mii.export()));
         _shutdown()();
         Library(id);
       }
@@ -40,10 +41,10 @@ export async function importMiiConfirmation(
       new Html("small").text(source),
       new Html("span")
         .style({ "font-size": "20px" })
-        .text(`${mii.miiName} has arrived!`),
+        .text(`${mii.nickname} has arrived!`),
       new Html("img")
         .attr({
-          src: miiIconUrl(mii, "qr_code", "all_body_sugar", 260)
+          src: await getMiiIcon(mii, "import", "all_body_sugar", 260)
         })
         .style({
           width: "260px",

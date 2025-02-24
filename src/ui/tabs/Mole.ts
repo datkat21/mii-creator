@@ -19,12 +19,13 @@ export function MoleTab(data: TabRenderInit) {
               type: FeatureSetType.Switch,
               iconOff: "Disable",
               iconOn: "Enable",
-              property: "moleEnabled",
-              part: RenderPart.Face
+              property: "moleType",
+              part: RenderPart.Face,
+              isNumber: true
             },
             {
               type: FeatureSetType.Range,
-              property: "moleYPosition",
+              property: "moleY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
@@ -36,7 +37,7 @@ export function MoleTab(data: TabRenderInit) {
             },
             {
               type: FeatureSetType.Range,
-              property: "moleXPosition",
+              property: "moleX",
               iconStart: EditorIcons.positionPushIn,
               iconEnd: EditorIcons.positionPushOut,
               soundStart: "move_together",

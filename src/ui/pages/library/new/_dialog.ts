@@ -1,14 +1,14 @@
 import Html from "@datkat21/html";
 import Modal from "../../../components/Modal";
 import { _shutdown, Library, newMiiId } from "../../Library";
-import Mii from "../../../../external/mii-js/mii";
+import Mii from "../../../../class/MiiData";
 import localforage from "localforage";
-import { Buffer } from "../../../../../node_modules/buffer";
 import { newFromScratch } from "./fromScratch";
 import { newFromQRCode } from "./qrCode";
 import { newFromNNID, newFromPNID } from "./nnidPnid";
 import { newFromLookalike } from "./lookalike";
 import { newFromRandonNNID } from "./randomNnid";
+import { dataToBase64 } from "../../../../util/dataConvert";
 
 export const miiCreateDialog = () => {
   const m = Modal.modal(
@@ -29,11 +29,11 @@ export const miiCreateDialog = () => {
       }
     },
     {
-      text: "FFSD/MiiCreator data",
+      text: "Mii data file",
       callback: () => {
         let id: string;
         let modal = Modal.modal(
-          "Import FFSD/MiiCreator data",
+          "Mii data files import",
           "",
           "body",
           {
@@ -53,37 +53,55 @@ export const miiCreateDialog = () => {
           .qsa(".modal-body .flex-group,.modal-body span")!
           .forEach((q) => q!.style({ display: "none" }));
         modal.qs(".modal-body")!.appendMany(
-          new Html("span").text("Select a FFSD or .miic file to import"),
+          new Html("span").text(
+            "Import Mii data file(s) here. Supported formats: .ffsd/.cfsd, .miic, .charinfo, .mnms"
+          ),
           new Html("input")
-            .attr({ type: "file", accept: ".ffsd,.cfsd,.miic" })
+            .attr({ type: "file", accept: ".ffsd,.cfsd,.miic", multiple: "on" })
             .style({ margin: "auto" })
-            .on("change", (e) => {
+            .on("change", async (e) => {
               const target = e.target as HTMLInputElement;
               console.log("Files", target.files);
 
               const f = new FileReader();
 
-              f.readAsArrayBuffer(target.files![0]);
-              f.onload = async () => {
+              let processed = 0;
+
+              function loadFile(file: File) {
+                return new Promise<void>((resolve) => {
+                  f.readAsArrayBuffer(file);
+                  f.onload = async () => {
+                    const miiData = new Uint8Array(f.result as ArrayBuffer);
+
+                    const mii = new Mii(miiData);
+
+                    const miiDataToSave = dataToBase64(mii.export("miic"));
+
+                    id = await newMiiId();
+
+                    await localforage.setItem(id, miiDataToSave);
+                    processed++;
+                    resolve();
+                  };
+                });
+              }
+              for (const file of Array.from(target.files!)) {
                 try {
-                  // prevent error when importing converted Wii-era data
-                  const miiData = Buffer.from(f.result as ArrayBuffer);
-
-                  const mii = new Mii(miiData);
-
-                  const miiDataToSave = mii.encode().toString("base64");
-
-                  id = await newMiiId();
-
-                  await localforage.setItem(id, miiDataToSave);
-
-                  _shutdown()();
-                  modal.qs(".modal-body button")!.elm.click();
+                  await loadFile(file).catch((e) => {
+                    throw e;
+                  });
                 } catch (e) {
                   Modal.alert("Error", `Invalid Mii data: ${e}`);
+                  console.error(e);
                   target.value = "";
+                  continue;
                 }
-              };
+              }
+
+              if (processed > 0) {
+                _shutdown()();
+                modal.qs(".modal-body button")!.elm.click();
+              }
             })
         );
       }

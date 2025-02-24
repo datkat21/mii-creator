@@ -1,16 +1,38 @@
+import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
+import Notify from "../ui/components/Notify";
 import { allocateArray } from "../util/allocateArray";
+import { dataToBase64, dataToHex } from "../util/dataConvert";
 import { Ver3StoreData } from "./struct/FFLStoreData";
-import { Ver3StoreDataToMiiCreatorV4Data as MiiCreatorV3DataToV4 } from "./struct/MiiCreatorV3Data";
+import {
+  MiiCreatorV3Data,
+  MiiCreatorV3DataToMiiCreatorV4Data as MiiCreatorV3DataToV4
+} from "./struct/MiiCreatorV3Data";
 import {
   EmptyMiiCreatorV4Data,
-  type MiiCreatorV4Data
+  MiiCreatorV4Data,
+  MiiCreatorV4DataToFFSD,
+  validate
 } from "./struct/MiiCreatorV4Data";
+import { NnMiiCharInfo } from "./struct/NnMiiCharInfo";
+import {
+  RFLStoreData,
+  RFLStoreDataToMiiCreatorV4Data
+} from "./struct/RFLStoreData";
+import { StudioData } from "./struct/StudioData";
 
 export default class Mii {
+  miicVersion!: number;
+  originPlatform!: number;
+  authorId!: Uint8Array;
+  createId!: Uint8Array;
+  creator!: string;
+  nickname!: string;
   beardColor!: number;
   beardType!: number;
+  birthDay!: number;
+  birthMonth!: number;
+  birthYear!: number;
   build!: number;
-  createId!: object;
   eyeAspect!: number;
   eyebrowAspect!: number;
   eyebrowColor!: number;
@@ -29,7 +51,8 @@ export default class Mii {
   facelineMake!: number;
   facelineType!: number;
   facelineWrinkle!: number;
-  favorite!: boolean;
+  facePaintColor!: number;
+  favorite!: number;
   favoriteColor!: number;
   fontRegion!: number;
   gender!: number;
@@ -40,7 +63,11 @@ export default class Mii {
   hairColor!: number;
   hairFlip!: number;
   hairType!: number;
+  hatCommonColor!: number;
+  hatFavoriteColor!: number;
+  hatType!: number;
   height!: number;
+  hideNose!: number;
   moleScale!: number;
   moleType!: number;
   moleX!: number;
@@ -53,42 +80,314 @@ export default class Mii {
   mustacheScale!: number;
   mustacheType!: number;
   mustacheY!: number;
-  nickname!: string;
   noseScale!: number;
   noseType!: number;
   noseY!: number;
+  pantsColor!: number;
+  personality!: number;
   regionMove!: number;
-  special!: boolean;
+  shirtColor!: number;
+  special!: number;
+  valid!: boolean;
 
-  constructor(initData: Uint8Array) {
-    this.import(Mii.parseData(initData));
+  // create
+  constructor(initData: Uint8Array | string) {
+    let importData: Uint8Array;
+
+    if (typeof initData === "string")
+      importData = parseHexOrB64ToUint8Array(initData);
+    else importData = initData;
+
+    this.import(Mii.parseData(importData));
   }
 
-  // decodes data of the following types and turns them into the internal data format
-  // Switch CharInfo - .charinfo
+  /** decodes data of the following types and turns them into the internal data format */
   static parseData(input: Uint8Array): MiiCreatorV4Data {
-    let data: MiiCreatorV4Data = EmptyMiiCreatorV4Data;
+    let data: MiiCreatorV4Data = EmptyMiiCreatorV4Data();
     let tempArray: Uint8Array;
     switch (input.length) {
       // 74/76 byte RFLStoreData - .rsd
       case 74:
       case 76:
         tempArray = allocateArray(96, input);
-        data = MiiCreatorV3DataToV4(Ver3StoreData.unpack(tempArray));
+        data = RFLStoreDataToMiiCreatorV4Data(RFLStoreData.unpack(tempArray));
+        break;
+      // 88 byte nn::mii::CharInfo - .charinfo
+      case 88:
+        // tempArray = allocateArray(88, input);
+        const d = NnMiiCharInfo.unpack(input) as NnMiiCharInfo;
+
+        var tmpCreateId = new Uint8Array(10);
+        tmpCreateId.set(d.createId.slice(0, 10), 0);
+        d.createId = tmpCreateId;
+
+        data = { ...data, ...d };
+
+        // split CharInfo's CreateID
+        data.createId.set(d.createId.slice(0, 10), 0);
+        data.authorId.set(d.createId.slice(10), 0);
+        data.creator = "";
         break;
       // 92/96-byte Ver3StoreData - .cfsd/.ffsd
       case 92:
       case 96:
+        tempArray = allocateArray(108, input);
+        data = MiiCreatorV3DataToV4(
+          MiiCreatorV3Data.unpack(
+            MiiCreatorV3Data.pack(Ver3StoreData.unpack(tempArray))
+          )
+        );
+        break;
       // 106/108-byte Mii Creator Data - .miic
       case 106:
       case 108:
         tempArray = allocateArray(108, input);
-        data = MiiCreatorV3DataToV4(Ver3StoreData.unpack(tempArray));
+        data = MiiCreatorV3DataToV4(MiiCreatorV3Data.unpack(tempArray));
         break;
+      // mii creator v4 data
+      case 122:
+        tempArray = allocateArray(122, input);
+        data = MiiCreatorV4Data.unpack(tempArray);
+        break;
+      default:
+        throw new Error(`Mii data type not supported (${input.length} bytes)`);
     }
+
+    // HACK: struct-fu is returning uint of -1 as 255,
+    // so we will replace those back here
+    if (data.facePaintColor === 255) data.facePaintColor = -1;
+    if (data.hatCommonColor === 255) data.hatCommonColor = -1;
+    if (data.hatFavoriteColor === 255) data.hatFavoriteColor = -1;
+    if (data.hatType === 255) data.hatType = -1;
+    if (data.pantsColor === 255) data.pantsColor = -1;
+    if (data.personality === 255) data.personality = -1;
+    if (data.shirtColor === 255) data.shirtColor = -1;
+
+    console.log("new data:", data);
 
     return data;
   }
+  static parseDataBinary(input: Uint8Array) {
+    const data = Mii.parseData(input);
+    return MiiCreatorV4Data.pack(data);
+  }
 
-  import(data: MiiCreatorV4Data) {}
+  /** Returns an object version of the current fields */
+  #getObject(
+    override: Partial<Record<keyof MiiCreatorV4Data, any>> | null = null
+  ) {
+    return {
+      miicVersion: this.miicVersion,
+      originPlatform: this.originPlatform,
+      authorId: this.authorId,
+      createId: this.createId,
+      creator: this.creator,
+      nickname: this.nickname,
+      beardColor: this.beardColor,
+      beardType: this.beardType,
+      birthDay: this.birthDay,
+      birthMonth: this.birthMonth,
+      birthYear: this.birthYear,
+      build: this.build,
+      eyeAspect: this.eyeAspect,
+      eyebrowAspect: this.eyebrowAspect,
+      eyebrowColor: this.eyebrowColor,
+      eyebrowRotate: this.eyebrowRotate,
+      eyebrowScale: this.eyebrowScale,
+      eyebrowType: this.eyebrowType,
+      eyebrowX: this.eyebrowX,
+      eyebrowY: this.eyebrowY,
+      eyeColor: this.eyeColor,
+      eyeRotate: this.eyeRotate,
+      eyeScale: this.eyeScale,
+      eyeType: this.eyeType,
+      eyeX: this.eyeX,
+      eyeY: this.eyeY,
+      facelineColor: this.facelineColor,
+      facelineMake: this.facelineMake,
+      facelineType: this.facelineType,
+      facelineWrinkle: this.facelineWrinkle,
+      facePaintColor: this.facePaintColor,
+      favorite: this.favorite,
+      favoriteColor: this.favoriteColor,
+      fontRegion: this.fontRegion,
+      gender: this.gender,
+      glassColor: this.glassColor,
+      glassScale: this.glassScale,
+      glassType: this.glassType,
+      glassY: this.glassY,
+      hairColor: this.hairColor,
+      hairFlip: this.hairFlip,
+      hairType: this.hairType,
+      hatCommonColor: this.hatCommonColor,
+      hatFavoriteColor: this.hatFavoriteColor,
+      hatType: this.hatType,
+      height: this.height,
+      hideNose: this.hideNose,
+      moleScale: this.moleScale,
+      moleType: this.moleType,
+      moleX: this.moleX,
+      moleY: this.moleY,
+      mouthAspect: this.mouthAspect,
+      mouthColor: this.mouthColor,
+      mouthScale: this.mouthScale,
+      mouthType: this.mouthType,
+      mouthY: this.mouthY,
+      mustacheScale: this.mustacheScale,
+      mustacheType: this.mustacheType,
+      mustacheY: this.mustacheY,
+      noseScale: this.noseScale,
+      noseType: this.noseType,
+      noseY: this.noseY,
+      pantsColor: this.pantsColor,
+      personality: this.personality,
+      regionMove: this.regionMove,
+      shirtColor: this.shirtColor,
+      special: this.special,
+      ...override
+    };
+  }
+
+  /** validate state of current fields */
+  verify(): { valid: boolean; reasons: string[] } {
+    return validate(this.#getObject());
+  }
+  validate() {
+    const verify = this.verify();
+    if (verify.valid === true) this.valid = true;
+    else {
+      this.valid = false;
+      Notify.show(
+        `${this.nickname} has invalid data:`,
+        verify.reasons.join(", ")
+      );
+      throw new Error(
+        `Mii data for ${this.nickname} is not valid: ${verify.reasons.join(
+          ", "
+        )}`
+      );
+    }
+  }
+
+  /** import existing miic v4 data */
+  import(data: MiiCreatorV4Data) {
+    this.miicVersion = data.miicVersion;
+    this.originPlatform = data.originPlatform;
+    this.authorId = data.authorId;
+    this.createId = data.createId;
+    this.creator = data.creator;
+    this.nickname = data.nickname;
+    this.beardColor = data.beardColor;
+    this.beardType = data.beardType;
+    this.birthDay = data.birthDay;
+    this.birthMonth = data.birthMonth;
+    this.birthYear = data.birthYear;
+    this.build = data.build;
+    this.eyeAspect = data.eyeAspect;
+    this.eyebrowAspect = data.eyebrowAspect;
+    this.eyebrowColor = data.eyebrowColor;
+    this.eyebrowRotate = data.eyebrowRotate;
+    this.eyebrowScale = data.eyebrowScale;
+    this.eyebrowType = data.eyebrowType;
+    this.eyebrowX = data.eyebrowX;
+    this.eyebrowY = data.eyebrowY;
+    this.eyeColor = data.eyeColor;
+    this.eyeRotate = data.eyeRotate;
+    this.eyeScale = data.eyeScale;
+    this.eyeType = data.eyeType;
+    this.eyeX = data.eyeX;
+    this.eyeY = data.eyeY;
+    this.facelineColor = data.facelineColor;
+    this.facelineMake = data.facelineMake;
+    this.facelineType = data.facelineType;
+    this.facelineWrinkle = data.facelineWrinkle;
+    this.facePaintColor = data.facePaintColor;
+    this.favorite = data.favorite;
+    this.favoriteColor = data.favoriteColor;
+    this.fontRegion = data.fontRegion;
+    this.gender = data.gender;
+    this.glassColor = data.glassColor;
+    this.glassScale = data.glassScale;
+    this.glassType = data.glassType;
+    this.glassY = data.glassY;
+    this.hairColor = data.hairColor;
+    this.hairFlip = data.hairFlip;
+    this.hairType = data.hairType;
+    this.hatFavoriteColor = data.hatFavoriteColor;
+    this.hatCommonColor = data.hatCommonColor;
+    this.hatType = data.hatType;
+    this.height = data.height;
+    this.hideNose = data.hideNose;
+    this.moleScale = data.moleScale;
+    this.moleType = data.moleType;
+    this.moleX = data.moleX;
+    this.moleY = data.moleY;
+    this.mouthAspect = data.mouthAspect;
+    this.mouthColor = data.mouthColor;
+    this.mouthScale = data.mouthScale;
+    this.mouthType = data.mouthType;
+    this.mouthY = data.mouthY;
+    this.mustacheScale = data.mustacheScale;
+    this.mustacheType = data.mustacheType;
+    this.mustacheY = data.mustacheY;
+    this.noseScale = data.noseScale;
+    this.noseType = data.noseType;
+    this.noseY = data.noseY;
+    this.pantsColor = data.pantsColor;
+    this.personality = data.personality;
+    this.regionMove = data.regionMove;
+    this.shirtColor = data.shirtColor;
+    this.special = data.special;
+  }
+
+  /** outputs in specific format */
+  export(
+    outputFormat:
+      | "rsd"
+      | "miic"
+      | "studioData"
+      | "switchCharInfo"
+      | "ffsd" = "miic"
+  ): Uint8Array {
+    this.validate();
+    switch (outputFormat) {
+      case "rsd":
+        throw Notify.show(
+          `Unable to export ${this.nickname}:`,
+          "RSD format is not yet supported."
+        );
+      case "miic":
+        return MiiCreatorV4Data.pack(this.#getObject());
+      case "studioData":
+        return StudioData.pack(
+          this.#getObject({
+            facelineColor:
+              this.facePaintColor !== -1
+                ? this.facePaintColor + 10
+                : this.facelineColor
+          })
+        );
+      case "switchCharInfo":
+        return NnMiiCharInfo.pack(this.#getObject());
+      case "ffsd":
+        return MiiCreatorV4DataToFFSD(this.#getObject(), true);
+    }
+  }
+
+  exportHex(outputFormat: "miic" | "studioData" | "switchCharInfo" | "ffsd") {
+    const data = this.export(outputFormat);
+    return dataToHex(data);
+  }
+
+  exportBase64(
+    outputFormat: "miic" | "studioData" | "switchCharInfo" | "ffsd"
+  ) {
+    const data = this.export(outputFormat);
+    return dataToBase64(data);
+  }
+
+  hasExtendedColors(): boolean {
+    // TODO: implement
+    return true;
+  }
 }

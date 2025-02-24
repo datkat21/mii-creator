@@ -1,18 +1,18 @@
 import Html from "@datkat21/html";
 import localforage from "localforage";
-import { Buffer } from "../../../../../node_modules/buffer";
 import { MiiEditor } from "../../../../class/MiiEditor";
 import { FFLiDatabaseRandom_Get } from "../../../../external/ffl/FFLiDatabaseRandom";
-import Mii from "../../../../external/mii-js/mii";
+import Mii from "../../../../class/MiiData";
 import Modal from "../../../components/Modal";
 import {
   _shutdown,
   Library,
-  miiIconUrl,
+  getMiiIcon,
   newMiiId,
   playLoadSound
 } from "../../Library";
 import { miiCreateDialog } from "./_dialog";
+import { dataToBase64 } from "../../../../util/dataConvert";
 
 export const newFromLookalike = async () => {
   var m = Modal.modal(
@@ -140,12 +140,9 @@ export const newFromLookalike = async () => {
 
   function reroll() {
     randomMiiContainer.clear();
-    for (let i = 0; i < 21; i++) {
+    for (let i = 0; i < 24; i++) {
       const randomMii = new Mii(
-        Buffer.from(
-          "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn",
-          "base64"
-        )
+        "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn"
       );
       FFLiDatabaseRandom_Get(randomMii, options);
 
@@ -153,12 +150,12 @@ export const newFromLookalike = async () => {
         .append(new Html("img").attr({ src: "" }))
         .appendTo(randomMiiContainer);
 
-      miiIconUrl(randomMii, "lookalike").then((icon) => {
+      getMiiIcon(randomMii, "lookalike").then((icon) => {
         playLoadSound();
         button.qs("img")?.attr({ src: icon });
       });
 
-      const randomMiiB64 = randomMii.encode().toString("base64");
+      const randomMiiB64 = dataToBase64(randomMii.export("miic"));
 
       button.on("click", () => {
         // Click the invisible "confirm" button to close the modal normally

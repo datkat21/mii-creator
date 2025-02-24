@@ -1,5 +1,4 @@
-import Mii from "../external/mii-js/mii";
-import { Buffer } from "../../node_modules/buffer/index";
+import Mii from "../class/MiiData";
 import Html from "@datkat21/html";
 import { TabList } from "../ui/components/TabList";
 import EditorIcons from "../constants/EditorIcons";
@@ -13,10 +12,8 @@ import { FavoriteColorTab } from "../ui/tabs/FavoriteColor";
 import { MouthTab } from "../ui/tabs/Mouth";
 import { HairTab } from "../ui/tabs/Hair";
 import {
-  MiiEyeColorTable,
   MiiFavoriteColorIconTable,
   MiiFavoriteColorLookupTable,
-  MiiGlassesColorIconTable,
   SwitchMiiColorTable,
   SwitchMiiColorTableLip
 } from "../constants/ColorTables";
@@ -33,14 +30,16 @@ import { OptionsTab } from "../ui/tabs/Options";
 import { ExtHatTab } from "../ui/tabs/ExtHat";
 import { Mii2DRenderer } from "./2DRenderer";
 import { getSetting } from "../util/SettingsHelper";
+import { dataToBase64 } from "../util/dataConvert";
+import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
 
 export enum MiiGender {
   Male,
   Female
 }
 export enum RenderMode {
-  Canvas2DRenderer,
-  Canvas3DScene
+  Canvas2DRenderer = 0,
+  Canvas3DScene = 1
 }
 export type IconSet = {
   face: string[];
@@ -64,6 +63,7 @@ export enum RenderPart {
 
 let activeMii: Mii;
 export const getMii = () => activeMii;
+let currentEditor: MiiEditor | null = null;
 
 export class MiiEditor {
   mii: Mii;
@@ -83,7 +83,11 @@ export class MiiEditor {
 
   renderingMode!: RenderMode;
   onShutdown!: (mii: string, shutdownProperly?: boolean) => any | Promise<any>;
-  errors: Map<string, boolean>;
+  errors: Map<string, { valid: boolean; reason: string }>;
+
+  static getCurrentEditor() {
+    return currentEditor;
+  }
 
   constructor(
     gender: MiiGender,
@@ -94,6 +98,7 @@ export class MiiEditor {
     init?: string
   ) {
     window.editor = this;
+    currentEditor = this;
 
     document.dispatchEvent(new CustomEvent("editor-launch"));
 
@@ -114,23 +119,8 @@ export class MiiEditor {
       this.onShutdown = onShutdown;
     }
 
-    getSetting("editMode").then((s) => {
-      if (s === "2d") {
-        this.renderingMode = RenderMode.Canvas2DRenderer;
-      } else if (s === "3d") {
-        if (Config.renderer.allow3DMode === true)
-          this.renderingMode = RenderMode.Canvas3DScene;
-        else this.renderingMode = RenderMode.Canvas2DRenderer;
-      }
-    });
-
-    this.mii = new Mii(Buffer.from(initString, "base64") as unknown as Buffer);
+    this.mii = new Mii(initString);
     activeMii = this.mii;
-
-    // Ensure that birthPlatform doesn't cause issues.
-    if (this.mii.deviceOrigin === 0) this.mii.deviceOrigin = 4;
-    // Enable allow copying so QR can be made.
-    if (this.mii.allowCopying === false) this.mii.allowCopying = true;
 
     this.#setupUi();
   }
@@ -163,6 +153,16 @@ export class MiiEditor {
   }
 
   async #setupUi() {
+    const editMode = await getSetting("editMode");
+
+    if (editMode === "2d") {
+      this.renderingMode = RenderMode.Canvas2DRenderer;
+    } else if (editMode === "3d") {
+      if (Config.renderer.allow3DMode === true)
+        this.renderingMode = RenderMode.Canvas3DScene;
+      else this.renderingMode = RenderMode.Canvas2DRenderer;
+    }
+
     this.icons = await fetch("./dist/icons.json?t=" + Date.now()).then((j) =>
       j.json()
     );
@@ -201,6 +201,7 @@ export class MiiEditor {
         nextRenderMode = RenderMode.Canvas2DRenderer;
         break;
     }
+
     const renderModeToggle = AddButtonSounds(
       new Html("button")
         .class("render-mode-toggle")
@@ -250,25 +251,13 @@ export class MiiEditor {
     this.ui.mii.qs(".loader")!.classOff("active");
   }
   #updateCssVars() {
-    let glassesColor: string;
-    if (this.mii.trueGlassesColor > 5)
-      glassesColor = SwitchMiiColorTable[this.mii.trueGlassesColor];
-    else glassesColor = MiiGlassesColorIconTable[this.mii.trueGlassesColor].top;
-    let eyeColor: string;
-    if (this.mii.trueEyeColor > 6) {
-      eyeColor = SwitchMiiColorTable[this.mii.trueEyeColor - 6];
-    } else eyeColor = MiiEyeColorTable[this.mii.fflEyeColor];
-    let mouthColor: { top: string; bottom: string };
-    if (this.mii.trueMouthColor > 6) {
-      mouthColor = {
-        top: SwitchMiiColorTableLip[this.mii.trueMouthColor - 5],
-        bottom: SwitchMiiColorTable[this.mii.trueMouthColor - 5]
-      };
-    } else
-      mouthColor = {
-        top: SwitchMiiColorTableLip[this.mii.fflMouthColor + 19],
-        bottom: SwitchMiiColorTable[this.mii.fflMouthColor + 19]
-      };
+    let glassesColor = SwitchMiiColorTable[this.mii.glassColor];
+
+    let eyeColor = SwitchMiiColorTable[this.mii.eyeColor];
+    let mouthColor = {
+      top: SwitchMiiColorTableLip[this.mii.mouthColor],
+      bottom: SwitchMiiColorTable[this.mii.mouthColor]
+    };
 
     this.ui.base.style({
       "--eye-color": eyeColor,
@@ -281,7 +270,7 @@ export class MiiEditor {
           .padStart(6, "0"),
       "--icon-eyebrow-fill": SwitchMiiColorTable[this.mii.eyebrowColor],
       "--icon-hair-fill": SwitchMiiColorTable[this.mii.hairColor],
-      "--icon-facial-hair-fill": SwitchMiiColorTable[this.mii.facialHairColor],
+      "--icon-facial-hair-fill": SwitchMiiColorTable[this.mii.beardColor],
       "--icon-hat-fill": MiiFavoriteColorIconTable[this.mii.favoriteColor].top,
       "--icon-hat-stroke":
         MiiFavoriteColorIconTable[this.mii.favoriteColor].bottom,
@@ -297,12 +286,9 @@ export class MiiEditor {
           container: content,
           callback: (mii, forceRender, renderPart) => {
             this.mii = mii;
-            if (this.mii.normalMii === false) this.mii.disableSharing = true;
-            else this.mii.disableSharing = false;
             activeMii = mii;
             // use of forceRender forces reload of the head in 3D mode
             this.render(forceRender, renderPart);
-            if (this.ui.scene) this.ui.scene.sparkle();
             this.#updateCssVars();
             this.dirty = true;
           },
@@ -383,9 +369,6 @@ export class MiiEditor {
               {
                 text: "Save & Exit",
                 callback: () => {
-                  // If the Mii is special and we try to save, there's an error that we need to disable sharing
-                  if (getMii().normalMii === false)
-                    getMii().disableSharing = true;
                   this.shutdown();
                 }
               },
@@ -438,6 +421,22 @@ export class MiiEditor {
     // every "img" here should be changed to "canvas.renderer" for new 2d mode.
     switch (this.renderingMode) {
       case RenderMode.Canvas2DRenderer:
+        if (Config.renderer.useRendererServer === false) {
+          if (this.ui.mii.qs("canvas.scene") === null) {
+            await this.#setup3D();
+          }
+          this.ui.mii.qs("canvas.scene")?.style({ display: "block" });
+          this.ui.scene.mii = this.mii;
+          if (forceReloadHead) {
+            // reload head and body
+            this.ui.scene.updateMiiHead(renderPart);
+            this.ui.scene.sparkle();
+          } else {
+            // only reload body
+            this.ui.scene.updateBody(true);
+          }
+          return;
+        }
         if (this.ui.mii.qs("img") === null) {
           this.#setup2D();
         }
@@ -447,7 +446,7 @@ export class MiiEditor {
         this.ui.mii.qs("img")?.style({ display: "block" });
 
         let pantsColor: string = "gray";
-        if (this.mii.normalMii === false) {
+        if (this.mii.special === 1) {
           pantsColor = "gold";
         }
         if (this.mii.favorite) {
@@ -460,14 +459,16 @@ export class MiiEditor {
           .attr({
             src: `${
               Config.renderer.renderFullBodyURL
-            }&data=${encodeURIComponent(
-              this.mii.encodeStudio().toString("hex")
-            )}&${Config.renderer.hatTypeParam}=${
-              this.mii.extHatType + Config.renderer.hatTypeAdd
-            }&${Config.renderer.hatColorParam}=${
-              this.mii.extHatColor + Config.renderer.hatColorAdd
+            }&data=${encodeURIComponent(this.mii.exportHex("studioData"))}&${
+              Config.renderer.hatTypeParam
+            }=${this.mii.hatType + Config.renderer.hatTypeAdd}&${
+              Config.renderer.hatColorParam
+            }=${
+              (this.mii.hatFavoriteColor !== -1
+                ? this.mii.hatFavoriteColor - 1
+                : -1) + Config.renderer.hatColorAdd
             }&miic=${encodeURIComponent(
-              this.mii.encode().toString("base64")
+              dataToBase64(this.mii.export("miic"))
             )}&pantsColor=${pantsColor}`
           });
         // this.ui.renderer.mii = this.mii;
@@ -485,6 +486,7 @@ export class MiiEditor {
         if (forceReloadHead) {
           // reload head and body
           this.ui.scene.updateMiiHead(renderPart);
+          this.ui.scene.sparkle();
         } else {
           // only reload body
           this.ui.scene.updateBody(true);
@@ -499,14 +501,14 @@ export class MiiEditor {
   }
   async shutdown(shouldSave: boolean = true) {
     if (shouldSave) {
-      if (Array.from(this.errors.values()).find((i) => i === true)) {
+      if (Array.from(this.errors.values()).find((i) => i.valid === false)) {
         let errorList = [];
-        for (const [id, value] of this.errors.entries()) {
-          if (value === true) errorList.push(id);
+        for (const value of this.errors.values()) {
+          if (value.valid === false) errorList.push(value.reason);
         }
         Modal.alert(
-          "Error",
-          "Will not save because there are problems with the following items:\n\n" +
+          "Notice",
+          "You need to fix the following issues before you can save:\n\n" +
             errorList.map((e) => `• ${e}`).join("\n")
         );
         return;
@@ -530,18 +532,17 @@ export class MiiEditor {
 
     this.ui.base.classOn("closing");
     setTimeout(() => {
-      if (this.ui.mii.qs("canvas.scene")) {
+      if (this.ui.scene) {
         this.ui.scene.shutdown();
       }
       this.ui.base.cleanup();
       if (this.onShutdown) {
-        this.onShutdown(
-          Buffer.from(this.mii.encode()).toString("base64"),
-          shouldSave
-        );
+        this.onShutdown(dataToBase64(this.mii.export("miic")), shouldSave);
       }
 
       document.dispatchEvent(new CustomEvent("editor-shutdown"));
+      window.editor = null;
+      currentEditor = null;
     }, 500);
   }
 }

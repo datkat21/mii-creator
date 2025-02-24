@@ -2,7 +2,6 @@
 // https://jsfiddle.net/arian_/ckya346z/12/
 import sjcl from "../external/mii-frontend/sjcl.min.js";
 import QrScanner from "../external/mii-frontend/qr-scanner.umd.min.js";
-import { Buffer } from "../../node_modules/buffer";
 // unused temporarily because it isn't loading the extra data correctly from TL qr codes from my testing
 import {
   MiiTLHairSprayToSwitchColor,
@@ -10,6 +9,7 @@ import {
 } from "../constants/ColorTables.js";
 import Modal from "../ui/components/Modal.js";
 import { getSetting } from "./SettingsHelper.js";
+import { dataToBase64, dataToHex } from "./dataConvert.js";
 
 // AES keys
 const AES_CCM_KEY_HEX = "59FC817E6446EA6190347B20E9BDCE52";
@@ -405,8 +405,10 @@ export enum QrScanDataType {
   ExtraDataMiiC
 }
 
-var qrCallback: (data: Buffer, type: QrScanDataType) => any;
-export function setQRCallback(fn: (data: Buffer, type: QrScanDataType) => any) {
+var qrCallback: (data: Uint8Array, type: QrScanDataType) => any;
+export function setQRCallback(
+  fn: (data: Uint8Array, type: QrScanDataType) => any
+) {
   qrCallback = fn;
 }
 
@@ -420,15 +422,12 @@ function handleQrCode(result: { bytes: any; noQrCode: any }) {
   cameraScanner.stop();
 
   const qrData = new Uint8Array(result.bytes);
-  console.log(Buffer.from(qrData).toString("hex"));
+  console.log(dataToHex(qrData));
 
   const decryptedData = decryptAesCcm(qrData.slice(0, 112)); // First 112 bytes are AES-CCM
-  const decryptedStoreDataBuf = Buffer.from(decryptedData);
+  const decryptedStoreDataBuf = decryptedData;
 
-  console.log(
-    "Decrypted QR Store Data:",
-    decryptedStoreDataBuf.toString("base64")
-  );
+  console.log("Decrypted QR Store Data:", dataToBase64(decryptedStoreDataBuf));
 
   // hexEditorBaseOutput.loadFromArray(decryptedData);
   // document.getElementById("extra-data-warning").style.display = "none";
@@ -445,10 +444,7 @@ function handleQrCode(result: { bytes: any; noQrCode: any }) {
         );
 
         if (decryptedExtraData.length === 240) {
-          qrCallback(
-            Buffer.concat([decryptedStoreDataBuf]),
-            QrScanDataType.ExtraDataTL
-          );
+          qrCallback(decryptedStoreDataBuf, QrScanDataType.ExtraDataTL);
           // QrScannerError(
           //   "Tomodachi Life codes won't retain hair dye info yet."
           // );
@@ -481,10 +477,12 @@ function handleQrCode(result: { bytes: any; noQrCode: any }) {
         if (extDataBuf.length === 10 || extDataBuf.length === 12) {
           console.log("This is probably miic data");
           // put together the data
-          qrCallback(
-            Buffer.concat([decryptedStoreDataBuf, extDataBuf]),
-            QrScanDataType.ExtraDataMiiC
+          var newArray = new Uint8Array(
+            decryptedStoreDataBuf.length + extDataBuf.length
           );
+          newArray.set(decryptedStoreDataBuf);
+          newArray.set(extDataBuf, decryptedStoreDataBuf.length);
+          qrCallback(newArray, QrScanDataType.ExtraDataMiiC);
         }
       });
   } else {

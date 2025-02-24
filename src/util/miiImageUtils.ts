@@ -1,29 +1,20 @@
 import qrjs from "../external/mii-frontend/qrjs.min.js";
-import {
-  convertDataToType,
-  supportedFormats
-} from "../external/mii-frontend/data-conversion.js";
-import { encryptAndEncodeVer3StoreDataToQRCodeFormat } from "./EncodeQRCode.js";
-import Mii from "../external/mii-js/mii.js";
-import { Buffer as Buf } from "../../node_modules/buffer/index";
-import { CameraPosition, Mii3DScene, SetupType } from "../class/3DScene.js";
+import { encryptAndEncodeVer3StoreDataToQRCodeFormat } from "./EncodeQRCode";
+import Mii from "../class/MiiData";
+import { CameraPosition, Mii3DScene, SetupType } from "../class/3DScene";
 import Html from "@datkat21/html";
 import { Vector3 } from "three";
-import { AddButtonSounds } from "./AddButtonSounds.js";
-import { Config } from "../config.js";
-
-const ver3Format = supportedFormats.find(
-  (f) => f.className === "Gen2Wiiu3dsMiitomo"
-)!;
+import { AddButtonSounds } from "./AddButtonSounds";
+import { Config } from "../config";
+import { getMiiIcon } from "../ui/pages/Library";
+import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl.js";
 
 const makeQrCodeImage = async (mii: string): Promise<HTMLImageElement> => {
   let convertedVer3Data: Uint8Array, ver3QRData: Uint8Array | any[];
 
-  const miiU8 = new Uint8Array(Buf.from(mii, "base64"));
+  const miiU8 = parseHexOrB64ToUint8Array(mii);
 
-  convertedVer3Data = new Uint8Array(
-    convertDataToType(miiU8, ver3Format, ver3Format.className, true)
-  );
+  convertedVer3Data = new Mii(miiU8).export("ffsd");
 
   ver3QRData = encryptAndEncodeVer3StoreDataToQRCodeFormat(convertedVer3Data);
   // Append any data after the first 96 bytes (fixed by the function above)
@@ -54,28 +45,28 @@ export const getMiiRender = async (
   useBlob: boolean = true
 ): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
-    let tmpMii = new Mii(mii.encode());
+    let tmpMii = new Mii(mii.export());
 
-    if (useExtendedColors === false) {
-      tmpMii.trueEyeColor = tmpMii.fflEyeColor;
-      tmpMii.trueEyebrowColor = tmpMii.fflEyebrowColor;
-      tmpMii.trueFacialHairColor = tmpMii.fflFacialHairColor;
-      tmpMii.trueGlassesColor = tmpMii.fflGlassesColor;
-      tmpMii.trueGlassesType = tmpMii.fflGlassesType;
-      tmpMii.trueHairColor = tmpMii.fflHairColor;
-      tmpMii.trueMouthColor = tmpMii.fflMouthColor;
-      tmpMii.trueSkinColor = tmpMii.fflSkinColor;
+    // if (useExtendedColors === false) {
+    //   tmpMii.trueEyeColor = tmpMii.fflEyeColor;
+    //   tmpMii.trueEyebrowColor = tmpMii.fflEyebrowColor;
+    //   tmpMii.trueFacialHairColor = tmpMii.fflFacialHairColor;
+    //   tmpMii.trueGlassesColor = tmpMii.fflGlassesColor;
+    //   tmpMii.trueGlassesType = tmpMii.fflGlassesType;
+    //   tmpMii.trueHairColor = tmpMii.fflHairColor;
+    //   tmpMii.trueMouthColor = tmpMii.fflMouthColor;
+    //   tmpMii.trueSkinColor = tmpMii.fflSkinColor;
 
-      tmpMii.extEyeColor = tmpMii.fflEyeColor + 8;
-      tmpMii.extHairColor = tmpMii.fflHairColor;
-      tmpMii.extFacelineColor = tmpMii.fflSkinColor;
-      tmpMii.extBeardColor = tmpMii.fflFacialHairColor;
-      tmpMii.extEyebrowColor = tmpMii.fflEyebrowColor;
-      tmpMii.extGlassColor = 0;
-      tmpMii.extGlassType = tmpMii.fflGlassesType;
-      tmpMii.extHatColor = 0;
-      tmpMii.extHatType = 0;
-    }
+    //   tmpMii.extEyeColor = tmpMii.fflEyeColor + 8;
+    //   tmpMii.extHairColor = tmpMii.fflHairColor;
+    //   tmpMii.extFacelineColor = tmpMii.fflSkinColor;
+    //   tmpMii.extBeardColor = tmpMii.fflFacialHairColor;
+    //   tmpMii.extEyebrowColor = tmpMii.fflEyebrowColor;
+    //   tmpMii.extGlassColor = 0;
+    //   tmpMii.extGlassType = tmpMii.fflGlassesType;
+    //   tmpMii.extHatColor = 0;
+    //   tmpMii.extHatType = 0;
+    // }
 
     let parent = new Html("div")
       .style({
@@ -207,16 +198,22 @@ export const QRCodeCanvas = async (
   mii: string,
   extendedColors: boolean = true
 ) => {
-  const miiData = new Mii(Buf.from(mii, "base64"));
-  const render = await loadImage(
-    `${Config.renderer.renderFullBodyAltURL}&data=${encodeURIComponent(
-      miiData.encodeStudio().toString("hex")
-    )}&${Config.renderer.hatTypeParam}=${
-      miiData.extHatType + Config.renderer.hatTypeAdd
-    }&${Config.renderer.hatColorParam}=${
-      miiData.extHatColor + Config.renderer.hatColorAdd
-    }`
-  );
+  const miiData = new Mii(mii);
+  let render: HTMLImageElement;
+  if (Config.renderer.useRendererServer) {
+    render = await loadImage(
+      `${Config.renderer.renderFullBodyAltURL}&data=${encodeURIComponent(
+        miiData.exportHex("studioData")
+      )}&${Config.renderer.hatTypeParam}=${
+        miiData.hatType + 1 + Config.renderer.hatTypeAdd
+      }&${Config.renderer.hatColorParam}=${
+        miiData.hatFavoriteColor - 1 + Config.renderer.hatColorAdd
+      }`
+    );
+  } else {
+    // TODO
+    // render
+  }
   const qrCodeSource = await makeQrCodeImage(mii);
   const background = await getBackground(extendedColors);
 
@@ -256,13 +253,13 @@ export const QRCodeCanvas = async (
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = '500 38px "NTLG", sans-serif';
-  ctx.fillText(miiData.miiName, 1005, 591);
+  ctx.fillText(miiData.nickname, 1005, 591);
   const canvasPngImage = canvas.toDataURL("png", 100);
   return canvasPngImage;
 };
 
 // This recreates the html from the update changelog
-export function createMiiCard(
+export async function createMiiCard(
   parent: Html | HTMLElement,
   name: string,
   username: string,
@@ -283,12 +280,12 @@ export function createMiiCard(
         .attr({
           width: 96,
           draggable: "false",
-          src:
-            Config.renderer.renderHeadshotURLNoParams +
-            `?data=${encodeURIComponent(
-              studioData
-            )}&type=variableiconbody&verifyCharInfo=0&shaderType=switch&width=96&source=credits&characterYRotate=8&bodyType=switch&` +
-            extra
+          src: await getMiiIcon(studioData, "creditIcon", "creditIcon", 128)
+          // Config.renderer.renderHeadshotURLNoParams +
+          // `?data=${encodeURIComponent(
+          //   studioData
+          // )}&type=variableiconbody&verifyCharInfo=0&shaderType=switch&width=96&source=credits&characterYRotate=8&bodyType=switch&` +
+          // extra,
         })
         .style({ width: "96px", height: "96px" }),
       new Html("div")

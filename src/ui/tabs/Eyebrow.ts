@@ -4,7 +4,8 @@ import {
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiHairColorTable,
-  SwitchMiiColorTable
+  SwitchMiiColorTable,
+  Ver3HairColorTable
 } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -12,56 +13,47 @@ import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
+  makeSeparatorGapThinDesktop,
+  MiiEyebrowTable,
   MiiSwitchColorTable,
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
-import type Mii from "../../external/mii-js/mii";
 
 export function EyebrowTab(data: TabRenderInit) {
-  let mii: Mii = data.mii;
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
-      // hacky workaround for color palette
-      onChange: (newMii, forceRender, renderPart) => {
-        data.callback(newMii, forceRender, renderPart);
-        mii = newMii;
-      },
+      onChange: data.callback,
       entries: {
         eyebrowType: {
           label: "Type",
-          items: ArrayNum(24).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            icon: data.icons.eyebrows[k],
-            part: RenderPart.Face
-          }))
+          items: rearrangeArray(
+            ArrayNum(24).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k,
+              icon: data.icons.eyebrows[k],
+              part: RenderPart.Face
+            })),
+            MiiEyebrowTable,
+            makeSeparatorGapThinDesktop
+          )
         },
         eyebrowColor: {
           label: EditorIcons.color,
-          validationProperty: "trueEyebrowColor",
-          // EXTREMELY HACKY but works..
-          validationFunction() {
-            if (mii.trueEyebrowColor > 7) {
-              return mii.trueEyebrowColor + 8;
-            } else return mii.trueEyebrowColor;
-          },
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,
-              value: k,
-              color: MiiHairColorTable[k],
-              part: RenderPart.Face,
-              property: "fflEyebrowColor"
+              value: Ver3HairColorTable[k],
+              color: MiiHairColorTable[Ver3HairColorTable[k]],
+              part: RenderPart.Face
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
               ArrayNum(100).map((k) => ({
                 type: FeatureSetType.Icon,
-                value: k + 8,
+                value: k,
                 color: SwitchMiiColorTable[k],
-                part: RenderPart.Face,
-                property: "extEyebrowColor"
+                part: RenderPart.Face
               })),
               MiiSwitchColorTable
             )
@@ -72,7 +64,7 @@ export function EyebrowTab(data: TabRenderInit) {
           items: [
             {
               type: FeatureSetType.Range,
-              property: "eyebrowYPosition",
+              property: "eyebrowY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
@@ -84,7 +76,7 @@ export function EyebrowTab(data: TabRenderInit) {
             },
             {
               type: FeatureSetType.Range,
-              property: "eyebrowSpacing",
+              property: "eyebrowX",
               iconStart: EditorIcons.positionPushIn,
               iconEnd: EditorIcons.positionPushOut,
               soundStart: "move_together",
@@ -95,7 +87,7 @@ export function EyebrowTab(data: TabRenderInit) {
             },
             {
               type: FeatureSetType.Range,
-              property: "eyebrowRotation",
+              property: "eyebrowRotate",
               iconStart: EditorIcons.positionRotateCW,
               iconEnd: EditorIcons.positionRotateCCW,
               soundStart: "rotate_cw",
@@ -118,7 +110,7 @@ export function EyebrowTab(data: TabRenderInit) {
             },
             {
               type: FeatureSetType.Range,
-              property: "eyebrowVerticalStretch",
+              property: "eyebrowAspect",
               iconStart: EditorIcons.positionStretchIn,
               iconEnd: EditorIcons.positionStretchOut,
               soundStart: "vert_stretch_down",

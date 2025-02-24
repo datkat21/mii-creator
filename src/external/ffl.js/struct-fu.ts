@@ -19,6 +19,6 @@ export interface Struct {
   size?: number;
   width?: number;
   name?: string;
-  pack: (val: any) => any;
+  pack: (val: any) => Uint8Array;
   unpack: (val: any) => any;
 }

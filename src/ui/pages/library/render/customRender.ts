@@ -2,7 +2,6 @@ import Html from "@datkat21/html";
 import type CameraControls from "camera-controls";
 import { Color, Vector3, type Mesh } from "three";
 import { GLTFExporter } from "three/examples/jsm/Addons.js";
-import { Buffer } from "../../../../../node_modules/buffer";
 import {
   CameraPosition,
   Mii3DScene,
@@ -10,7 +9,8 @@ import {
 } from "../../../../class/3DScene";
 import { RenderPart } from "../../../../class/MiiEditor";
 import { Config } from "../../../../config";
-import Mii from "../../../../external/mii-js/mii";
+// import Mii from "../../../../external/mii-js/mii";
+import Mii from "../../../../class/MiiData";
 import { AddButtonSounds } from "../../../../util/AddButtonSounds";
 import { downloadLink, saveArrayBuffer } from "../../../../util/downloadLink";
 import { ArrayNum } from "../../../../util/Numbers";
@@ -18,12 +18,15 @@ import { getSetting } from "../../../../util/SettingsHelper";
 import {
   FeatureSetType,
   MiiPagedFeatureSet,
-  type FeatureSetEntry
+  type FeatureSetEntry,
+  type FeatureSetIconItem
 } from "../../../components/MiiPagedFeatureSet";
-import Modal from "../../../components/Modal";
+import Modal, { buttonsOkCancel } from "../../../components/Modal";
 import { importMiiConfirmation } from "../importDialog";
 import { traverse3DMaterialFix } from "../util/3DModel";
 import { cMaterialName } from "../../../../class/3d/shader/fflShaderConst";
+import { getMiiIcon } from "../../Library";
+import { parseHexOrB64ToUint8Array } from "../../../../external/ffl.js/ffl";
 
 enum ExpressionModifier {
   HideNose,
@@ -32,70 +35,70 @@ enum ExpressionModifier {
 
 const expressionTable: {
   name: string;
-  id: string;
+  id: number;
   modifier?: ExpressionModifier;
 }[] = [
-  { name: "Normal", id: "normal" },
-  { name: "Smile", id: "smile" },
-  { name: "Anger", id: "anger" },
-  { name: "Sorrow", id: "sorrow" },
-  { name: "Surprise", id: "surprise" },
-  { name: "Blink", id: "blink" },
-  { name: "Normal (open mouth)", id: "normal_open_mouth" },
-  { name: "Smile (open mouth)", id: "smile_open_mouth" },
-  { name: "Anger (open mouth)", id: "anger_open_mouth" },
-  { name: "Surprise (open mouth)", id: "surprise_open_mouth" },
-  { name: "Sorrow (open mouth)", id: "sorrow_open_mouth" },
-  { name: "Blink (open mouth)", id: "blink_open_mouth" },
-  { name: "Wink (left eye open)", id: "wink_left" },
-  { name: "Wink (right eye open)", id: "wink_right" },
-  { name: "Wink (left eye and mouth open)", id: "wink_left_open_mouth" },
-  { name: "Wink (right eye and mouth open)", id: "wink_right_open_mouth" },
-  { name: "Wink (left eye open and smiling)", id: "like_wink_left" },
-  { name: "Wink (right eye open and smiling)", id: "like_wink_right" },
-  { name: "Frustrated", id: "frustrated" },
-  { name: "Bored", id: "19" },
-  { name: "Bored open mouth", id: "20" },
-  { name: "Sigh mouth straight", id: "21" },
-  { name: "Sigh", id: "22" },
-  { name: "Disgusted mouth straight", id: "23" },
-  { name: "Disgusted", id: "24" },
-  { name: "Love", id: "25" },
-  { name: "Love mouth open", id: "26" },
-  { name: "Determined mouth straight", id: "27" },
-  { name: "Determined", id: "28" },
-  { name: "Cry mouth straight", id: "29" },
-  { name: "Cry", id: "30" },
-  { name: "Big smile mouth straight", id: "31" },
-  { name: "Big smile", id: "32" },
-  { name: "Cheeky", id: "33" },
-  { name: "Resolve eyes funny mouth", id: "35" },
-  { name: "Resolve eyes funny mouth open", id: "36" },
-  { name: "Smug", id: "37" },
-  { name: "Smug mouth open", id: "38" },
-  { name: "Resolve", id: "39" },
-  { name: "Resolve mouth open", id: "40" },
-  { name: "Unbelievable", id: "41" },
-  { name: "Cunning", id: "43" },
-  { name: "Raspberry", id: "45" },
-  { name: "Innocent", id: "47" },
-  { name: "Cat", id: "49", modifier: ExpressionModifier.HideNose },
-  { name: "Dog", id: "51", modifier: ExpressionModifier.HideNose },
-  { name: "Tasty", id: "53" },
-  { name: "Money mouth straight", id: "55" },
-  { name: "Money", id: "56" },
-  { name: "Confused mouth straight", id: "57" },
-  { name: "Confused", id: "58" },
-  { name: "Cheerful mouth straight", id: "59" },
-  { name: "Cheerful", id: "60" },
-  { name: "Blank", id: "61", modifier: ExpressionModifier.HideNoseAndMask },
-  { name: "Grumble mouth straight", id: "63" },
-  { name: "Grumble", id: "64" },
-  { name: "Moved mouth straight", id: "65" },
-  { name: "Moved (aka pleading face)", id: "66" },
-  { name: "Singing mouth small", id: "67" },
-  { name: "Singing", id: "68" },
-  { name: "Stunned", id: "69" }
+  { name: "Normal", id: 0 },
+  { name: "Smile", id: 1 },
+  { name: "Anger", id: 2 },
+  { name: "Sorrow", id: 3 },
+  { name: "Surprise", id: 4 },
+  { name: "Blink", id: 5 },
+  { name: "Normal (open mouth)", id: 6 },
+  { name: "Smile (open mouth)", id: 7 },
+  { name: "Anger (open mouth)", id: 8 },
+  { name: "Surprise (open mouth)", id: 9 },
+  { name: "Sorrow (open mouth)", id: 10 },
+  { name: "Blink (open mouth)", id: 11 },
+  { name: "Wink (left eye open)", id: 12 },
+  { name: "Wink (right eye open)", id: 13 },
+  { name: "Wink (left eye and mouth open)", id: 14 },
+  { name: "Wink (right eye and mouth open)", id: 15 },
+  { name: "Wink (left eye open and smiling)", id: 16 },
+  { name: "Wink (right eye open and smiling)", id: 17 },
+  { name: "Frustrated", id: 18 },
+  { name: "Bored", id: 19 },
+  { name: "Bored open mouth", id: 20 },
+  { name: "Sigh mouth straight", id: 21 },
+  { name: "Sigh", id: 22 },
+  { name: "Disgusted mouth straight", id: 23 },
+  { name: "Disgusted", id: 24 },
+  { name: "Love", id: 25 },
+  { name: "Love mouth open", id: 26 },
+  { name: "Determined mouth straight", id: 27 },
+  { name: "Determined", id: 28 },
+  { name: "Cry mouth straight", id: 29 },
+  { name: "Cry", id: 30 },
+  { name: "Big smile mouth straight", id: 31 },
+  { name: "Big smile", id: 32 },
+  { name: "Cheeky", id: 33 },
+  { name: "Resolve eyes funny mouth", id: 35 },
+  { name: "Resolve eyes funny mouth open", id: 36 },
+  { name: "Smug", id: 37 },
+  { name: "Smug mouth open", id: 38 },
+  { name: "Resolve", id: 39 },
+  { name: "Resolve mouth open", id: 40 },
+  { name: "Unbelievable", id: 41 },
+  { name: "Cunning", id: 43 },
+  { name: "Raspberry", id: 45 },
+  { name: "Innocent", id: 47 },
+  { name: "Cat", id: 49, modifier: ExpressionModifier.HideNose },
+  { name: "Dog", id: 51, modifier: ExpressionModifier.HideNose },
+  { name: "Tasty", id: 53 },
+  { name: "Money mouth straight", id: 55 },
+  { name: "Money", id: 56 },
+  { name: "Confused mouth straight", id: 57 },
+  { name: "Confused", id: 58 },
+  { name: "Cheerful mouth straight", id: 59 },
+  { name: "Cheerful", id: 60 },
+  { name: "Blank", id: 61, modifier: ExpressionModifier.HideNoseAndMask },
+  { name: "Grumble mouth straight", id: 63 },
+  { name: "Grumble", id: 64 },
+  { name: "Moved mouth straight", id: 65 },
+  { name: "Moved (aka pleading face)", id: 66 },
+  { name: "Singing mouth small", id: 67 },
+  { name: "Singing", id: 68 },
+  { name: "Stunned", id: 69 }
 ];
 
 export async function customRender(miiData: Mii) {
@@ -133,14 +136,14 @@ export async function customRender(miiData: Mii) {
   let configuration = {
     fov: 30,
     pose: 0,
-    expression: "normal",
+    expression: 0,
     renderWidth: 720,
     renderHeight: 720,
     cameraPosition: 1,
     animSpeed: 100
   };
 
-  const base64Data = miiData.encodeStudio().toString("hex");
+  const miiDataHex = miiData.exportHex("studioData");
 
   let poseListPerBodyModel: Record<string, number> = {
     wii: 4,
@@ -295,9 +298,8 @@ export async function customRender(miiData: Mii) {
 
           // easter egg !!!!!
           const mii = new Mii(
-            Buffer.from(
-              "A0EAwAAAAAAAAAAAgP9wmS/5Fhz6rQAAAABkAHUAbQBtAHkAAAAAAAAAAAAAAEBAEgAeARJoYxoHA2YWIRQTZgwAAAEAUkhQTQBpAGkAQwByAGUAYQB0AG8AcgAAAK6gAAAICAAAAAAAAGQA",
-              "base64"
+            parseHexOrB64ToUint8Array(
+              "A0EAwAAAAAAAAAAAgP9wmS/5Fhz6rQAAAABkAHUAbQBtAHkAAAAAAAAAAAAAAEBAEgAeARJoYxoHA2YWIRQTZgwAAAEAUkhQTQBpAGkAQwByAGUAYQB0AG8AcgAAAK6gAAAICAAAAAAAAGQA"
             )
           );
           importMiiConfirmation(mii, "Mii Creator (Special Mii)");
@@ -320,16 +322,7 @@ export async function customRender(miiData: Mii) {
     },
     expression: {
       label: "Expression",
-      items: expressionTable.map((k) => ({
-        type: FeatureSetType.Icon,
-        value: String(k.id),
-        icon: `<img class="lazy" width=128 height=128 data-src="${
-          Config.renderer.renderHeadshotURLNoParams
-        }?width=128&scale=1&data=${encodeURIComponent(base64Data)}&expression=${
-          k.id
-        }&type=fflmakeicon&verifyCharInfo=0" title="${k.name}">`,
-        part: RenderPart.Head
-      }))
+      items: []
     },
     animation: {
       label: "Animation",
@@ -348,6 +341,31 @@ export async function customRender(miiData: Mii) {
       ]
     }
   };
+
+  expressionTable.forEach(async (k) => {
+    const expressionItem = {
+      type: FeatureSetType.Icon,
+      value: String(k.id),
+      icon: Config.renderer.useRendererServer
+        ? `<img class="lazy" width=128 height=128 data-src="${
+            Config.renderer.renderHeadshotURLNoParams
+          }?width=128&scale=1&data=${encodeURIComponent(
+            miiDataHex
+          )}&expression=${k.id}&type=fflmakeicon&verifyCharInfo=0" title="${
+            k.name
+          }">`
+        : `<img class="lazy" width=128 height=128 data-src="${await getMiiIcon(
+            miiDataHex,
+            "customRender",
+            "fflmakeicon",
+            128,
+            k.id,
+            false
+          )}" title="${k.name}">`,
+      part: RenderPart.Head
+    };
+    e["expression"].items.push(expressionItem as FeatureSetIconItem);
+  });
 
   // very hacky way to use feature set to create tabs
   MiiPagedFeatureSet({
@@ -480,7 +498,7 @@ export async function customRender(miiData: Mii) {
     if (oldConfiguration.expression !== configuration.expression) {
       scene.traverseAddFaceMaterial(
         scene.getHead() as Mesh,
-        `&data=${encodeURIComponent(base64Data)}&expression=${
+        `&data=${encodeURIComponent(miiDataHex)}&expression=${
           configuration.expression
         }&width=896&verifyCharInfo=0`
       );
@@ -576,6 +594,8 @@ export async function customRender(miiData: Mii) {
 
     scene.focusCamera(CameraPosition.MiiFullBody, true, false);
     parentBox.append(scene.getRendererElement());
+
+    scene.resize();
   });
 
   let shouldClose = await getSetting("autoCloseCustomRender");
@@ -589,7 +609,7 @@ export async function customRender(miiData: Mii) {
       image.onload = () => {
         downloadLink(
           image.src,
-          `${miiData.miiName}_all_body_${new Date().toJSON()}.png`
+          `${miiData.nickname}_all_body_${new Date().toJSON()}.png`
         );
         if (shouldClose) {
           scene.shutdown();
@@ -625,7 +645,7 @@ export async function customRender(miiData: Mii) {
         if (gltf instanceof ArrayBuffer) {
           saveArrayBuffer(
             gltf,
-            `${miiData.miiName}_all_body_${new Date().toJSON()}.glb`
+            `${miiData.nickname}_all_body_${new Date().toJSON()}.glb`
           );
         }
         if (shouldClose) {

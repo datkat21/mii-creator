@@ -32,7 +32,8 @@ import {
   FFLI_NN_MII_COMMON_COLOR_MASK,
   type DrawParamMaterial
 } from "./SwitchShaderMaterials";
-import type Mii from "../../../external/mii-js/mii";
+// import type Mii from "../../../external/mii-js/mii";
+import type Mii from "../../../class/MiiData";
 import { ShaderType } from "../../../constants/BodyShaderTypes";
 import { getSetting } from "../../../util/SettingsHelper";
 import { miitomoFragmentShader, miitomoVertexShader } from "./MiitomoShader";
@@ -217,10 +218,10 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
       case cMaterialName.FFL_MODULATE_TYPE_SHAPE_FOREHEAD:
       case cMaterialName.FFL_MODULATE_TYPE_SHAPE_FACELINE:
         // does not need conversion
-        drawParamMaterial = cFacelineMaterials[mpCharInfo.extFacelineColor];
+        drawParamMaterial = cFacelineMaterials[mpCharInfo.facelineColor];
         break;
       case cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSE:
-        drawParamMaterial = cNoseMaterials[mpCharInfo.extFacelineColor];
+        drawParamMaterial = cNoseMaterials[mpCharInfo.facelineColor];
         break;
       // body: favorite color
       case cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY:
@@ -228,9 +229,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         break;
       case cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS:
         drawParamMaterial =
-          mpCharInfo.normalMii === false
-            ? cPantsMaterials[1]
-            : cPantsMaterials[0];
+          mpCharInfo.special === 1 ? cPantsMaterials[1] : cPantsMaterials[0];
         break;
       // case cMaterialName.CUSTOM_MATERIAL_PARAM_BODY:
       //     drawParamMaterial = cBodyMaterials[mpCharInfo->favoriteColor];
@@ -248,17 +247,15 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
       case cMaterialName.FFL_MODULATE_TYPE_SHAPE_HAIR:
         // HACK: ver3 hair color 0 maps to common color 8
         if (mpCharInfo.hairColor == 0) commonColor = 8;
-        else
-          commonColor = mpCharInfo.extHairColor & FFLI_NN_MII_COMMON_COLOR_MASK;
+        else commonColor = mpCharInfo.hairColor & FFLI_NN_MII_COMMON_COLOR_MASK;
         drawParamMaterial = cHairMaterials[commonColor];
         //RIO_LOG("hair color: %d, specular factor B: %f\n", commonColor, drawParamMaterial.specular.factorB);
         break;
       case cMaterialName.FFL_MODULATE_TYPE_SHAPE_BEARD:
         // HACK: same as above
-        if (mpCharInfo.facialHairColor == 0) commonColor = 8;
+        if (mpCharInfo.beardColor == 0) commonColor = 8;
         else
-          commonColor =
-            mpCharInfo.extBeardColor & FFLI_NN_MII_COMMON_COLOR_MASK;
+          commonColor = mpCharInfo.beardColor & FFLI_NN_MII_COMMON_COLOR_MASK;
         drawParamMaterial = cBeardMaterials[commonColor];
         break;
       default:

@@ -6,6 +6,11 @@ import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
+import {
+  makeSeparatorGapThinDesktop,
+  MiiNoseTable,
+  rearrangeArray
+} from "../../constants/MiiFeatureTable";
 
 export function NoseTab(data: TabRenderInit) {
   data.container.append(
@@ -15,19 +20,23 @@ export function NoseTab(data: TabRenderInit) {
       entries: {
         noseType: {
           label: "Type",
-          items: ArrayNum(18).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            icon: data.icons.nose[k],
-            part: RenderPart.Head
-          }))
+          items: rearrangeArray(
+            ArrayNum(18).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k,
+              icon: data.icons.nose[k],
+              part: RenderPart.Head
+            })),
+            MiiNoseTable,
+            makeSeparatorGapThinDesktop
+          )
         },
         nosePosition: {
           label: "Position",
           items: [
             {
               type: FeatureSetType.Range,
-              property: "noseYPosition",
+              property: "noseY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",

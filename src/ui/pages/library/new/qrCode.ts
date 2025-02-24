@@ -1,6 +1,5 @@
 import Html from "@datkat21/html";
-import { Buffer } from "../../../../../node_modules/buffer";
-import Mii from "../../../../external/mii-js/mii";
+import Mii from "../../../../class/MiiData";
 import {
   initQrCam,
   QrScanDataType,
@@ -96,7 +95,7 @@ export const newFromQRCode = async () => {
   }
 
   // initialize qr callback for data handling
-  setQRCallback((data: Buffer, dataType: QrScanDataType) => {
+  setQRCallback((data: Uint8Array, dataType: QrScanDataType) => {
     try {
       var mii: Mii;
       switch (dataType) {

@@ -1,5 +1,6 @@
 import type { GLTF } from "three/examples/jsm/Addons.js";
-import Mii from "../external/mii-js/mii";
+// import Mii from "../external/mii-js/mii";
+import Mii from "../class/MiiData";
 import * as THREE from "three";
 import { RandomInt } from "./Numbers";
 import { cMaterialName } from "../class/3d/shader/fflShaderConst";
@@ -57,7 +58,7 @@ export async function getHeadModel(
   // In the future, this could be hooked up to a custom rendering library (FFL under WASM or a custom asset loader)
   // For now, this will just return a cube with some FFL shader properties to test if it's working.
 
-  const dataU8 = mii.encodeStudio();
+  const dataU8 = mii.export("studioData");
 
   const modelDesc = FFLCharModelDescDefault;
   modelDesc.resolution = 512;
@@ -137,7 +138,7 @@ export async function getMaskTex(
   // In the future, this could be hooked up to a custom rendering library (FFL under WASM or a custom asset loader)
   // For now, this will just return a cube with some FFL shader properties to test if it's working.
 
-  const dataU8 = mii.encodeStudio();
+  const dataU8 = mii.export("studioData");
 
   const modelDesc = FFLCharModelDescDefault;
   modelDesc.resolution = 512;
