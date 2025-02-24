@@ -113,8 +113,8 @@ function arrayizeField(f, count) {
 /**
  * Defines a new structure with the given fields.
  *
- * @param {string} [name] - The name of the structure.
- * @param {Array} fields - The array of field definitions.
+ * @param {any} [name] - The name of the structure.
+ * @param {Array} [fields] - The array of field definitions.
  * @param {number} [count] - The number of structures in an array.
  * @returns {Object} The defined structure with pack and unpack methods.
  */

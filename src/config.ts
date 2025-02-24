@@ -59,7 +59,7 @@ export const Config = {
 
     // ignore that I'm just writing HTML here
     changelog: `
-    <h1 style="font-size: 20px;text-align: center;">v0.9.3 - QR Code and MiiC v3 Support</h1>
+    <h1 style="font-size: 20px;text-align: center;">v0.9.2 - QR Code and MiiC v3 Support</h1>
 
     <div class="flex-group">
       <img draggable="false" width=96 height=96 src="https://i.imgur.com/sMtNF5a.png">
@@ -187,7 +187,7 @@ export const Config = {
       </div>
     </div>
 
-    <p style="margin-bottom:0;text-align:center"><strong>You can view this message again in Settings, or by clicking the version string.</strong></p>
+    <p style="margin-bottom:0;text-align:center"><strong>You can view this message again in Settings.</strong></p>
     `
   }
 };

@@ -12,6 +12,7 @@ import { getSetting } from "../../../../util/SettingsHelper";
 import { sRGB } from "../../../../util/Color";
 import { cMaterialName } from "../../../../class/3d/shader/fflShaderConst";
 import * as THREE from "three";
+import { ShaderType } from "../../../../constants/BodyShaderTypes";
 
 export async function traverse3DMaterialFix(
   scene: Mii3DScene
@@ -48,7 +49,8 @@ export async function traverse3DMaterialFix(
       if (
         // Both of these internally use FFL shader
         shaderSetting.startsWith("wiiu") ||
-        shaderSetting === "lightDisabled"
+        shaderSetting === ShaderType.LightDisabled ||
+        shaderSetting === ShaderType.Miitomo
       ) {
         console.log(m.name, (m.material as MeshBasicMaterial).type);
         if ((m.material as MeshBasicMaterial).type !== "ShaderMaterial") return;

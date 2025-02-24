@@ -1,6 +1,11 @@
 import { WebGLRenderer } from "three";
 import * as FFL from "./external/ffl.js/ffl";
-import { LUTShaderMaterial } from "./external/ffl.js/LUTShaderMaterial.js";
+import {
+  getMaterialOverridesFromShaderType,
+  getShaderMaterialFromShaderType
+} from "./class/3d/shader/ShaderUtils.js";
+import type { MiiExpression } from "./external/ffl/FFLTypes.js";
+import type { MiiCreatorAdditionalData } from "./external/ffl.js/MiiCreatorTypes.js";
 
 export type FFLWorkerMessage =
   | FFLWorkerInitializeMessage
@@ -14,8 +19,13 @@ export type FFLWorkerInitializeMessage = {
 export type FFLWorkerCreateIconMessage = {
   type: "MakeIcon"; // request type
   data: Uint8Array; // commonly studio data?
-  view: string; // commonly studio data?
+  view: FFL.ViewType;
+  useBlob: boolean;
+  showBody: boolean;
   id: string; // random id
+  expression: MiiExpression;
+  extraData?: MiiCreatorAdditionalData;
+  width: number;
 };
 
 let FFLModule: any,
@@ -30,6 +40,18 @@ function initRenderer() {
     antialias: true,
     alpha: true,
     canvas: offscreenCanvas
+  });
+}
+
+// https://stackoverflow.com/a/30407959
+//**blob to dataURL**
+function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve) => {
+    var a = new FileReader();
+    a.onload = function (e) {
+      resolve(e.target!.result as string);
+    };
+    a.readAsDataURL(blob);
   });
 }
 
@@ -59,7 +81,7 @@ self.onmessage = async (e) => {
       log("Call MakeIcon");
       var then = performance.now();
       // Momentarily create CharModel
-      let dataURL: { type: string; result: Blob | string } = {
+      let result: { type: string; result: Blob | string } = {
           type: "dataURL",
           result: ""
         },
@@ -68,32 +90,35 @@ self.onmessage = async (e) => {
         const dataU8 = input.data;
         model = FFL.createCharModel(
           dataU8,
-          undefined,
-          LUTShaderMaterial,
+          {
+            ...FFL.FFLCharModelDescDefault,
+            allExpressionFlag: FFL.makeExpressionFlag([
+              isNaN(input.expression)
+                ? FFL.FFLExpression.NORMAL
+                : input.expression
+            ])
+          },
+          await getShaderMaterialFromShaderType(),
           FFLModule,
-          false
+          false,
+          await getMaterialOverridesFromShaderType()
         );
         FFL.initCharModelTextures(model, workerRenderer);
-        let realView = FFL.ViewType.MakeIcon;
-        switch (input.view) {
-          case "face":
-          case "variableiconbody":
-            realView = FFL.ViewType.MakeIcon;
-            break;
-          case "all_body_sugar":
-            realView = FFL.ViewType.MakeIcon;
-            break;
-        }
-        dataURL = await FFL.createCharModelIcon(
+        let realView = input.view;
+        log("making icon for view", Object.keys(FFL.ViewType)[realView]);
+        result = await FFL.createCharModelIcon(
           model,
           workerRenderer,
           realView,
-          512,
-          512
+          input.width,
+          input.width,
+          input.showBody,
+          input.extraData
         );
         // console.log(`charModel for ${mii.miiName}:`, model);
       } catch (e) {
-        console.error(`Library error: Could not make icon`, e);
+        console.error(`Worker error: Could not make icon`, e);
+        postMessage({ id: input.id, result: null, error: e });
       } finally {
         model.dispose();
         var now = performance.now();
@@ -107,14 +132,26 @@ self.onmessage = async (e) => {
         log(`Got it in ${(now - then).toFixed(0)}ms! Sending to main thread.`);
 
         var url: string | undefined = undefined;
-        if (dataURL.type === "blob") {
-          url = URL.createObjectURL(dataURL.result as Blob);
-          setTimeout(() => {
-            URL.revokeObjectURL(url!);
-          }, 500);
-        }
+        if (result !== undefined) {
+          if (input.useBlob) {
+            if (result.type === "blob") {
+              url = URL.createObjectURL(result.result as Blob);
+              setTimeout(() => {
+                URL.revokeObjectURL(url!);
+              }, 500);
+            }
+          } else {
+            if (result.type === "blob") {
+              url = await blobToDataURL(result.result as Blob);
+            }
+          }
 
-        postMessage({ id: input.id, result: url || dataURL.result });
+          postMessage({
+            id: input.id,
+            result: url || result.result,
+            error: null
+          });
+        }
       }
     }
   }

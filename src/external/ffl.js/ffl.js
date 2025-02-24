@@ -9,48 +9,43 @@ import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import {FFLShaderMaterial} from "./FFLShaderMaterial.js";
 import {LUTShaderMaterial} from "./LUTShaderMaterial.js";
 import { cMaterialName } from "../../class/3d/shader/fflShaderConst.js";
+import JSZip from "jszip";
+import localforage from "localforage";
+
+const hatModels = [];
+
+
+
 
 // Web Worker shenanigans
-let global;
+let global, isWorker = false;
 if (typeof window === 'undefined') {
 	global = self;
+	isWorker = true
 } else {
 	global = window;
 }
+
+var gltfLoader = new GLTFLoader();
 
 global.FFLShaderMaterial = FFLShaderMaterial;
 global.LUTShaderMaterial = LUTShaderMaterial;
 
 // Cloneable models used 
 let bodyModels = {
-	WiiU: {
-		/**@type {THREE.Group} */
-		m: null, 
-		/**@type {THREE.Group} */
-		f: null
-	},
-	Switch: {
-		/**@type {THREE.Group} */
-		m: null, 
-		/**@type {THREE.Group} */
-		f: null
-	},
-	Miitomo: {
-		/**@type {THREE.Group} */
-		m: null, 
-		/**@type {THREE.Group} */
-		f: null
-	}
+	/**@type {THREE.Group} */
+	m: null, 
+	/**@type {THREE.Group} */
+	f: null
 };
 
-var loader = new GLTFLoader();
 
 //! NOTE: THIS ASSUMES THE ROOT IS THE PUBLIC FOLDER
 function makeModelPath(gender, modelName) {
 	return `/assets/models/miiBody${gender}_${modelName}.glb`
 }
-async function loadModel(modelPath) {
-	const model = await loader.loadAsync(modelPath);
+async function loadBodyModel(modelPath) {
+	const model = await gltfLoader.loadAsync(modelPath);
 	
 	var mixer = new THREE.AnimationMixer(model.scene);
 	const scene = model.scene;
@@ -58,20 +53,59 @@ async function loadModel(modelPath) {
 	const idleClip = model.animations[0];
 	const idleAnim = mixer.clipAction(idleClip, scene);
 	idleAnim.stop();
-	const clip = model.animations.find(a => a.name === "Wait");
+	const clip = model.animations.find(a => a.name === "Pose.01");
 	const anim = mixer.clipAction(clip, scene);
 	anim.play();
-	anim.timeScale=0;
-
+	anim.timeScale = 0;
+	anim.paused = true;
 	mixer.update();
 
 	return scene;
 }
 
+let bodyType = "miitomo";
 export async function loadBodyModels() {
-	bodyModels.Miitomo.m = await loadModel(makeModelPath("M", "miitomo"));
-	bodyModels.Miitomo.f = await loadModel(makeModelPath("F", "miitomo"));
+	bodyType = await localforage.getItem("settings_bodyModel") || "miitomo";
+
+	if (bodyModels.m) {
+		bodyModels.m.traverse(o => {
+			if (o.isMesh) {
+				o.dispose();
+			}
+		})
+	}
+	if (bodyModels.f) {
+		bodyModels.f.traverse(o => {
+			if (o.isMesh) {
+				o.dispose();
+			}
+		})
+	}
+
+	bodyModels.m = await loadBodyModel(makeModelPath("M", bodyType));
+	bodyModels.f = await loadBodyModel(makeModelPath("F", bodyType));
 }
+
+(async() => {
+	if (isWorker) {
+		// Load hat models bundle
+		const data = await fetch("/assets/models/hat_models_bundle.zip").then((j) => j.blob());
+		const zip = await JSZip.loadAsync(data);
+		let promises = [];
+		const fileList = Object.keys(zip.files);
+		for (const file of fileList) {
+			promises.push(zip.files[file].async("blob"));
+		}
+		const resolves = await Promise.all(promises);
+		for (let i = 0; i < fileList.length; i++) {
+			console.log("File:", fileList[i]);
+			const url = URL.createObjectURL(resolves[i]);
+			const gltf = await gltfLoader.loadAsync(url);
+			hatModels[i] = gltf;
+			URL.revokeObjectURL(url);
+		}
+	}
+})();
 
 global.bodyModels = bodyModels;
 
@@ -197,7 +231,7 @@ _;
 /**
  * @enum {number}
  */
-const FFLiShapeType = {
+export const FFLiShapeType = {
 	OPA_BEARD: 0,
 	OPA_FACELINE: 1,
 	OPA_HAIR_NORMAL: 2,
@@ -238,7 +272,7 @@ const FFLCullMode = {
 /**
  * @enum {number}
  */
-const FFLModulateMode = {
+export const FFLModulateMode = {
 	CONSTANT: 0, // No Texture,  Has Color (R)
 	TEXTURE_DIRECT: 1, // Has Texture, No Color
 	RGB_LAYERED: 2, // Has Texture, Has Color (R + G + B)
@@ -250,7 +284,7 @@ const FFLModulateMode = {
 /**
  * @enum {number}
  */
-const FFLModulateType = {
+export const FFLModulateType = {
 	SHAPE_FACELINE: 0,
 	SHAPE_BEARD: 1,
 	SHAPE_NOSE: 2,
@@ -275,7 +309,7 @@ const FFLModulateType = {
 /**
  * @enum {number}
  */
-const FFLResourceType = {
+export const FFLResourceType = {
 	MIDDLE: 0,
 	HIGH: 1,
 	MAX: 2
@@ -284,7 +318,7 @@ const FFLResourceType = {
 /**
  * @enum {number}
  */
-const FFLExpression = {
+export const FFLExpression = {
 	NORMAL: 0,
 	MAX: 70
 };
@@ -1340,12 +1374,15 @@ export class CharModel {
 	 * @param {number} ptr - Pointer to the FFLiCharModel structure in heap.
 	 * @param {Module} [module=global.Module] - The Emscripten module.
 	 * @param {Function} materialClass - The material constructor (e.g., FFLShaderMaterial).
+	 * @param {any} materialParams - The material parameters to override.
 	 */
-	constructor(ptr, module = global.Module, materialClass = global.FFLShaderMaterial) {
+	constructor(ptr, module = global.Module, materialClass = global.FFLShaderMaterial, materialParams = null) {
 		/** @private */
 		this._module = module;
 		/** @public */
 		this._materialClass = materialClass; // Store the material class.
+		/** @public */
+		this._materialParams = materialParams; // Store the material parameters.
 		/**
 		 * @private
 		 * Pointer to the FFLiCharModel in memory, set to null when deleted.
@@ -1408,7 +1445,7 @@ export class CharModel {
 			// This will be null if there is no shape data,
 			// but it will be added anyway so that the indexes
 			// of this group all match up with FFLiShapeType.
-			const mesh = drawParamToMesh(drawParam, this._materialClass, module);
+			const mesh = drawParamToMesh(drawParam, this._materialClass, module, this._materialParams);
 			// if (mesh) {
 			if (!mesh) {
 				continue;
@@ -1665,6 +1702,8 @@ export class CharModel {
 		}
 		// const mesh = this.meshes[FFLiShapeType.XLU_MASK];
 		const mesh = this.meshes.getObjectById(this._maskID);
+
+		if (expression === 61) return console.warn("Blank expression detected, use at your own risk");
 		if (!mesh) {
 			throw new Error('setExpression: this.meshes[FFLiShapeType.XLU_MASK] does not exist, cannot set expression on the mask');
 		}
@@ -2008,9 +2047,10 @@ export function makeExpressionFlag(expressions) {
  * @param {any} materialClass - Constructor for the material (e.g. FFLShaderMaterial).
  * @param {Module} [module=global.Module] - The Emscripten module.
  * @param {boolean} verify - Whether the CharInfo provided should be verified.
+ * @param {any} materialParams - Material Parameters!!!
  * @returns {CharModel} The new CharModel instance.
  */
-export function createCharModel(data, modelDesc, materialClass, module = global.Module, verify = true) {
+export function createCharModel(data, modelDesc, materialClass, module = global.Module, verify = true, materialParams = {}) {
 	modelDesc = modelDesc || FFLCharModelDesc.default;
 	// Allocate memory for model source, description, char model, and char info.
 	const modelSourcePtr = module._malloc(FFLCharModelSource.size);
@@ -2053,7 +2093,7 @@ export function createCharModel(data, modelDesc, materialClass, module = global.
 	}
 
 	// Create the CharModel instance.
-	const charModel = new CharModel(charModelPtr, module, materialClass);
+	const charModel = new CharModel(charModelPtr, module, materialClass, materialParams);
 	// The constructor will populate meshes from the FFLiCharModel instance.
 	/** @private */
 	charModel._data = data; // Store original data passed to function.
@@ -2158,10 +2198,11 @@ export function updateCharModel(charModel, newData, renderer, descOrExpFlag = nu
  * @param {FFLDrawParam} drawParam - The DrawParam representing the mesh.
  * @param {Function} materialClass - Material constructor.
  * @param {Module} module - The Emscripten module.
+ * @param {any} materialParams - Material parameter overrides
  * @returns {THREE.Mesh|null} The THREE.Mesh instance, or null if the index count is 0 indicating no shape data.
  * @throws {Error} drawParam may be null, Unexpected value for FFLCullMode
  */
-function drawParamToMesh(drawParam, materialClass, module) {
+function drawParamToMesh(drawParam, materialClass, module, materialParams) {
 	if (!drawParam) {
 		throw new Error('drawParamToMesh: drawParam may be null.');
 	}
@@ -2192,7 +2233,9 @@ function drawParamToMesh(drawParam, materialClass, module) {
 		// Apply texture.
 		map: texture,
 		// Apply modulateParam material parameters.
-		..._applyModulateParam(drawParam.modulateParam, module)
+		..._applyModulateParam(drawParam.modulateParam, module),
+		// Apply override material parameters.
+		...materialParams
 	};
 	// Create material using the provided materialClass.
 	const material = new materialClass(materialParam);
@@ -2409,15 +2452,17 @@ let _noCharModelCleanupDebug = false;
  *
  * @param {CharModel} charModel - The CharModel instance.
  * @param {THREE.Renderer} renderer - The Three.js renderer.
+ * @param {null | (tex: THREE.DataTexture) => any} facelineTextureCallback - Callback for the faceline texture.
+ * @param {null | (tex: THREE.DataTexture) => any} maskTextureCallback - Callback for the mask texture.
  * @todo Should this just be called in createCharModel() or something? But it's the only function requiring renderer. Maybe if you pass in renderer to that?
  */
-export function initCharModelTextures(charModel, renderer) {
+export function initCharModelTextures(charModel, renderer, facelineTextureCallback = null, maskTextureCallback = null) {
 	const module = charModel._module;
 	const textureTempObject = charModel._getTextureTempObject();
 	// Draw faceline texture if applicable.
-	_drawFacelineTexture(charModel, textureTempObject, renderer, module);
+	_drawFacelineTexture(charModel, textureTempObject, renderer, module, facelineTextureCallback);
 	// Draw mask textures for all expressions.
-	_drawMaskTextures(charModel, textureTempObject, renderer, module);
+	_drawMaskTextures(charModel, textureTempObject, renderer, module, maskTextureCallback);
 	// Finalize CharModel, deleting and freeing it.
 	if (!_noCharModelCleanupDebug) {
 		charModel._finalizeCharModel();
@@ -2432,26 +2477,7 @@ export function initCharModelTextures(charModel, renderer) {
  * @param {THREE.WebGLRenderer} renderer
  * @param {Boolean} [flipY=false]
  */
-// ?
-
-// hook stuff
-let _facelineTextureHook = () => null;
-let _maskTextureHook = () => null;
-
-export function setFacelineTextureHook(fn) {
-	_facelineTextureHook =async  (target, renderer) => {
-		const dataURL = await renderTargetToDataURL(target, renderer, true);
-		fn(dataURL);
-		_facelineTextureHook = () => null;
-	};
-}
-export function setMaskTextureHook(fn) {
-	_maskTextureHook = async (target, renderer) => {
-		const dataURL = await renderTargetToDataURL(target, renderer, true);
-		fn(dataURL);
-		_maskTextureHook = () => null;
-	};
-}
+// Unused
 // function _displayTextureDebug(target, renderer) {
 // 	if (_displayRenderTexturesElement) {
 // 		const dataURL = renderTargetToDataURL(target, renderer, true);
@@ -2468,7 +2494,7 @@ export function setMaskTextureHook(fn) {
  * @param {THREE.Renderer} renderer - The renderer.
  * @param {Module} module - The Emscripten module.
  */
-function _drawFacelineTexture(charModel, textureTempObject, renderer, module) {
+function _drawFacelineTexture(charModel, textureTempObject, renderer, module, callback = null) {
 	// Invalidate faceline texture before drawing (ensures correctness)
 	const facelineTempObjectPtr = charModel._getFacelineTempObjectPtr();
 	module._FFLiInvalidateTempObjectFacelineTexture(facelineTempObjectPtr);
@@ -2506,8 +2532,13 @@ function _drawFacelineTexture(charModel, textureTempObject, renderer, module) {
 
 	// console.debug(`Creating target ${target.texture.id} for faceline`);
 
-	// Optionally view the texture for debugging.
-	_facelineTextureHook(target, renderer);
+	// Return a copy of the texture to the caller, 
+	// it's up to them to dispose of it later
+	if (callback !== null)
+	{
+		renderTargetToDataTexture(target, renderer)
+			.then(tex => callback(tex));
+	}
 
 	// Apply texture to CharModel.
 	_setFaceline(charModel, target);
@@ -2527,7 +2558,7 @@ function _drawFacelineTexture(charModel, textureTempObject, renderer, module) {
  * @param {THREE.Renderer} renderer - The renderer.
  * @param {Module} module - The Emscripten module.
  */
-function _drawMaskTextures(charModel, textureTempObject, renderer, module) {
+function _drawMaskTextures(charModel, textureTempObject, renderer, module, callback = null) {
 	const maskTempObjectPtr = charModel._getMaskTempObjectPtr();
 	const expressionFlagPtr = charModel._ptr + FFLiCharModel.fields.charModelDesc.offset +
 		FFLCharModelDesc.fields.allExpressionFlag.offset;
@@ -2546,7 +2577,7 @@ function _drawMaskTextures(charModel, textureTempObject, renderer, module) {
 		const rawMaskDrawParam = FFLiRawMaskDrawParam.unpack(module.HEAPU8.subarray(rawMaskDrawParamPtr, rawMaskDrawParamPtr + FFLiRawMaskDrawParam.size));
 		module._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
 
-		const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer, module);
+		const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer, module, callback);
 		// console.debug(`Creating target ${target.texture.id} for mask ${i}`);
 		charModel._maskTargets[i] = target;
 
@@ -2577,7 +2608,7 @@ function _drawMaskTextures(charModel, textureTempObject, renderer, module) {
  * @param {Module} module - The Emscripten module.
  * @returns {{target: THREE.RenderTarget, scene: THREE.Scene}} The RenderTarget and scene of this mask texture.
  */
-function _drawMaskTexture(charModel, rawMaskParam, renderer, module) {
+function _drawMaskTexture(charModel, rawMaskParam, renderer, module, callback = null) {
 	const drawParams = [
 		rawMaskParam.drawParamRawMaskPartsMustache[0],
 		rawMaskParam.drawParamRawMaskPartsMustache[1],
@@ -2604,7 +2635,11 @@ function _drawMaskTexture(charModel, rawMaskParam, renderer, module) {
 	const target = createAndRenderToTarget(offscreenScene,
 		getIdentCamera(), renderer, width, width, options);
 
-	_maskTextureHook(target, renderer);
+	if (callback !== null)
+	{
+		renderTargetToDataTexture(target, renderer)
+			.then(tex => callback(tex));
+	}
 
 	return { target, scene: offscreenScene };
 	// Caller needs to dispose meshes in scene.
@@ -2762,7 +2797,34 @@ function disposeMeshes(group, scene) {
 // // ---------------------------------------------------------------------
 // //  Export Scene/Texture To Image
 // // ---------------------------------------------------------------------
+// ----------- renderTargetToDataTexture(renderTarget, renderer, flipY) -----------
+/**
+ * Gets a data URL for a render target's texture using the same renderer.
+ *
+ * @param {THREE.RenderTarget} renderTarget - The render target.
+ * @param {THREE.WebGLRenderer} renderer - The renderer (MUST be the same renderer used for the target).
+ * @param {Boolean} [flipY=false] - Flip the Y axis. Default is oriented for OpenGL.
+ * @returns {Promise<THREE.DataTexture>} The data URL representing the RenderTarget's texture contents.
+ */
+export async function renderTargetToDataTexture(renderTarget, renderer, flipY = false, filtering = true) {
+	const width = renderTarget.width, height = renderTarget.height;
+	let buf = new Uint8Array(width * height * 4);
+	await renderer.readRenderTargetPixelsAsync(renderTarget, 0, 0, width, height, buf);
+	const dataTexture = new THREE.DataTexture(buf, width, height, THREE.RGBAFormat, THREE.UnsignedByteType);
+	dataTexture.needsUpdate = true;
 
+	if (flipY) {
+		dataTexture.flipY = true;
+	}
+
+	if (filtering) {
+		dataTexture.minFilter = THREE.LinearFilter;
+		dataTexture.magFilter = THREE.LinearFilter;
+	}
+
+	// Caller has to update data texture wrap/filter params.
+	return dataTexture;
+}
 // ----------- renderTargetToDataURL(renderTarget, renderer, flipY) -----------
 /**
  * Gets a data URL for a render target's texture using the same renderer.
@@ -2774,8 +2836,6 @@ function disposeMeshes(group, scene) {
  */
 function renderTargetToDataURL(renderTarget, renderer, flipY = false) {
 	return new Promise((resolve) => {
-
-	
 	// Create a new scene using a full-screen quad.
 	const scene = new THREE.Scene();
 	scene.background = null;
@@ -2860,8 +2920,11 @@ function appendImageFromDataURL(dataURL, container) {
 export const ViewType = {
 	Face: 0, // Typical icon body view.
 	MakeIcon: 1, // FFLMakeIcon matrix
-	IconFovy45: 2, // Custom
-	AllBody: 3, // Custom
+	// Custom
+	IconFovy45: 2,
+	AllBody: 3,
+	AllBodySugar: 4,
+	CreditIcon: 5, 
 };
 
 // TODO: private?
@@ -2873,7 +2936,7 @@ export const ViewType = {
  * @returns {THREE.PerspectiveCamera} The camera representing the view type specified.
  * @throws {Error}
  */
-function getCameraForViewType(viewType, width = 1, height = 1) {
+function getCameraForViewType(viewType, width = 1, height = 1, miiHeight = 63) {
 	const aspect = width / height;
 	switch (viewType) {
 		case ViewType.Face: {
@@ -2891,9 +2954,7 @@ function getCameraForViewType(viewType, width = 1, height = 1) {
 			const fovy = 10; // Math.atan2(43.2 / aspect, 500) / 0.5;
 			const camera = new THREE.PerspectiveCamera(fovy, aspect, 500, 1000);
 			camera.position.set(0, 34.5, 600);
-			// pCamera->pos() = { 0.0f, 34.5f, 600.0f };
 			camera.lookAt(0, 34.5, 0.0);
-			// pCamera->at() = { 0.0f, 34.5f, 0.0f };
 						
 			return camera;
 		}
@@ -2908,6 +2969,51 @@ function getCameraForViewType(viewType, width = 1, height = 1) {
 			const camera = new THREE.PerspectiveCamera(fovy, aspect, 50, 1500);
 			camera.position.set(0, 50, 900);
 			camera.lookAt(0, 105, 0);
+			return camera;
+		}
+		case ViewType.AllBodySugar: {
+			const fovy = 15;
+			const camera = new THREE.PerspectiveCamera(fovy, aspect, 50, 15000);
+
+			// These camera parameters look right when the character is tallest
+			const posStart = new THREE.Vector3(0.0, 65.0, 550.0);
+			const atStart = new THREE.Vector3(0.0, 65.0, 0.0);
+
+			// Likewise these look correct when it's shortest.
+			const posEnd = new THREE.Vector3(0.0, 75.0, 850.0);
+			const atEnd =  new THREE.Vector3(0.0, 88.0, 0.0);
+
+			// Calculate interpolation factor (normalized to range [0, 1])
+			const t = (miiHeight - 0.5) / (1.264 - 0.5);
+
+			// Interpolate between start and end positions
+			const pos = new THREE.Vector3(
+				posStart.x + t * (posEnd.x - posStart.x),
+				posStart.y + t * (posEnd.y - posStart.y),
+				posStart.z + t * (posEnd.z - posStart.z)
+			);
+
+			// Interpolate between start and end target positions
+			const at = new THREE.Vector3(
+				atStart.x + t * (atEnd.x - atStart.x),
+				atStart.y + t * (atEnd.y - atStart.y),
+				atStart.z + t * (atEnd.z - atStart.z)
+			);
+
+			console.log("pos:", pos.toArray());
+			console.log("lookAt:", at.toArray());
+
+			// Set the camera position and look-at target
+			camera.position.copy(pos);
+			camera.lookAt(at);
+
+			return camera;
+		}
+		case ViewType.CreditIcon: {
+			const fovy = 15;
+			const camera = new THREE.PerspectiveCamera(fovy, aspect, 0.1, 1000);
+			camera.position.set(-60, 34.5, 380);
+			camera.lookAt(0, 34.3, 0.0);
 			return camera;
 		}
 		default:
@@ -2925,9 +3031,11 @@ function getCameraForViewType(viewType, width = 1, height = 1) {
  * @param {ViewType} [viewType=ViewType.IconFovy45] viewType
  * @param {number} [width=256] - Desired icon width.
  * @param {number} [height=256] - Desired icon height.
+ * @param {boolean} [useBody=false] - Draw the body.
+ * @param {import('./MiiCreatorTypes').MiiCreatorAdditionalData} [extraData=undefined] - Extra Mii Creator data.
  * @returns {Promise<any>} A data URL of the icon image.
  */
-export function createCharModelIcon(charModel, renderer, viewType = ViewType.MakeIcon, width = 256, height = 256, useBody=false) {
+export function createCharModelIcon(charModel, renderer, viewType = ViewType.MakeIcon, width = 256, height = 256, useBody = false, extraData = undefined) {
 	return new Promise((resolve) => {
 	// Create an offscreen scene for the icon.
 	const iconScene = new THREE.Scene();
@@ -2935,14 +3043,25 @@ export function createCharModelIcon(charModel, renderer, viewType = ViewType.Mak
 
 	const gender = charModel._getGender();
 
+	// Add meshes from the CharModel.
+	const headMesh = charModel.meshes.clone();
+	iconScene.add(headMesh);
+
+	// If the meshes aren't cloned then they disappear from the
+	// primary scene, however geometry/material etc are same
+
+	// Get camera based on viewType parameter.
+
+	const bodyScale = charModel.getBodyScale();
+	const iconCamera = getCameraForViewType(viewType, undefined, undefined, bodyScale.y);
+
 	if (useBody){
 		let bodyModel, bodyModelBody, bodyModelHands, bodyModelLegs;
 		
-		var bodyScale = charModel.getBodyScale();
 
 		switch (gender) {
 			case 0: {
-				bodyModel = bodyModels.Miitomo.m;
+				bodyModel = bodyModels.m;
 
 				bodyModelBody = bodyModel.getObjectByName("body_m");
 				bodyModelHands = bodyModel.getObjectByName("hands_m");
@@ -2950,7 +3069,7 @@ export function createCharModelIcon(charModel, renderer, viewType = ViewType.Mak
 				break;
 			}
 			case 1: {
-				bodyModel = bodyModels.Miitomo.f;
+				bodyModel = bodyModels.f;
 
 				bodyModelBody = bodyModel.getObjectByName("body_f");
 				bodyModelHands = bodyModel.getObjectByName("hands_f");
@@ -2959,17 +3078,18 @@ export function createCharModelIcon(charModel, renderer, viewType = ViewType.Mak
 			}
 		}
 
-		bodyModel.scale.set(1, bodyScale.y*10,1);
-
+		
 		var box = new THREE.Box3().setFromObject(bodyModel);
-		console.log("pos y:", box.max.y);
-
-		bodyModel.position.set(0, -box.max.y, 0);
+		// console.log("pos y:", box.max.y);
+		
+		bodyModel.scale.set(bodyScale.x*7,bodyScale.y*7,bodyScale.z*7);
+		bodyModel.position.set(0, 0, 0);
 		iconScene.add(bodyModel);
 
 		var favoriteColor = charModel._getFavoriteColor(true);
 	
-		bodyModelBody.material = new LUTShaderMaterial({
+		bodyModelBody.material = new charModel._materialClass({
+			...charModel._materialParams,
 			modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY,
 			modulateMode: 0,
 			modulateColor: new THREE.Vector4(
@@ -2979,8 +3099,11 @@ export function createCharModelIcon(charModel, renderer, viewType = ViewType.Mak
 				1
 			)
 		});
+
+		bodyModelHands.material = bodyModelBody.material;
 	
-		bodyModelLegs.material = new LUTShaderMaterial({
+		bodyModelLegs.material = new charModel._materialClass({
+			...charModel._materialParams,
 			modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS,
 			modulateMode: 0,
 			modulateColor: new THREE.Vector4(
@@ -2990,16 +3113,21 @@ export function createCharModelIcon(charModel, renderer, viewType = ViewType.Mak
 				1
 			)
 		});
+
+		headMesh.position.set(0, bodyScale.y * 75, 0);
+
+
+		switch (viewType) {
+			case ViewType.Face: 
+			case ViewType.MakeIcon: 
+			case ViewType.IconFovy45:
+			case ViewType.CreditIcon: {
+				// Position the icon closer to the head
+				iconCamera.position.y += bodyScale.y*76;
+			}
+		}
 	}
 
-
-	// Add meshes from the CharModel.
-	iconScene.add(charModel.meshes.clone());
-	// If the meshes aren't cloned then they disappear from the
-	// primary scene, however geometry/material etc are same
-
-	// Get camera based on viewType parameter.
-	const iconCamera = getCameraForViewType(viewType);
 
 	const target = createAndRenderToTarget(iconScene,
 		iconCamera, renderer, width, height);

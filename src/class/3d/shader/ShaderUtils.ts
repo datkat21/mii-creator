@@ -1,23 +1,16 @@
 import * as THREE from "three";
 import {
-  cLightAmbient,
   cLightAmbientFFLIconWithBody,
-  cLightDiffuse,
   cLightDiffuseFFLIconWithBody,
-  cLightDir,
   cLightDirFFLIconWithBody,
   cLightDirGlossy,
-  cLightSpecular,
   cLightSpecularFFLIconWithBody,
   cMaterialName,
-  cMaterialParam,
   cRimColor,
   cRimPower,
   FFLBlinnMaterial,
-  FFLGlossMaterial,
-  type FFLShaderMaterial
+  FFLToonMaterial
 } from "./fflShaderConst";
-import { fflFragmentShader, fflVertexShader } from "./FFLShader";
 import { switchFragmentShader, switchVertexShader } from "./SwitchShader";
 import {
   cBeardMaterials,
@@ -35,10 +28,24 @@ import {
 // import type Mii from "../../../external/mii-js/mii";
 import type Mii from "../../../class/MiiData";
 import { ShaderType } from "../../../constants/BodyShaderTypes";
-import { getSetting } from "../../../util/SettingsHelper";
-import { miitomoFragmentShader, miitomoVertexShader } from "./MiitomoShader";
-import { FFLShaderMaterial as FFLShaderMaterialInstance } from "../../../external/ffl.js/FFLShaderMaterial";
-import { LUTShaderMaterial as LUTShaderMaterialInstance } from "../../../external/ffl.js/LUTShaderMaterial";
+import {
+  FFLShaderMaterial,
+  type FFLMaterial,
+  type FFLShaderOptions
+} from "../../../external/ffl.js/FFLShaderMaterial";
+import { LUTShaderMaterial } from "../../../external/ffl.js/LUTShaderMaterial";
+import localforage from "localforage";
+
+// Worker-friendly copy of getSetting
+const getSetting = async (key: string) => {
+  const value = (await localforage.getItem("settings_" + key)) as any;
+
+  // hack?
+  if (value == null && key === "shaderType") {
+    return "miitomo";
+  }
+  return value;
+};
 
 export function traverseAddShader(
   model: THREE.Group<THREE.Object3DEventMap>,
@@ -73,36 +80,12 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
   // those that does not happen in FFL-Testing)
   const lightEnable = modulateType > 5 ? false : true;
   // Select material parameter based on the modulate type, default to faceline
-  let materialParam: FFLShaderMaterial =
+  let materialParam: FFLMaterial =
     modulateType !== undefined
       ? modulateType && modulateType < 9
-        ? cMaterialParam[modulateType]
-        : cMaterialParam[0]
-      : cMaterialParam[0];
-
-  let lightDir = cLightDir;
-
-  let lightAmbient: THREE.Vector4 = cLightAmbient,
-    lightDiffuse: THREE.Vector4 = cLightDiffuse,
-    lightSpecular: THREE.Vector4 = cLightSpecular;
-
-  // reused for extra materials
-  function modifyMaterialParam() {
-    // Wii U shader modifiers
-    if (shaderSetting === ShaderType.WiiUBlinn) {
-      materialParam = { ...materialParam, ...FFLBlinnMaterial };
-    } else if (shaderSetting === ShaderType.WiiUToon) {
-      materialParam = { ...materialParam, ...FFLGlossMaterial };
-      lightDir = cLightDirGlossy;
-    } else if (shaderSetting === ShaderType.WiiUFFLIconWithBody) {
-      lightDir = cLightDirFFLIconWithBody;
-      lightAmbient = cLightAmbientFFLIconWithBody;
-      lightDiffuse = cLightDiffuseFFLIconWithBody;
-      lightSpecular = cLightSpecularFFLIconWithBody;
-    }
-  }
-
-  modifyMaterialParam();
+        ? FFLShaderMaterial.materialParams[modulateType]
+        : FFLShaderMaterial.materialParams[0]
+      : FFLShaderMaterial.materialParams[0];
 
   // Retrieve modulateMode, defaulting to constant color
   let modulateMode =
@@ -118,58 +101,6 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     modulateColor = new THREE.Vector4(...userData.modulateColor, 1);
   }
   THREE.ColorManagement.enabled = false;
-
-  if (shaderSetting === ShaderType.Simple) {
-    THREE.ColorManagement.enabled = true;
-
-    if (
-      modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_MASK ||
-      modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSELINE
-    ) {
-      const nonShaderMaterial = new THREE.MeshBasicMaterial({
-        color: originalMaterial.color,
-        side: originalMaterial.side,
-        map: originalMaterial.map,
-        blending: THREE.CustomBlending,
-        blendDstAlpha: THREE.OneFactor,
-        transparent: originalMaterial.transparent,
-        alphaTest: 0,
-        reflectivity: 0
-      });
-      node.material = nonShaderMaterial;
-    } else if (
-      modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY ||
-      modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS
-    ) {
-      const nonShaderMaterial = new THREE.MeshPhysicalMaterial({
-        color: originalMaterial.color,
-        side: originalMaterial.side,
-        map: originalMaterial.map,
-        blending: THREE.CustomBlending,
-        blendDstAlpha: THREE.OneFactor,
-        transparent: originalMaterial.transparent,
-        alphaTest: originalMaterial.alphaTest,
-        metalness: 1,
-        roughness: 1
-      });
-      node.material = nonShaderMaterial;
-    } else {
-      const nonShaderMaterial = new THREE.MeshPhysicalMaterial({
-        color: originalMaterial.color,
-        side: originalMaterial.side,
-        map: originalMaterial.map,
-        blending: THREE.CustomBlending,
-        blendDstAlpha: THREE.OneFactor,
-        transparent: originalMaterial.transparent,
-        alphaTest: originalMaterial.alphaTest,
-        metalness: 1,
-        roughness: 1,
-        reflectivity: 1
-      });
-      node.material = nonShaderMaterial;
-    }
-    return;
-  }
 
   // Define macros based on the presence of textures
   const defines: Record<string, any> = {};
@@ -202,6 +133,8 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
 
   let finalMat: THREE.Material;
 
+  const overrides = await getMaterialOverridesFromShaderType();
+
   if (shaderSetting === ShaderType.Switch) {
     /* Do A LOTTA Calculations */
     let drawParamMaterial: DrawParamMaterial;
@@ -231,15 +164,6 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         drawParamMaterial =
           mpCharInfo.special === 1 ? cPantsMaterials[1] : cPantsMaterials[0];
         break;
-      // case cMaterialName.CUSTOM_MATERIAL_PARAM_BODY:
-      //     drawParamMaterial = cBodyMaterials[mpCharInfo->favoriteColor];
-      //     break;
-      // case static_cast<FFLModulateType>(SWITCH_MATERIAL_PARAM_PANTS_GRAY):
-      //     drawParamMaterial = cPantsMaterials[0]; // gray index
-      //     break;
-      // case static_cast<FFLModulateType>(SWITCH_MATERIAL_PARAM_PANTS_GOLD):
-      //     drawParamMaterial = cPantsMaterials[1]; // gold index
-      //     break;
       case cMaterialName.FFL_MODULATE_TYPE_SHAPE_CAP:
         drawParamMaterial = cHatMaterials[mpCharInfo.favoriteColor];
         break;
@@ -483,54 +407,68 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         },
         */
     console.log("Modulate type:", modulateType);
-    finalMat = new FFLShaderMaterialInstance({
+    finalMat = new FFLShaderMaterial({
       modulateColor: modulateColor.toArray(),
       modulateMode,
       modulateType: modulateType,
       map: originalMaterial.map || undefined,
       side,
-      lightEnable: shaderSetting.startsWith("wiiu") ? true : false
+      lightEnable: shaderSetting.startsWith("wiiu") ? true : false,
+      ...overrides
     });
   } else if (shaderSetting === ShaderType.Miitomo) {
-    finalMat = new LUTShaderMaterialInstance({
+    finalMat = new LUTShaderMaterial({
       modulateColor: modulateColor.toArray(),
       modulateMode,
       modulateType: modulateType,
       map: originalMaterial.map || undefined,
-      side
+      side,
+      ...overrides
     });
   } else {
-    finalMat = new THREE.ShaderMaterial({
-      vertexShader: fflVertexShader,
-      fragmentShader: fflFragmentShader,
-      uniforms: {
-        u_const1: { value: modulateColor },
-        u_light_ambient: { value: cLightAmbient },
-        u_light_diffuse: { value: cLightDiffuse },
-        u_light_specular: { value: cLightSpecular },
-        u_light_dir: { value: cLightDir },
-        u_light_enable: { value: lightEnable },
-        u_material_ambient: { value: materialParam.ambient },
-        u_material_diffuse: { value: materialParam.diffuse },
-        u_material_specular: { value: materialParam.specular },
-        u_material_specular_mode: { value: materialParam.specularMode },
-        u_material_specular_power: { value: materialParam.specularPower },
-        u_mode: { value: modulateMode },
-        u_rim_color: { value: cRimColor },
-        u_rim_power: { value: cRimPower },
-        s_texture: { value: originalMaterial.map }
-      },
-      defines: defines,
-      side: side,
-      // NOTE: usually these blend modes are
-      // only set for DrawXlu stage
-      blending: THREE.CustomBlending,
-      blendDstAlpha: THREE.OneFactor,
-      transparent: originalMaterial.transparent, // Handle transparency
-      alphaTest: originalMaterial.alphaTest // Handle alpha testing
-    });
+    throw new Error("This shader doesn't exist");
   }
 
   // Assign the custom material to the mesh
   node.material = finalMat;
+}
+
+export async function getMaterialOverridesFromShaderType(): Promise<Partial<FFLShaderOptions> | null> {
+  const shaderType = (await getSetting("shaderType")) as ShaderType;
+  switch (shaderType) {
+    case ShaderType.WiiU:
+      return null;
+    case ShaderType.WiiUBlinn:
+      return { customMaterial: FFLBlinnMaterial };
+    case ShaderType.WiiUFFLIconWithBody:
+      return {
+        lightAmbient: cLightAmbientFFLIconWithBody,
+        lightDiffuse: cLightDiffuseFFLIconWithBody,
+        lightSpecular: cLightSpecularFFLIconWithBody,
+        lightDirection: cLightDirFFLIconWithBody
+      };
+    case ShaderType.WiiUToon:
+      return { customMaterial: FFLToonMaterial };
+    case ShaderType.LightDisabled:
+      return { lightEnable: false };
+    case ShaderType.Switch:
+      return null;
+    case ShaderType.Miitomo:
+      return null;
+  }
+}
+export async function getShaderMaterialFromShaderType() {
+  const shaderType = (await getSetting("shaderType")) as ShaderType;
+  switch (shaderType) {
+    case ShaderType.WiiU:
+    case ShaderType.LightDisabled:
+    case ShaderType.WiiUBlinn:
+    case ShaderType.WiiUFFLIconWithBody:
+    case ShaderType.WiiUToon:
+    case ShaderType.Switch:
+      // todo: switch should have its own material class?
+      return FFLShaderMaterial;
+    case ShaderType.Miitomo:
+      return LUTShaderMaterial;
+  }
 }

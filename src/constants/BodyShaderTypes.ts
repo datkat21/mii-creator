@@ -12,7 +12,6 @@ export enum ShaderType {
   WiiU = "wiiu",
   Switch = "switch",
   LightDisabled = "lightDisabled",
-  Simple = "none",
   Miitomo = "miitomo",
   WiiUBlinn = "wiiu_blinn",
   WiiUFFLIconWithBody = "wiiu_ffliconwithbody",
@@ -34,7 +33,6 @@ export function adjustShaderQuery(params: URLSearchParams, shader: ShaderType) {
       params.set("shaderType", "wiiu");
       break;
     case ShaderType.WiiUBlinn:
-    case ShaderType.Simple:
       params.set("shaderType", "wiiu_blinn");
       break;
     case ShaderType.LightDisabled:

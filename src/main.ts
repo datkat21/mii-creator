@@ -1,5 +1,4 @@
-import Mii from "./external/mii-js/mii";
-import { Buffer as Buf } from "../node_modules/buffer/index";
+import MiiData from "./class/MiiData";
 import { setupUi } from "./ui/setup";
 import { MiiEditor } from "./class/MiiEditor";
 import LazyLoad, { type ILazyLoadInstance } from "vanilla-lazyload";
@@ -8,22 +7,30 @@ import * as Sentry from "@sentry/browser";
 import { Config } from "./config";
 import Modal, { buttonsOkCancel, closeModal } from "./ui/components/Modal";
 import {
+  FFLExpression,
   initializeFFLWithResource,
-  loadBodyModels
+  loadBodyModels,
+  parseHexOrB64ToUint8Array
 } from "./external/ffl.js/ffl.js";
 import type { FFLShaderMaterial } from "./external/ffl.js/FFLShaderMaterial.js";
 import type { LUTShaderMaterial } from "./external/ffl.js/LUTShaderMaterial.js";
 import type { FFLWorkerInitializeMessage, FFLWorkerMessage } from "./worker.js";
+import {
+  MiiCreatorV4Data,
+  MiiCreatorV4DataToRSD
+} from "./class/struct/MiiCreatorV4Data.js";
+import { MiiCreatorV3Data } from "./class/struct/MiiCreatorV3Data.js";
+import { dataToHex } from "./util/dataConvert.js";
+import Notify from "./ui/components/Notify.js";
 
 declare global {
   interface Window {
-    buffer: Buf;
-    editor: MiiEditor;
+    editor: MiiEditor | null;
     firstVisit: boolean;
     LazyLoad: ILazyLoadInstance;
     localforage: LocalForage;
     Mii: any;
-    mii: Mii;
+    mii: MiiData;
     sentryOnLoad: any;
 
     // New stuff
@@ -31,9 +38,6 @@ declare global {
     LUTShaderMaterial: LUTShaderMaterial;
   }
 }
-
-//@ts-expect-error Buffer to keep in window for debugging purposes
-window.buffer = Buf;
 
 window.LazyLoad = new LazyLoad();
 
@@ -51,7 +55,13 @@ let FFL: any, FFLWorker: Worker | undefined;
 export const getFFL = () => FFL;
 export const getFFLWorker = () => FFLWorker;
 export const getFFLWorkerExists = () => FFLWorker !== undefined;
-export const getFFLWorkerMakeIcon = (data: Uint8Array, view: string) => {
+export const getFFLWorkerMakeIcon = (
+  data: Uint8Array,
+  view: number,
+  expression: FFLExpression,
+  useBlob: boolean = true,
+  showBody: boolean = true
+) => {
   if (FFLWorker === undefined)
     throw new Error("FFL worker told to make icon, but it wasn't initialized");
 
@@ -59,7 +69,10 @@ export const getFFLWorkerMakeIcon = (data: Uint8Array, view: string) => {
     sendMessageToWorker({
       type: "MakeIcon",
       data,
-      view
+      expression,
+      view,
+      useBlob,
+      showBody
     } as FFLWorkerMessage)
       .then((resp) => resolve(resp))
       .catch((err) => reject(err));
@@ -102,7 +115,10 @@ if (Config.renderer.useRendererServer === false) {
             const { id, result, error } = event.data;
             if (id === requestId) {
               FFLWorker!.removeEventListener("message", handleMessage);
-              error ? reject(error) : resolve(result);
+              if (error) {
+                Notify.show("Worker error", error);
+                resolve(null);
+              } else resolve(result);
             }
           }
 
@@ -152,3 +168,18 @@ if (Config.renderer.useRendererServer === false) {
 
 langManager.getString("languages.en_US");
 setupUi();
+
+// TODO DEBUGGING REMOVE THOSE
+
+//@ts-expect-error
+window.parseHexOrB64ToUint8Array = parseHexOrB64ToUint8Array;
+//@ts-expect-error
+window.mii = MiiData;
+//@ts-expect-error
+window.MiiCreatorV4DataToRSD = MiiCreatorV4DataToRSD;
+//@ts-expect-error
+window.MiiCreatorV3Data = MiiCreatorV3Data;
+//@ts-expect-error
+window.MiiCreatorV4Data = MiiCreatorV4Data;
+//@ts-expect-error
+window.dataToHex = dataToHex;

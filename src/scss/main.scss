@@ -213,7 +213,8 @@ $animation-duration: 0.8s;
 $easing-function: cubic-bezier(0.16, 1, 0.3, 1);
 $phoneWidth: 540px;
 $tabletWidth: 960px;
-$desktopWidth: 1280px;
+$laptopWidth: 1280px;
+$desktopWidth: 1875px;
 
 @keyframes fadeIn {
   from {
@@ -223,20 +224,40 @@ $desktopWidth: 1280px;
     opacity: 1;
   }
 }
-@keyframes shortSlideUp {
-  from {
-    transform: translateY(-25%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
 @keyframes fadeOut {
   from {
     opacity: 1;
   }
   to {
     opacity: 0;
+  }
+}
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%);
+    opacity: 0;
+  }
+}
+@keyframes shortSlideUp {
+  from {
+    transform: translateY(-25%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 @keyframes shortSlideDown {
@@ -514,6 +535,14 @@ select {
   pointer-events: none;
   animation: fadeOut $animation-duration $easing-function !important;
 }
+.slideIn {
+  pointer-events: none;
+  animation: slideIn 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+.slideOut {
+  pointer-events: none;
+  animation: slideOut 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
 
 .loader {
   position: absolute;
@@ -556,6 +585,18 @@ select {
   margin: 0;
 }
 
+.separator-gap-thin-desktop {
+  display: none;
+}
+@media screen and (min-width: $desktopWidth) {
+  .separator-gap-thin-desktop {
+    display: block !important;
+    width: 100%;
+    height: 0;
+    margin: 0;
+  }
+}
+
 .ui-base {
   position: fixed;
   top: 0;
@@ -578,7 +619,7 @@ select {
     pointer-events: none;
     animation: fadeOut $animation-duration $easing-function !important;
   }
-  @media screen and (max-width: $tabletWidth) {
+  @media screen and (max-width: ($tabletWidth - 1)) {
     //1100px) {
     & {
       grid-template-areas: "mii" "tabList" "tabContent";
@@ -668,6 +709,14 @@ select {
     grid-area: tabContent;
     border: 2px solid var(--stroke-dim);
   }
+}
+
+canvas.scene {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  overflow: hidden;
+  transition: opacity 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
 .tab-save {
@@ -987,7 +1036,7 @@ select {
     }
   }
 
-  @media screen and (max-width: $tabletWidth) {
+  @media screen and (max-width: ($tabletWidth - 1)) {
     grid-template-areas: "miiList miiList" "sidebar sidebar";
     grid-template-rows: 1fr auto;
     .library-sidebar {
@@ -1012,4 +1061,44 @@ select {
   .responsive-row-lg {
     flex-direction: row !important;
   }
+}
+
+.notify-box {
+  display: flex;
+  flex-direction: column-reverse;
+  position: fixed;
+  z-index: 9999999999;
+  top: 1.5rem;
+  left: 1.5rem;
+  gap: 1rem;
+
+  > .notify {
+    background-color: var(--container);
+    border: 0.125rem solid var(--stroke);
+    border-radius: 0.32rem;
+    padding: 0.9rem 1rem;
+    min-width: 18rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    backdrop-filter: blur(0.5rem) brightness(0.5) contrast(1.05);
+    pointer-events: all;
+    width: max-content;
+  }
+  > .notify .notify-title {
+    font-size: 1.25rem;
+    color: var(--text);
+  }
+  > .notify .notify-description {
+    /* . . . */
+    opacity: 1;
+  }
+}
+.disable-item {
+  width: 120px;
+  font-size: 20px;
+  min-height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

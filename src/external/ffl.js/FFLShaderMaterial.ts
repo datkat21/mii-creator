@@ -445,7 +445,7 @@ export type FFLShaderOptions = {
   // -- Custom parameters added for use with mii creator
 
   // Override parts of material settings (only required for 'Toon' shader?)
-  customMaterial: FFLMaterial;
+  customMaterial: Partial<FFLMaterial>;
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -693,7 +693,10 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
 
     // temp solution
     if (customMaterial) {
-      matParam = customMaterial;
+      matParam = {
+        ...matParam,
+        ...customMaterial
+      };
     }
 
     const uniforms = Object.assign({}, colorUniforms, {

@@ -638,3 +638,6 @@ export const Ver3HairColorTable = [8, 1, 2, 3, 4, 5, 6, 7];
 export const Ver3EyeColorTable = [8, 9, 10, 11, 12, 13];
 export const Ver3MouthColorTable = [19, 20, 21, 22, 23];
 export const Ver3GlassColorTable = [8, 14, 15, 16, 17, 18, 0];
+
+// do NOT mess with this.
+export const ForbiddenShirtPantColors = [1, 7, 22, 84, 91, 92, 93];

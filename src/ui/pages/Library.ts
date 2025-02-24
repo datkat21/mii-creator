@@ -35,6 +35,7 @@ import {
 } from "../../external/ffl.js/ffl";
 import { getFFL, getFFLWorkerExists, getFFLWorkerMakeIcon } from "../../main";
 import { WebGLRenderer } from "three";
+import { MiiExpression } from "../../external/ffl/FFLTypes";
 import Notify from "../components/Notify";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
@@ -316,7 +317,7 @@ export async function Library(highlightMiiId?: string) {
         "library",
         "variableiconbody",
         180,
-        0
+        MiiExpression.Normal
       )
         .then((r) => {
           miiImage.attr({ src: r }).style({ opacity: "1" });

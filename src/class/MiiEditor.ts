@@ -193,7 +193,12 @@ export class MiiEditor {
     let nextRenderMode = 0;
     switch (this.renderingMode) {
       case RenderMode.Canvas2DRenderer:
-        this.#setup2D();
+        if (Config.renderer.useRendererServer === true) this.#setup2D();
+        else {
+          await this.#setup3D();
+          this.ui.scene.cameraPan = true;
+          this.ui.scene.focusCameraUpdate();
+        }
         nextRenderMode = RenderMode.Canvas3DScene;
         break;
       case RenderMode.Canvas3DScene:
@@ -221,6 +226,12 @@ export class MiiEditor {
             case RenderMode.Canvas3DScene:
               this.renderingMode = RenderMode.Canvas2DRenderer;
           }
+          if (this.ui.scene && Config.renderer.useRendererServer === false) {
+            this.ui.scene.cameraPan = !Boolean(this.renderingMode);
+            this.ui.scene.focusCameraUpdate();
+            console.log("why this Really not work :(", this.renderingMode);
+            return;
+          }
           this.render();
         })
         .appendTo(this.ui.mii)
@@ -241,6 +252,11 @@ export class MiiEditor {
       undefined,
       this
     );
+    if (this.ui.scene && Config.renderer.useRendererServer === false) {
+      this.ui.scene.cameraPan = Boolean(this.renderingMode);
+      this.ui.scene.focusCameraUpdate();
+      console.log("why this not work :(", this.renderingMode);
+    }
     await this.ui.scene.init();
     this.ui.mii.append(this.ui.scene.getRendererElement());
     window.addEventListener("resize", () => {

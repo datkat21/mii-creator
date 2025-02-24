@@ -15,7 +15,8 @@ import {
   MiiSwitchSkinColorSRGB,
   MiiSwitchSkinColorLinear,
   SwitchMiiColorTableLinear,
-  SwitchMiiColorTableSRGB
+  SwitchMiiColorTableSRGB,
+  ForbiddenShirtPantColors
 } from "../constants/ColorTables";
 import {
   cMaterialName,
@@ -42,6 +43,8 @@ import { makeExpressionFlag, type CharModel } from "../external/ffl.js/ffl";
 import { LUTShaderMaterial } from "../external/ffl.js/LUTShaderMaterial";
 import { FFLShaderMaterial } from "../external/ffl.js/FFLShaderMaterial";
 import JSZip from "jszip";
+import { MiiExpression } from "../external/ffl/FFLTypes";
+// import Stats from "three/examples/jsm/libs/stats.module.js";
 
 export enum CameraPosition {
   MiiHead,
@@ -79,6 +82,8 @@ export class Mii3DScene {
   simpleShaderLegacyColors!: boolean;
   hatModels!: GLTF[];
   editor?: MiiEditor;
+  camSetup!: () => void;
+  // stats: Stats;
 
   constructor(
     mii: Mii,
@@ -114,6 +119,10 @@ export class Mii3DScene {
     } else {
       this.#renderer = new THREE.WebGLRenderer({ antialias: true });
     }
+
+    // this.stats = new Stats();
+    // document.body.appendChild(this.stats.dom);
+
     this.getRendererElement().classList.add("scene");
     this.setupType = setupType;
 
@@ -176,8 +185,8 @@ export class Mii3DScene {
       this.#renderer.domElement
     );
     if (setupType === SetupType.Normal) {
-      const camSetup = async () => {
-        const canPan = await localforage.getItem("settings_cameraPan");
+      this.camSetup = async () => {
+        const canPan = this.cameraPan !== undefined ? this.cameraPan : false;
 
         if (canPan !== true) {
           console.log("canPan is not false:", canPan);
@@ -187,31 +196,26 @@ export class Mii3DScene {
           this.#controls.touches.one = CameraControls.ACTION.TOUCH_ROTATE;
           this.#controls.touches.two = CameraControls.ACTION.TOUCH_DOLLY;
           this.#controls.touches.three = CameraControls.ACTION.NONE;
-          this.#controls.minDistance = 8;
+          this.#controls.enabled = true;
+          this.#controls.minDistance = 10;
           this.#controls.maxDistance = 35;
-          // this.#controls.minDistance = 60;
-          // this.#controls.maxDistance = 100;
           this.#controls.minAzimuthAngle = -Math.PI;
           this.#controls.maxAzimuthAngle = Math.PI;
+          this.#controls.zoomTo(1);
           this.cameraPan = true;
         } else {
-          this.#camera.fov = 15;
-          this.#camera.updateProjectionMatrix();
-          this.#controls.mouseButtons.left = CameraControls.ACTION.NONE;
-          this.#controls.mouseButtons.right = CameraControls.ACTION.NONE;
-          this.#controls.mouseButtons.wheel = CameraControls.ACTION.NONE;
-          this.#controls.touches.one = CameraControls.ACTION.NONE;
-          this.#controls.touches.two = CameraControls.ACTION.NONE;
-          this.#controls.touches.three = CameraControls.ACTION.NONE;
+          console.log("canPan is True:", canPan);
+          this.#controls.enabled = false;
           this.#controls.minDistance = 60;
           this.#controls.maxDistance = 140;
           this.#controls.minAzimuthAngle = -Math.PI;
           this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.dollyTo(380 / 10);
+          this.#controls.zoomTo(2.5);
           this.cameraPan = false;
         }
       };
-      camSetup();
+      this.camSetup();
     }
 
     if (setupType === SetupType.Screenshot) {
@@ -243,6 +247,7 @@ export class Mii3DScene {
     const animate = (time: number) => {
       const delta = clock.getDelta();
 
+      // this.stats.update();
       this.#renderer.render(this.#scene, this.#camera);
       this.animators.forEach((f) => f(time, delta));
     };
@@ -252,9 +257,7 @@ export class Mii3DScene {
 
     this.#camera.aspect = this.#parent.offsetWidth / this.#parent.offsetHeight;
     this.#camera.updateProjectionMatrix();
-    setTimeout(() => {
-      this.resizeRendererToDisplaySize();
-    }, 500);
+    this.resize();
   }
   async #loadHatModels(path: string = "./assets/models/hat_models_bundle.zip") {
     this.hatModels = [];
@@ -338,10 +341,30 @@ export class Mii3DScene {
       return pos;
     }
   }
+  focusCameraUpdate() {
+    if (this.ready) this.camSetup();
+    if (this.anim)
+      switch (this.cameraPan) {
+        case true:
+          for (const [_, anim] of this.anim) {
+            anim.timeScale = 0.5;
+          }
+          break;
+        case false:
+          for (const [_, anim] of this.anim) {
+            anim.timeScale = 0;
+          }
+          break;
+      }
+    this.focusCamera(this.currentPosition, true, false);
+  }
   playEndingAnimation() {
+    this.#controls.enabled = false;
     this.focusCamera(CameraPosition.MiiFullBody, true);
     let heads = this.#scene.getObjectsByProperty("name", "MiiHead");
     for (const head of heads) {
+      if (Config.renderer.useRendererServer) {
+      }
       this.traverseAddFaceMaterial(
         head as THREE.Mesh,
         `&data=${encodeURIComponent(
@@ -354,41 +377,53 @@ export class Mii3DScene {
     this.swapAnimation("Finish");
     getSoundManager().playSound("finish");
   }
-  resize(
+  resize(width?: number, height?: number) {
+    this.resizeRendererToDisplaySize(width, height);
+  }
+  // copied from three.js manual code lol
+  resizeRendererToDisplaySize(
     width: number = this.#parent.offsetWidth,
     height: number = this.#parent.offsetHeight
   ) {
     this.#camera.aspect = width / height;
     this.#camera.updateProjectionMatrix();
-    this.resizeRendererToDisplaySize();
-  }
-  // copied from three.js manual code lol
-  resizeRendererToDisplaySize() {
     const canvas = this.#renderer.domElement;
     const pixelRatio = window.devicePixelRatio;
-    const width = Math.floor(canvas.clientWidth * pixelRatio);
-    const height = Math.floor(canvas.clientHeight * pixelRatio);
-    const needResize = canvas.width !== width || canvas.height !== height;
-    if (needResize) {
-      this.#renderer.setSize(width, height, false);
-    }
-    return needResize;
+    const w = Math.floor(canvas.clientWidth * pixelRatio);
+    const h = Math.floor(canvas.clientHeight * pixelRatio);
+    // const needResize = canvas.width !== w || canvas.height !== h;
+    // if (needResize) {
+    this.#renderer.setSize(w, h, false);
+    // }
+    // return needResize;
   }
+  preparing!: boolean;
   async init() {
     if (this.ready) return;
+    if (this.preparing) return;
+    this.preparing = true;
     this.ready = false;
     this.getRendererElement().style.opacity = "0";
     await this.#addBody();
     this.swapAnimation("Wait", true);
     await this.#loadHatModels();
-    //await this.updateMiiHead();
-    // ^^ will happen on first render()
     this.ready = true;
+    this.preparing = false;
+    this.resize();
     if (this.setupType === SetupType.Screenshot) {
       this.#initCallback && this.#initCallback(this.#renderer);
+      this.resize();
+      requestAnimationFrame(() => {
+        this.resize();
+      });
+      setTimeout(() => {
+        this.resize();
+      }, 0);
     } else {
       // weird hacky fix to correct the camera position at startup
+      this.resize();
       setTimeout(() => {
+        this.resize();
         this.focusCamera(CameraPosition.MiiHead, true, false);
       }, 500);
     }
@@ -519,8 +554,7 @@ export class Mii3DScene {
         });
       // adds shader material
       else {
-        if (Config.renderer.useRendererServer)
-          traverseMesh(gHandsMesh, this.mii);
+        traverseMesh(gHandsMesh, this.mii);
       }
 
       const gLegsMesh = glb.scene.getObjectByName(
@@ -566,11 +600,13 @@ export class Mii3DScene {
     console.log("READY");
   }
   getPantsColor() {
-    const useLinearColors =
-      this.shaderType === ShaderType.Simple &&
-      this.simpleShaderLegacyColors === false
-        ? true
-        : false;
+    if (
+      this.mii.pantsColor !== -1 &&
+      this.mii.pantsColor < 100 &&
+      !ForbiddenShirtPantColors.includes(this.mii.pantsColor)
+    ) {
+      return SwitchMiiColorTableSRGB[this.mii.pantsColor];
+    }
 
     if (this.mii.special) {
       return cPantsColorGold;
@@ -582,6 +618,7 @@ export class Mii3DScene {
   }
   async updateBody(force?: boolean) {
     if (!this.ready) return;
+    this.resize();
 
     this.type = this.mii.gender === 0 ? "m" : "f";
 
@@ -773,11 +810,14 @@ export class Mii3DScene {
       const nBody = bodyN
         .getObjectByName(type)!
         .getObjectByName("body_" + type)! as THREE.Mesh;
-      if (isWiiUShader)
+      if (isWiiUShader) {
         (nBody.material as THREE.ShaderMaterial).uniforms.u_const1.value =
           new THREE.Vector4(
-            ...MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor]
+            ...(this.mii.shirtColor !== -1 && this.mii.shirtColor < 100
+              ? SwitchMiiColorTableSRGB[this.mii.shirtColor]
+              : MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor])
           );
+      }
       const nLegs = bodyN
         .getObjectByName(type)!
         .getObjectByName("legs_" + type)! as THREE.Mesh;
@@ -785,7 +825,7 @@ export class Mii3DScene {
         (nLegs.material as THREE.ShaderMaterial).uniforms.u_const1.value =
           new THREE.Vector4(...this.getPantsColor());
 
-      if (shaderSetting === "none" || this.shaderOverride) {
+      if (this.shaderOverride) {
         if (this.simpleShaderLegacyColors === false) {
           const lookupTable = MiiFavoriteColorLookupTable;
           (nBody.material as THREE.MeshBasicMaterial).color.set(
@@ -841,13 +881,6 @@ export class Mii3DScene {
         } else {
           desiredColor = MiiSwitchSkinColorSRGB[this.mii.facelineColor];
         }
-
-        // console.log(
-        //   `Desired Color: %c${JSON.stringify(desiredColor)}`,
-        //   `rgb(${desiredColor[0] * 255}, ${desiredColor[1] * 255}, ${
-        //     desiredColor[2] * 255
-        //   })`
-        // );
 
         if (isWiiUShader) {
           (nHands.material as THREE.ShaderMaterial).uniforms.u_const1.value =
@@ -989,7 +1022,7 @@ export class Mii3DScene {
                 break;
             }
 
-            GLB = await getHeadModel(tmpMii, this, modelType);
+            GLB = await getHeadModel(tmpMii, this.getRenderer(), modelType);
           }
           //@ts-expect-error
           window.GLB = GLB;
@@ -997,7 +1030,9 @@ export class Mii3DScene {
           GLB.scene.name = "MiiHead";
           // head is no longer attached to head bone physically, no more need to offset rotation
           // GLB.scene.rotation.set(-Math.PI / 2, 0, 0);
-          GLB.scene.scale.set(0.12, 0.12, 0.12);
+          // GLB.scene.scale.set(0.12, 0.12, 0.12);
+          var headScale = 0.14;
+          GLB.scene.scale.set(headScale, headScale, headScale);
 
           // enable shader on head
           this.#scene.remove(...head);
@@ -1040,6 +1075,7 @@ export class Mii3DScene {
           const bodyModelType = this.bodyModel;
           this.#scene.add(GLB.scene);
           console.debug("Adding head to scene");
+          this.resize();
 
           // Hacky fix for head being snapped in the wrong direction for 1 frame
           if (bodyModelType === "miitomo") {
@@ -1102,11 +1138,14 @@ export class Mii3DScene {
                     // ignore: 1,
                     cullMode: 0,
                     modulateColor:
-                      MiiFavoriteColorVec3Table[
-                        this.mii.hatFavoriteColor !== -1
-                          ? this.mii.hatFavoriteColor
-                          : this.mii.favoriteColor
-                      ],
+                      this.mii.hatCommonColor !== -1 &&
+                      this.mii.hatCommonColor < 100
+                        ? SwitchMiiColorTableSRGB[this.mii.hatCommonColor]
+                        : MiiFavoriteColorVec3Table[
+                            this.mii.hatFavoriteColor !== -1
+                              ? this.mii.hatFavoriteColor
+                              : this.mii.favoriteColor
+                          ],
                     modulateMode: 5, //5,
                     modulateType: 5 //5,
                   };
@@ -1156,6 +1195,7 @@ export class Mii3DScene {
     if (this.headReady === false) this.fadeIn();
     this.headReady = true;
     await this.updateBody();
+    this.resize();
   }
 
   particles!: SparkleParticle[];
@@ -1223,24 +1263,41 @@ export class Mii3DScene {
                 const mat = child.material as THREE.MeshBasicMaterial;
                 const oldMat = mat;
 
-                var loadUrl = Config.renderer.renderFaceURL + urlParams;
+                var loadUrl: string | null =
+                  Config.renderer.renderFaceURL + urlParams;
+                let tex: THREE.Texture;
 
                 if (Config.renderer.useRendererServer === false) {
                   console.log("READY");
-                  const { img, model } = await getMaskTex(this.mii, this);
+                  const params = new URLSearchParams(urlParams);
+                  let expressionFlag = new Uint32Array([
+                    1, 0, 0
+                  ]) as Uint32Array<ArrayBufferLike>;
+
+                  if (params.has("expression")) {
+                    expressionFlag = makeExpressionFlag(
+                      Number(params.get("expression")!)
+                    );
+                  }
+                  console.log(
+                    "Expression:",
+                    params.get("expression"),
+                    expressionFlag
+                  );
+                  const { img, model } = await getMaskTex(
+                    this.mii,
+                    this.getRenderer(),
+                    expressionFlag
+                  );
                   console.log("DONE");
-                  loadUrl = img;
+                  loadUrl = null;
+                  tex = img;
                   model.dispose();
-                  console.log("Mask URL:", img);
+                } else {
+                  tex = await this.#textureLoader.loadAsync(loadUrl);
                 }
 
-                const tex = await this.#textureLoader.loadAsync(loadUrl);
-
                 if (tex) {
-                  // Simple shader mask color space fix
-                  if ((await getSetting("shaderType")) === ShaderType.Simple) {
-                    tex.colorSpace = "srgb";
-                  }
                   tex.flipY = false;
                   // Initialize the texture on the GPU to prevent lag frames
                   this.#renderer.initTexture(tex);
@@ -1283,6 +1340,8 @@ export class Mii3DScene {
   }
 
   shutdown() {
+    // this.stats.dom.parentElement!.removeChild(this.stats.dom);
+    // this.stats.end();
     Array.from(this.animators.keys()).forEach((k) => {
       this.animators.delete(k);
     });
