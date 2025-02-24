@@ -13,6 +13,7 @@ export type TabRenderInit = {
     renderPart: RenderPart
   ) => any | Promise<any>;
   editor: MiiEditor;
+  useAccessibility: boolean;
 };
 
 export type TabBase = (input: TabRenderInit) => any;

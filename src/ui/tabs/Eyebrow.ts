@@ -39,12 +39,12 @@ export function EyebrowTab(data: TabRenderInit) {
           )
         },
         eyebrowColor: {
-          label: EditorIcons.color,
+          label: data.useAccessibility ? "Color" : EditorIcons.color,
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,
               value: Ver3HairColorTable[k],
-              color: MiiHairColorTable[Ver3HairColorTable[k]],
+              color: SwitchMiiColorTable[Ver3HairColorTable[k]],
               part: RenderPart.Face
             })),
             makeSeparatorFSI(),
@@ -72,7 +72,8 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 3,
               max: 18,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Position" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -83,7 +84,8 @@ export function EyebrowTab(data: TabRenderInit) {
               soundEnd: "move_apart",
               min: 0,
               max: 12,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Spacing" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -95,7 +97,8 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 11,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Rotation" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -106,7 +109,8 @@ export function EyebrowTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 8,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Scale" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -117,7 +121,8 @@ export function EyebrowTab(data: TabRenderInit) {
               soundEnd: "vert_stretch_up",
               min: 0,
               max: 6,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Stretch" : undefined
             }
           ]
         }

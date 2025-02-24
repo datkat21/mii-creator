@@ -42,14 +42,14 @@ export function MouthTab(data: TabRenderInit) {
           )
         },
         mouthColor: {
-          label: EditorIcons.color,
+          label: data.useAccessibility ? "Color" : EditorIcons.color,
           items: [
             ...ArrayNum(5).map((k) => ({
               type: FeatureSetType.Icon,
               value: Ver3MouthColorTable[k],
               color: SwitchMiiColorTable[Ver3MouthColorTable[k]],
               part: RenderPart.Face,
-              property: "fflMouthColor"
+              property: "mouthColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
@@ -57,7 +57,8 @@ export function MouthTab(data: TabRenderInit) {
                 type: FeatureSetType.Icon,
                 value: k,
                 color: SwitchMiiColorTable[k],
-                part: RenderPart.Face
+                part: RenderPart.Face,
+                property: "mouthColor"
               })),
               MiiSwitchColorTable
             )
@@ -76,7 +77,8 @@ export function MouthTab(data: TabRenderInit) {
               min: 0,
               max: 18,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Position" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -87,7 +89,8 @@ export function MouthTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 8,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Scale" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -98,7 +101,8 @@ export function MouthTab(data: TabRenderInit) {
               soundEnd: "vert_stretch_up",
               min: 0,
               max: 6,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Stretch" : undefined
             }
           ]
         }

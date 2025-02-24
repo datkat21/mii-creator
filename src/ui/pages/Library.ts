@@ -37,6 +37,7 @@ import { getFFL, getFFLWorkerExists, getFFLWorkerMakeIcon } from "../../main";
 import { WebGLRenderer } from "three";
 import { MiiExpression } from "../../external/ffl/FFLTypes";
 import Notify from "../components/Notify";
+import { dataToBase64 } from "../../util/dataConvert";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -60,63 +61,77 @@ export const getMiiIcon = async (
   mii: Mii | string,
   source: string = "unknown",
   view: string = "variableiconbody",
-  width: number = 180,
+  size: number = 180,
   expression: number = 0,
   useBlob: boolean = true
 ) => {
   let m: string = "",
-    useBody = true,
-    realView = ViewType.Face;
+    drawBody = true,
+    type = ViewType.Face;
   switch (view) {
     case "creditIcon":
-      realView = ViewType.CreditIcon;
+      type = ViewType.CreditIcon;
       break;
     case "face":
     case "variableiconbody":
-      realView = ViewType.Face;
+      type = ViewType.Face;
       break;
     case "fflmakeicon":
-      realView = ViewType.MakeIcon;
-      useBody = false;
+      type = ViewType.MakeIcon;
+      drawBody = false;
       break;
     case "all_body":
-      realView = ViewType.AllBody;
+      type = ViewType.AllBody;
       break;
     case "all_body_sugar":
-      realView = ViewType.AllBodySugar;
+      type = ViewType.AllBodySugar;
       break;
   }
 
-  console.log("icon view:", Object.keys(ViewType)[realView]);
+  console.log("icon view:", Object.keys(ViewType)[type]);
 
   if (Config.renderer.useRendererServer === false) {
     // Momentarily create CharModel
     let dataURL = "undefined",
       model: any,
-      dataU8: Uint8Array;
+      data: Uint8Array,
+      miiData: Mii;
 
     if (typeof mii === "string") {
-      dataU8 = parseHexOrB64ToUint8Array(mii);
+      data = parseHexOrB64ToUint8Array(mii);
+      miiData = new Mii(data);
     } else {
-      dataU8 = mii.export("studioData");
+      data = mii.export("studioData");
+      miiData = mii;
     }
 
     if (getFFLWorkerExists()) {
       console.log("Asking worker thread for an icon plz!");
       const icon = await getFFLWorkerMakeIcon(
-        dataU8,
-        realView,
-        expression,
-        useBlob,
-        useBody,
-        width
+        {
+          data,
+          type,
+          expression,
+          additionalInfo: {
+            hatCommonColor: miiData.hatCommonColor,
+            hatFavoriteColor: miiData.hatFavoriteColor,
+            hatType: miiData.hatType,
+            pantsColor: miiData.pantsColor,
+            shirtColor: miiData.shirtColor,
+            favorite: miiData.favorite,
+            special: miiData.special
+          },
+          drawBody,
+          size
+        },
+        useBlob
       );
       return icon;
     }
 
     try {
       model = createCharModel(
-        dataU8,
+        data,
         undefined,
         window.LUTShaderMaterial,
         getFFL(),
@@ -130,7 +145,7 @@ export const getMiiIcon = async (
         realView,
         512,
         512,
-        useBody
+        drawBody
       );
       // console.log(`charModel for ${mii.miiName}:`, model);
     } catch (e) {
@@ -156,7 +171,7 @@ export const getMiiIcon = async (
   adjustShaderQuery(params, currentShader);
   params.set("bodyType", currentBodyModel);
   params.set("type", view);
-  params.set("width", width.toString());
+  params.set("width", size.toString());
   params.set("verifyCharInfo", "0");
   params.set("miic", encodeURIComponent(mii.exportHex("miic")));
   params.set("version", Config.version.string);
@@ -394,7 +409,7 @@ export async function Library(highlightMiiId?: string) {
       let miiName = new Html("span").text("?");
 
       if (miiData !== null) {
-        miiName.text(miiData.nickname);
+        if (miiData.nickname.trim() !== "") miiName.text(miiData.nickname);
       }
 
       miiContainer.appendMany(miiImage, miiName).appendTo(libraryList);
@@ -412,7 +427,7 @@ export async function Library(highlightMiiId?: string) {
             callback(e) {
               console.log(mii);
               saveArrayBuffer(
-                Buffer.from(mii.mii, "base64").buffer,
+                parseHexOrB64ToUint8Array(mii.mii).buffer,
                 mii.id + ".miic"
               );
             }
@@ -422,7 +437,7 @@ export async function Library(highlightMiiId?: string) {
             callback(e) {
               console.log(mii);
               saveArrayBuffer(
-                Buffer.from(mii.mii).buffer,
+                dataToBase64(parseHexOrB64ToUint8Array(mii.mii)),
                 mii.id + ".miic.txt"
               );
             }

@@ -5,5 +5,7 @@ export type MiiCreatorAdditionalData =
       hatFavoriteColor: number;
       shirtColor: number;
       pantsColor: number;
+      favorite: number;
+      special: number;
     }
   | undefined;

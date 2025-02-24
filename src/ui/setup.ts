@@ -10,7 +10,6 @@ import {
   Settings,
   updateSettings
 } from "./pages/Settings";
-import { getMiiRender, MiiCustomRenderType } from "../util/miiImageUtils";
 import { customRender } from "./pages/library/render/customRender";
 
 export async function setupUi() {
@@ -96,36 +95,36 @@ export async function setupUi() {
               if (searchParams.has("renderTypes")) {
                 const renderTypes = searchParams.get("renderTypes")!.split(",");
 
-                if (renderTypes.includes("headshot")) {
-                  headshot = (
-                    await getMiiRender(
-                      miiData,
-                      MiiCustomRenderType.Head,
-                      true,
-                      false
-                    )
-                  ).src;
-                }
-                if (renderTypes.includes("headOnly")) {
-                  headOnly = (
-                    await getMiiRender(
-                      miiData,
-                      MiiCustomRenderType.HeadOnly,
-                      true,
-                      false
-                    )
-                  ).src;
-                }
-                if (renderTypes.includes("fullBody")) {
-                  fullBody = (
-                    await getMiiRender(
-                      miiData,
-                      MiiCustomRenderType.Body,
-                      true,
-                      false
-                    )
-                  ).src;
-                }
+                // if (renderTypes.includes("headshot")) {
+                //   headshot = (
+                //     await getMiiRender(
+                //       miiData,
+                //       MiiCustomRenderType.Head,
+                //       true,
+                //       false
+                //     )
+                //   ).src;
+                // }
+                // if (renderTypes.includes("headOnly")) {
+                //   headOnly = (
+                //     await getMiiRender(
+                //       miiData,
+                //       MiiCustomRenderType.HeadOnly,
+                //       true,
+                //       false
+                //     )
+                //   ).src;
+                // }
+                // if (renderTypes.includes("fullBody")) {
+                //   fullBody = (
+                //     await getMiiRender(
+                //       miiData,
+                //       MiiCustomRenderType.Body,
+                //       true,
+                //       false
+                //     )
+                //   ).src;
+                // }
               }
             }
 

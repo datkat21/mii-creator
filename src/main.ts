@@ -9,19 +9,22 @@ import Modal, { buttonsOkCancel, closeModal } from "./ui/components/Modal";
 import {
   FFLExpression,
   initializeFFLWithResource,
-  loadBodyModels,
   parseHexOrB64ToUint8Array
 } from "./external/ffl.js/ffl.js";
 import type { FFLShaderMaterial } from "./external/ffl.js/FFLShaderMaterial.js";
 import type { LUTShaderMaterial } from "./external/ffl.js/LUTShaderMaterial.js";
 import type { FFLWorkerInitializeMessage, FFLWorkerMessage } from "./worker.js";
 import {
+  EmptyMiiCreatorV4Data,
   MiiCreatorV4Data,
-  MiiCreatorV4DataToRSD
+  MiiCreatorV4DataToRSD,
+  validationThing
 } from "./class/struct/MiiCreatorV4Data.js";
 import { MiiCreatorV3Data } from "./class/struct/MiiCreatorV3Data.js";
 import { dataToHex } from "./util/dataConvert.js";
 import Notify from "./ui/components/Notify.js";
+import { loadBodyModels, loadHatModels } from "./util/ModelLoader.js";
+import { defaultParams, type RenderRequest } from "./util/IconRendering.js";
 
 declare global {
   interface Window {
@@ -56,11 +59,8 @@ export const getFFL = () => FFL;
 export const getFFLWorker = () => FFLWorker;
 export const getFFLWorkerExists = () => FFLWorker !== undefined;
 export const getFFLWorkerMakeIcon = (
-  data: Uint8Array,
-  view: number,
-  expression: FFLExpression,
-  useBlob: boolean = true,
-  showBody: boolean = true
+  request: Partial<RenderRequest>,
+  useBlob: boolean = true
 ) => {
   if (FFLWorker === undefined)
     throw new Error("FFL worker told to make icon, but it wasn't initialized");
@@ -68,11 +68,11 @@ export const getFFLWorkerMakeIcon = (
   return new Promise((resolve, reject) => {
     sendMessageToWorker({
       type: "MakeIcon",
-      data,
-      expression,
-      view,
       useBlob,
-      showBody
+      request: {
+        ...defaultParams,
+        ...request
+      }
     } as FFLWorkerMessage)
       .then((resp) => resolve(resp))
       .catch((err) => reject(err));
@@ -96,6 +96,7 @@ if (Config.renderer.useRendererServer === false) {
 
   // Import FFL.JS (c) 2025 Arian K. pro max Edition
   await loadBodyModels();
+  await loadHatModels();
   await initializeFFLWithResource(Config.renderer.fflResourcePath, FFL);
 
   // TODO: CLEAN THIS UP so all the wasm/worker loading logic isn't in main.ts??? this was just a temp spot since its before everything else loads
@@ -132,7 +133,8 @@ if (Config.renderer.useRendererServer === false) {
         {
           type: "Init",
           resourcePath: Config.renderer.fflResourcePath,
-          offscreenCanvas
+          offscreenCanvas,
+          devicePixelRatio: window.devicePixelRatio
         } as FFLWorkerInitializeMessage,
         // transfer the offscreen canvas over
         [offscreenCanvas]
@@ -183,3 +185,7 @@ window.MiiCreatorV3Data = MiiCreatorV3Data;
 window.MiiCreatorV4Data = MiiCreatorV4Data;
 //@ts-expect-error
 window.dataToHex = dataToHex;
+//@ts-expect-error
+window.validationThing = validationThing;
+//@ts-expect-error
+window.EmptyMiiCreatorV4Data = EmptyMiiCreatorV4Data;

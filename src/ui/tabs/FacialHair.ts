@@ -45,7 +45,8 @@ export function FacialHairTab(data: TabRenderInit) {
               min: 0,
               max: 16,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Position" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -56,7 +57,8 @@ export function FacialHairTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 8,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Scale" : undefined
             }
           ]
         },
@@ -70,7 +72,7 @@ export function FacialHairTab(data: TabRenderInit) {
           }))
         },
         beardColor: {
-          label: EditorIcons.color,
+          label: data.useAccessibility ? "Color" : EditorIcons.color,
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,

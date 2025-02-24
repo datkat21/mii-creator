@@ -31,135 +31,127 @@ const makeQrCodeImage = async (mii: string): Promise<HTMLImageElement> => {
     };
   });
 };
+//   mii: Mii,
+//   type: MiiCustomRenderType,
+//   useExtendedColors: boolean = true,
+//   useBlob: boolean = true
+// ): Promise<HTMLImageElement> => {
+//   return new Promise((resolve, reject) => {
+//     let tmpMii = new Mii(mii.export());
 
-export enum MiiCustomRenderType {
-  Head,
-  HeadOnly,
-  Body
-}
+//     // if (useExtendedColors === false) {
+//     //   tmpMii.trueEyeColor = tmpMii.fflEyeColor;
+//     //   tmpMii.trueEyebrowColor = tmpMii.fflEyebrowColor;
+//     //   tmpMii.trueFacialHairColor = tmpMii.fflFacialHairColor;
+//     //   tmpMii.trueGlassesColor = tmpMii.fflGlassesColor;
+//     //   tmpMii.trueGlassesType = tmpMii.fflGlassesType;
+//     //   tmpMii.trueHairColor = tmpMii.fflHairColor;
+//     //   tmpMii.trueMouthColor = tmpMii.fflMouthColor;
+//     //   tmpMii.trueSkinColor = tmpMii.fflSkinColor;
 
-export const getMiiRender = async (
-  mii: Mii,
-  type: MiiCustomRenderType,
-  useExtendedColors: boolean = true,
-  useBlob: boolean = true
-): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    let tmpMii = new Mii(mii.export());
+//     //   tmpMii.extEyeColor = tmpMii.fflEyeColor + 8;
+//     //   tmpMii.extHairColor = tmpMii.fflHairColor;
+//     //   tmpMii.extFacelineColor = tmpMii.fflSkinColor;
+//     //   tmpMii.extBeardColor = tmpMii.fflFacialHairColor;
+//     //   tmpMii.extEyebrowColor = tmpMii.fflEyebrowColor;
+//     //   tmpMii.extGlassColor = 0;
+//     //   tmpMii.extGlassType = tmpMii.fflGlassesType;
+//     //   tmpMii.extHatColor = 0;
+//     //   tmpMii.extHatType = 0;
+//     // }
 
-    // if (useExtendedColors === false) {
-    //   tmpMii.trueEyeColor = tmpMii.fflEyeColor;
-    //   tmpMii.trueEyebrowColor = tmpMii.fflEyebrowColor;
-    //   tmpMii.trueFacialHairColor = tmpMii.fflFacialHairColor;
-    //   tmpMii.trueGlassesColor = tmpMii.fflGlassesColor;
-    //   tmpMii.trueGlassesType = tmpMii.fflGlassesType;
-    //   tmpMii.trueHairColor = tmpMii.fflHairColor;
-    //   tmpMii.trueMouthColor = tmpMii.fflMouthColor;
-    //   tmpMii.trueSkinColor = tmpMii.fflSkinColor;
+//     let parent = new Html("div")
+//       .style({
+//         width: "720px",
+//         height: "720px",
+//         opacity: "0"
+//         // position: "fixed",
+//       })
+//       .appendTo("body");
+//     const scene = new Mii3DScene(tmpMii, parent.elm, SetupType.Screenshot);
+//     scene.init().then(async () => {
+//       await scene.updateBody();
+//       await scene.updateMiiHead();
+//       // swap pose for render
+//       scene.anim.forEach((a) => {
+//         a.timeScale = 0;
+//         // a.stop();
+//         // a.reset();
+//       });
+//       scene.swapAnimation("Pose.01");
 
-    //   tmpMii.extEyeColor = tmpMii.fflEyeColor + 8;
-    //   tmpMii.extHairColor = tmpMii.fflHairColor;
-    //   tmpMii.extFacelineColor = tmpMii.fflSkinColor;
-    //   tmpMii.extBeardColor = tmpMii.fflFacialHairColor;
-    //   tmpMii.extEyebrowColor = tmpMii.fflEyebrowColor;
-    //   tmpMii.extGlassColor = 0;
-    //   tmpMii.extGlassType = tmpMii.fflGlassesType;
-    //   tmpMii.extHatColor = 0;
-    //   tmpMii.extHatType = 0;
-    // }
+//       let scn = scene.getScene()!,
+//         cam = scene.getCamera()!,
+//         ctl = scene.getControls()!,
+//         pos = new Vector3();
+//       switch (type) {
+//         case MiiCustomRenderType.Head:
+//           // zoom in on head
+//           setTimeout(() => {
+//             scene.focusCamera(0, true, false);
+//             ctl.dollyTo(50);
+//             cam.fov = 15;
+//             cam.updateProjectionMatrix();
+//           }, 300);
+//           break;
+//         case MiiCustomRenderType.HeadOnly:
+//           // hide body from view
+//           scn.getObjectByName("body_m")!.visible = false;
+//           scn.getObjectByName("hands_m")!.visible = false;
+//           scn.getObjectByName("legs_m")!.visible = false;
+//           scn.getObjectByName("body_f")!.visible = false;
+//           scn.getObjectByName("hands_f")!.visible = false;
+//           scn.getObjectByName("legs_f")!.visible = false;
+//           // Get the bounding box of the object
+//           scene.focusCamera(CameraPosition.MiiHead, true, false);
+//           ctl.dollyTo(40);
+//           cam.fov = 15;
+//           cam.updateProjectionMatrix();
+//           break;
+//         case MiiCustomRenderType.Body:
+//           // default screenshot camera position
+//           scene.focusCamera(CameraPosition.MiiFullBody, true, false);
+//           ctl.dollyTo(90, false);
+//           cam.fov = 15;
+//           cam.updateProjectionMatrix();
+//           break;
+//       }
 
-    let parent = new Html("div")
-      .style({
-        width: "720px",
-        height: "720px",
-        opacity: "0"
-        // position: "fixed",
-      })
-      .appendTo("body");
-    const scene = new Mii3DScene(tmpMii, parent.elm, SetupType.Screenshot);
-    scene.init().then(async () => {
-      await scene.updateBody();
-      await scene.updateMiiHead();
-      // swap pose for render
-      scene.anim.forEach((a) => {
-        a.timeScale = 0;
-        // a.stop();
-        // a.reset();
-      });
-      scene.swapAnimation("Pose.01");
+//       parent.append(scene.getRendererElement());
 
-      let scn = scene.getScene()!,
-        cam = scene.getCamera()!,
-        ctl = scene.getControls()!,
-        pos = new Vector3();
-      switch (type) {
-        case MiiCustomRenderType.Head:
-          // zoom in on head
-          setTimeout(() => {
-            scene.focusCamera(0, true, false);
-            ctl.dollyTo(50);
-            cam.fov = 15;
-            cam.updateProjectionMatrix();
-          }, 300);
-          break;
-        case MiiCustomRenderType.HeadOnly:
-          // hide body from view
-          scn.getObjectByName("body_m")!.visible = false;
-          scn.getObjectByName("hands_m")!.visible = false;
-          scn.getObjectByName("legs_m")!.visible = false;
-          scn.getObjectByName("body_f")!.visible = false;
-          scn.getObjectByName("hands_f")!.visible = false;
-          scn.getObjectByName("legs_f")!.visible = false;
-          // Get the bounding box of the object
-          scene.focusCamera(CameraPosition.MiiHead, true, false);
-          ctl.dollyTo(40);
-          cam.fov = 15;
-          cam.updateProjectionMatrix();
-          break;
-        case MiiCustomRenderType.Body:
-          // default screenshot camera position
-          scene.focusCamera(CameraPosition.MiiFullBody, true, false);
-          ctl.dollyTo(90, false);
-          cam.fov = 15;
-          cam.updateProjectionMatrix();
-          break;
-      }
-
-      parent.append(scene.getRendererElement());
-
-      const renderer = scene.getRenderer();
-      setTimeout(() => {
-        if (useBlob)
-          renderer.domElement.toBlob((blob) => {
-            const image = new Image(
-              renderer.domElement.width,
-              renderer.domElement.height
-            );
-            image.src = URL.createObjectURL(blob!);
-            console.log("Temporary render URL:", image.src);
-            image.onload = () => {
-              resolve(image);
-              scene.shutdown();
-              parent.cleanup();
-            };
-          });
-        else {
-          const url = renderer.domElement.toDataURL("png", 100);
-          const image = new Image(
-            renderer.domElement.width,
-            renderer.domElement.height
-          );
-          image.src = url;
-          image.onload = () => {
-            resolve(image);
-            scene.shutdown();
-            parent.cleanup();
-          };
-        }
-      }, 500);
-    });
-  });
-};
+//       const renderer = scene.getRenderer();
+//       setTimeout(() => {
+//         if (useBlob)
+//           renderer.domElement.toBlob((blob) => {
+//             const image = new Image(
+//               renderer.domElement.width,
+//               renderer.domElement.height
+//             );
+//             image.src = URL.createObjectURL(blob!);
+//             console.log("Temporary render URL:", image.src);
+//             image.onload = () => {
+//               resolve(image);
+//               scene.shutdown();
+//               parent.cleanup();
+//             };
+//           });
+//         else {
+//           const url = renderer.domElement.toDataURL("png", 100);
+//           const image = new Image(
+//             renderer.domElement.width,
+//             renderer.domElement.height
+//           );
+//           image.src = url;
+//           image.onload = () => {
+//             resolve(image);
+//             scene.shutdown();
+//             parent.cleanup();
+//           };
+//         }
+//       }, 500);
+//     });
+//   });
+// };
 
 export const getBackground = async (
   isMiic: boolean

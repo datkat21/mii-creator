@@ -417,9 +417,8 @@ export type FFLMaterial = {
   specularPower: number;
   specularMode: number;
 };
-export type FFLColor =
-  | [/**Red*/ number, /**Green*/ number, /**Blue*/ number, /**Alpha*/ number]
-  | [/**Red*/ number, /**Green*/ number, /**Blue*/ number];
+// more generic so you can cast larger array into it
+export type FFLColor = number[] | [number[], number[], number[]];
 
 export type FFLShaderOptions = {
   // Maps to pre-made materials

@@ -86,9 +86,6 @@ export const MiiCreatorV4Data = _.struct([
   _.uint8("special")
 ]) as Struct;
 
-//@ts-expect-error
-window.MiiCreatorV4Data = MiiCreatorV4Data;
-
 export type MiiCreatorV4Data = {
   miicVersion: number;
   originPlatform: number;

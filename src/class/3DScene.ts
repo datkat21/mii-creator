@@ -13,37 +13,26 @@ import {
   MiiFavoriteColorLookupTable,
   MiiFavoriteColorVec3Table,
   MiiSwitchSkinColorSRGB,
-  MiiSwitchSkinColorLinear,
-  SwitchMiiColorTableLinear,
   SwitchMiiColorTableSRGB,
   ForbiddenShirtPantColors
 } from "../constants/ColorTables";
 import {
-  cMaterialName,
   cPantsColorGold,
-  cPantsColorGoldLinear,
   cPantsColorGray,
-  cPantsColorGrayLinear,
   cPantsColorRed,
-  cPantsColorRedLinear,
   MiiFavoriteFFLColorLookupTable
 } from "./3d/shader/fflShaderConst";
 import { MiiEditor, RenderPart } from "./MiiEditor";
 import { Config } from "../config";
 import { getSoundManager } from "./audio/SoundManager";
 import { SparkleParticle } from "./3d/effect/SparkleParticle";
-import { multiplyTexture } from "./3d/canvas/multiplyTexture";
 import { HatType, HatTypeList } from "../constants/Extensions";
-import localforage from "localforage";
 import { traverseAddShader, traverseMesh } from "./3d/shader/ShaderUtils";
 import { getSetting } from "../util/SettingsHelper";
 import { ShaderType } from "../constants/BodyShaderTypes";
 import { getHeadModel, getMaskTex, type ModelFlag } from "../util/MiiRendering";
 import { makeExpressionFlag, type CharModel } from "../external/ffl.js/ffl";
-import { LUTShaderMaterial } from "../external/ffl.js/LUTShaderMaterial";
-import { FFLShaderMaterial } from "../external/ffl.js/FFLShaderMaterial";
 import JSZip from "jszip";
-import { MiiExpression } from "../external/ffl/FFLTypes";
 // import Stats from "three/examples/jsm/libs/stats.module.js";
 
 export enum CameraPosition {
@@ -63,8 +52,7 @@ export class Mii3DScene {
   #scene: THREE.Scene;
   #renderer: THREE.WebGLRenderer;
   #parent: HTMLElement;
-  #pastCharModel!: CharModel;
-  #pastCharMask!: CharModel;
+  #pastCharModel!: CharModel | null;
   mii: Mii;
   ready: boolean;
   headReady: boolean;
@@ -248,7 +236,11 @@ export class Mii3DScene {
       const delta = clock.getDelta();
 
       // this.stats.update();
-      this.#renderer.render(this.#scene, this.#camera);
+      try {
+        this.#renderer.render(this.#scene, this.#camera);
+      } catch (e) {
+        console.error(e);
+      }
       this.animators.forEach((f) => f(time, delta));
     };
 
@@ -334,7 +326,7 @@ export class Mii3DScene {
         this.#controls.rotateTo(0, Math.PI / 2, transition);
         this.#controls.dollyTo(25, transition);
         if (this.cameraPan === false) {
-          this.#controls.moveTo(pos.x, pos.y, pos.z, transition);
+          this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
           this.#controls.dollyTo(65, transition);
         }
       }
@@ -854,27 +846,6 @@ export class Mii3DScene {
       if (colorHands === true) {
         let desiredColor: [number, number, number] = [1, 0, 0];
 
-        // previous revision of hand color guessing, keeping it here because it may be used later..?
-        // let head = this.#scene.getObjectByName("MiiHead");
-        // if (head) {
-        //   // attempt to get current skin color...
-        //   if (isWiiUShader) {
-        //     this.mii.skinColor
-        //     MiiSwitchSkinColorList
-        //     // desiredColor = (
-        //     //   (head.children[0] as THREE.Mesh).material as THREE.ShaderMaterial
-        //     // ).uniforms.u_const1.value;
-        //   } else {
-        //     const color = (
-        //       (head.children[0] as THREE.Mesh)
-        //         .material as THREE.MeshBasicMaterial
-        //     ).color;
-        //     desiredColor = [color.r, color.g, color.b, 1];
-        //   }
-        // } else {
-        //   console.log("OOOPS");
-        // }
-
         // TODO: REMOVE ALL REFERENCES TO SIMPLE SHADER
         if (this.mii.facePaintColor !== -1) {
           desiredColor = SwitchMiiColorTableSRGB[this.mii.facePaintColor];
@@ -1006,10 +977,10 @@ export class Mii3DScene {
             //   } as unknown as any)
             // );
           } else {
-            if (this.#pastCharModel) {
-              // console.log("Past Char Model:", this.#pastCharModel);
-              if (this.#pastCharModel.dispose) this.#pastCharModel.dispose();
-            }
+            // if (this.#pastCharModel) {
+            //   // console.log("Past Char Model:", this.#pastCharModel);
+            //   if (this.#pastCharModel.dispose) this.#pastCharModel.dispose();
+            // }
 
             let modelType: ModelFlag = "NORMAL";
 
@@ -1043,9 +1014,9 @@ export class Mii3DScene {
 
           if (Config.renderer.useRendererServer)
             traverseAddShader(GLB.scene, this.mii);
-          else {
-            this.#pastCharModel = (GLB as any).CharModel;
-          }
+          // else {
+          //   this.#pastCharModel = (GLB as any).CharModel;
+          // }
 
           console.debug("Traversing shader now");
 
@@ -1073,6 +1044,18 @@ export class Mii3DScene {
           }
 
           const bodyModelType = this.bodyModel;
+
+          if (Config.renderer.useRendererServer === false) {
+            if (this.#pastCharModel) {
+              // console.log("Past Char Model:", this.#pastCharModel);
+              if (this.#pastCharModel.dispose) {
+                this.#pastCharModel.dispose();
+                this.#pastCharModel = null;
+              }
+            }
+            this.#pastCharModel = (GLB as any).CharModel;
+          }
+
           this.#scene.add(GLB.scene);
           console.debug("Adding head to scene");
           this.resize();

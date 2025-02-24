@@ -44,7 +44,8 @@ export function NoseTab(data: TabRenderInit) {
               min: 0,
               max: 18,
               part: RenderPart.Head,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Position" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -55,7 +56,8 @@ export function NoseTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 8,
-              part: RenderPart.Head
+              part: RenderPart.Head,
+              label: data.useAccessibility ? "Scale" : undefined
             }
           ]
         }

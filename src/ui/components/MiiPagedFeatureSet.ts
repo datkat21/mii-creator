@@ -58,6 +58,7 @@ export interface FeatureSetSliderItem {
   min: number;
   max: number;
   property: string;
+  label?: string;
   forceRender?: boolean;
 }
 export interface FeatureSetSwitchItem {
@@ -258,6 +259,10 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                 }
                 break;
               case FeatureSetType.Slider:
+                if (item.label !== undefined) {
+                  new Html("span").text(item.label).appendTo(setList);
+                }
+
                 let featureSliderItem = new Html("div")
                   .class("feature-slider")
                   .on("pointerenter", playHoverSound)

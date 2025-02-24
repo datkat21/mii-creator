@@ -9,11 +9,7 @@ import {
   setSetting,
   settingsInfo
 } from "../../util/SettingsHelper";
-import {
-  adjustShaderQuery,
-  ShaderType,
-  BodyType
-} from "../../constants/BodyShaderTypes";
+import { adjustShaderQuery } from "../../constants/BodyShaderTypes";
 import { Config } from "../../config";
 import Notify from "../components/Notify";
 

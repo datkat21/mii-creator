@@ -25,7 +25,8 @@ export function ScaleTab(data: TabRenderInit) {
               forceRender: false,
               part: RenderPart.Face,
               soundStart: "vert_stretch_down",
-              soundEnd: "vert_stretch_up"
+              soundEnd: "vert_stretch_up",
+              label: data.useAccessibility ? "Height" : undefined
             },
             {
               type: FeatureSetType.Slider,
@@ -37,7 +38,8 @@ export function ScaleTab(data: TabRenderInit) {
               forceRender: false,
               part: RenderPart.Face,
               soundStart: "vert_stretch_down",
-              soundEnd: "vert_stretch_up"
+              soundEnd: "vert_stretch_up",
+              label: data.useAccessibility ? "Build" : undefined
             }
           ]
         }

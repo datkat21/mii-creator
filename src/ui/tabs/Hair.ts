@@ -17,7 +17,6 @@ import {
   MiiSwitchColorTable,
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
-import type Mii from "../../class/MiiData";
 
 export function HairTab(data: TabRenderInit) {
   data.container.append(
@@ -34,7 +33,7 @@ export function HairTab(data: TabRenderInit) {
             ArrayNum(132).map((k) => ({
               type: FeatureSetType.Icon,
               value: k,
-              icon: data.icons.hair[k], // `<img src="./assets/images/hair/${k}.png" width="84" height="84" />`,
+              icon: data.icons.hair[k],
               part: RenderPart.Head
             })),
             MiiHairTable,
@@ -42,7 +41,7 @@ export function HairTab(data: TabRenderInit) {
           )
         },
         hairColor: {
-          label: EditorIcons.color,
+          label: data.useAccessibility ? "Color" : EditorIcons.color,
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,
@@ -63,12 +62,16 @@ export function HairTab(data: TabRenderInit) {
           ]
         },
         hairPosition: {
-          label: "Position",
+          label: "Hair Flip",
           items: [
             {
               type: FeatureSetType.Switch,
-              iconOff: EditorIcons.positionHairFlip,
-              iconOn: EditorIcons.positionHairFlipped,
+              iconOff: data.useAccessibility
+                ? "Unflipped"
+                : EditorIcons.positionHairFlip,
+              iconOn: data.useAccessibility
+                ? "Flipped"
+                : EditorIcons.positionHairFlipped,
               property: "hairFlip",
               part: RenderPart.Head
             }

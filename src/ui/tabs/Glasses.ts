@@ -36,7 +36,7 @@ export function GlassesTab(data: TabRenderInit) {
           }))
         },
         glassesColor: {
-          label: EditorIcons.color,
+          label: data.useAccessibility ? "Color" : EditorIcons.color,
           items: [
             ...ArrayNum(6).map((k) => ({
               type: FeatureSetType.Icon,
@@ -71,7 +71,8 @@ export function GlassesTab(data: TabRenderInit) {
               min: 0,
               max: 20,
               part: RenderPart.Head,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Position" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -82,7 +83,8 @@ export function GlassesTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 7,
-              part: RenderPart.Head
+              part: RenderPart.Head,
+              label: data.useAccessibility ? "Scale" : undefined
             }
           ]
         }

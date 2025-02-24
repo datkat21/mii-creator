@@ -438,10 +438,7 @@ function handleQrCode(result: { bytes: any; noQrCode: any }) {
     const encryptedExtra = qrData.slice(128, -4);
     decryptAesCtr(encryptedExtra, iv)
       .then((decryptedExtraData) => {
-        console.log(
-          "Scanned Extra Data:",
-          Buffer.from(decryptedExtraData).toString("hex")
-        );
+        console.log("Scanned Extra Data:", dataToHex(decryptedExtraData));
 
         if (decryptedExtraData.length === 240) {
           qrCallback(decryptedStoreDataBuf, QrScanDataType.ExtraDataTL);

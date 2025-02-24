@@ -1,5 +1,5 @@
 import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
-import Notify from "../ui/components/Notify";
+// import Notify from "../ui/components/Notify";
 import { allocateArray } from "../util/allocateArray";
 import { dataToBase64, dataToHex } from "../util/dataConvert";
 import { Ver3StoreData } from "./struct/FFLStoreData";
@@ -106,6 +106,11 @@ export default class Mii {
     let data: MiiCreatorV4Data = EmptyMiiCreatorV4Data();
     let tempArray: Uint8Array;
     switch (input.length) {
+      // Mii Studio data (decoded)
+      case 46:
+        tempArray = allocateArray(46, input);
+        data = { ...EmptyMiiCreatorV4Data(), ...StudioData.unpack(tempArray) };
+        break;
       // 74/76 byte RFLStoreData - .rsd
       case 74:
       case 76:
@@ -248,6 +253,11 @@ export default class Mii {
     };
   }
 
+  #getNickameSafe() {
+    if (this.nickname.trim() !== "") return this.nickname;
+    else return "A Mii";
+  }
+
   /** validate state of current fields */
   verify(): { valid: boolean; reasons: string[] } {
     return validate(this.#getObject());
@@ -257,8 +267,8 @@ export default class Mii {
     if (verify.valid === true) this.valid = true;
     else {
       this.valid = false;
-      Notify.show(
-        `${this.nickname} has invalid data:`,
+      console.warn(
+        `${this.#getNickameSafe()} has invalid data:`,
         verify.reasons.join(", ")
       );
       throw new Error(
@@ -352,10 +362,7 @@ export default class Mii {
     this.validate();
     switch (outputFormat) {
       case "rsd":
-        throw Notify.show(
-          `Unable to export ${this.nickname}:`,
-          "RSD format is not yet supported."
-        );
+        throw new Error("RSD format is not yet supported.");
       case "miic":
         return MiiCreatorV4Data.pack(this.#getObject());
       case "studioData":

@@ -16,6 +16,12 @@ export const settingsInfo: Record<string, any> = {
     default: true,
     description: "Toggle sound effects for buttons and inputs."
   },
+  accessibilityFeature: {
+    type: "checkbox",
+    label: "Enable accessibility features",
+    default: false,
+    description: "The editor UI will be tweaked to be more accessible."
+  },
   autoCloseCustomRender: {
     type: "checkbox",
     label: "Auto-close custom render menu",

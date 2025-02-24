@@ -6,6 +6,8 @@ import {
 } from "./class/3d/shader/ShaderUtils.js";
 import type { MiiExpression } from "./external/ffl/FFLTypes.js";
 import type { MiiCreatorAdditionalData } from "./external/ffl.js/MiiCreatorTypes.js";
+import { loadBodyModels, loadHatModels } from "./util/ModelLoader.js";
+import { createMiiRender, type RenderRequest } from "./util/IconRendering.js";
 
 export type FFLWorkerMessage =
   | FFLWorkerInitializeMessage
@@ -15,22 +17,19 @@ export type FFLWorkerInitializeMessage = {
   type: "Init"; // request type
   resourcePath: any; // Path to resource file
   offscreenCanvas: OffscreenCanvas; // Path to resource file
+  devicePixelRatio: number;
 };
 export type FFLWorkerCreateIconMessage = {
   type: "MakeIcon"; // request type
-  data: Uint8Array; // commonly studio data?
-  view: FFL.ViewType;
-  useBlob: boolean;
-  showBody: boolean;
   id: string; // random id
-  expression: MiiExpression;
-  extraData?: MiiCreatorAdditionalData;
-  width: number;
+  request: RenderRequest;
+  useBlob: boolean;
 };
 
 let FFLModule: any,
   offscreenCanvas: OffscreenCanvas,
-  workerRenderer: WebGLRenderer;
+  workerRenderer: WebGLRenderer,
+  devicePixelRatio: number;
 
 function log(...message: any[]) {
   console.log("[FFLWorker]", ...message);
@@ -41,6 +40,7 @@ function initRenderer() {
     alpha: true,
     canvas: offscreenCanvas
   });
+  // workerRenderer.setPixelRatio(devicePixelRatio);
 }
 
 // https://stackoverflow.com/a/30407959
@@ -68,10 +68,12 @@ self.onmessage = async (e) => {
         .Module as any;
       log("Initialized Module!", FFLModule);
       log("Loading FFL Resource...");
-      await FFL.loadBodyModels();
+      await loadBodyModels();
+      await loadHatModels();
       await FFL.initializeFFLWithResource(input.resourcePath, FFLModule);
       log("Loaded FFL Resource!");
       offscreenCanvas = input.offscreenCanvas;
+      devicePixelRatio = input.devicePixelRatio;
       initRenderer();
       // I'm ready! I'll tell main thread to continue.
       postMessage({ ready: true });
@@ -82,45 +84,28 @@ self.onmessage = async (e) => {
       var then = performance.now();
       // Momentarily create CharModel
       let result: { type: string; result: Blob | string } = {
-          type: "dataURL",
-          result: ""
-        },
-        model: any;
+        type: "dataURL",
+        result: ""
+      };
       try {
-        const dataU8 = input.data;
-        model = FFL.createCharModel(
-          dataU8,
-          {
-            ...FFL.FFLCharModelDescDefault,
-            allExpressionFlag: FFL.makeExpressionFlag([
-              isNaN(input.expression)
-                ? FFL.FFLExpression.NORMAL
-                : input.expression
-            ])
-          },
-          await getShaderMaterialFromShaderType(),
-          FFLModule,
-          false,
-          await getMaterialOverridesFromShaderType()
+        log(
+          "making icon for view",
+          Object.keys(FFL.ViewType)[input.request.type]
         );
-        FFL.initCharModelTextures(model, workerRenderer);
-        let realView = input.view;
-        log("making icon for view", Object.keys(FFL.ViewType)[realView]);
-        result = await FFL.createCharModelIcon(
-          model,
-          workerRenderer,
-          realView,
-          input.width,
-          input.width,
-          input.showBody,
-          input.extraData
-        );
+        const size = input.request.size * devicePixelRatio;
+
+        result = await createMiiRender({
+          ...input.request,
+          renderer: workerRenderer,
+          size,
+          module: FFLModule
+        });
+
         // console.log(`charModel for ${mii.miiName}:`, model);
       } catch (e) {
         console.error(`Worker error: Could not make icon`, e);
         postMessage({ id: input.id, result: null, error: e });
       } finally {
-        model.dispose();
         var now = performance.now();
 
         // ignore these worker console logs it was 3am

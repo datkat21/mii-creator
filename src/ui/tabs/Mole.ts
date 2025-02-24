@@ -12,8 +12,8 @@ export function MoleTab(data: TabRenderInit) {
       mii: data.mii,
       onChange: data.callback,
       entries: {
-        eyePosition: {
-          label: "Position",
+        mole: {
+          label: "Mole",
           items: [
             {
               type: FeatureSetType.Switch,
@@ -33,7 +33,8 @@ export function MoleTab(data: TabRenderInit) {
               min: 0,
               max: 30,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Position" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -44,7 +45,9 @@ export function MoleTab(data: TabRenderInit) {
               soundEnd: "move_apart",
               min: 0,
               max: 16,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+
+              label: data.useAccessibility ? "Spacing" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -55,7 +58,8 @@ export function MoleTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 7,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Scale" : undefined
             }
           ]
         }

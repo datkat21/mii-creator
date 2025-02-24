@@ -138,6 +138,53 @@ export const newFromLookalike = async () => {
     ])
   );
 
+  async function confirmOrReviseMii(mii: Mii) {
+    Modal.modal(
+      "Is this OK?",
+      new Html("div").append(
+        new Html("img")
+          .attr({
+            src: await getMiiIcon(mii, "lookalike_preview", "fflmakeicon", 160)
+          })
+          .style({ width: "160px", height: "160px" })
+      ),
+      "body",
+      {
+        text: "Cancel",
+        type: "danger"
+      },
+      {
+        text: "Close",
+        type: "danger"
+      },
+      {
+        text: "Revise",
+        callback(e) {
+          // Todo.
+        }
+      },
+      {
+        text: "Done",
+        type: "primary",
+        callback(e) {
+          const randomMiiB64 = dataToBase64(mii.export("miic"));
+          // Click the invisible "confirm" button to close the modal normally
+          m.qs(".flex-group button")?.elm.click();
+          _shutdown()();
+          new MiiEditor(
+            0,
+            async (m, shouldSave) => {
+              if (shouldSave === true)
+                await localforage.setItem(await newMiiId(), m);
+              Library();
+            },
+            randomMiiB64
+          );
+        }
+      }
+    );
+  }
+
   function reroll() {
     randomMiiContainer.clear();
     for (let i = 0; i < 24; i++) {
@@ -155,21 +202,8 @@ export const newFromLookalike = async () => {
         button.qs("img")?.attr({ src: icon });
       });
 
-      const randomMiiB64 = dataToBase64(randomMii.export("miic"));
-
-      button.on("click", () => {
-        // Click the invisible "confirm" button to close the modal normally
-        m.qs(".flex-group button")?.elm.click();
-        _shutdown()();
-        new MiiEditor(
-          0,
-          async (m, shouldSave) => {
-            if (shouldSave === true)
-              await localforage.setItem(await newMiiId(), m);
-            Library();
-          },
-          randomMiiB64
-        );
+      button.on("click", async () => {
+        confirmOrReviseMii(randomMii);
       });
     }
   }

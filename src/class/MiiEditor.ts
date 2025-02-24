@@ -84,6 +84,7 @@ export class MiiEditor {
   renderingMode!: RenderMode;
   onShutdown!: (mii: string, shutdownProperly?: boolean) => any | Promise<any>;
   errors: Map<string, { valid: boolean; reason: string }>;
+  useAccessibility!: boolean;
 
   static getCurrentEditor() {
     return currentEditor;
@@ -162,6 +163,9 @@ export class MiiEditor {
         this.renderingMode = RenderMode.Canvas3DScene;
       else this.renderingMode = RenderMode.Canvas2DRenderer;
     }
+
+    const useAccessibility = await getSetting("accessibilityFeature");
+    this.useAccessibility = useAccessibility;
 
     this.icons = await fetch("./dist/icons.json?t=" + Date.now()).then((j) =>
       j.json()
@@ -266,7 +270,7 @@ export class MiiEditor {
     this.ui.scene.getRendererElement().classList.add("ready");
     this.ui.mii.qs(".loader")!.classOff("active");
   }
-  #updateCssVars() {
+  async #updateCssVars() {
     let glassesColor = SwitchMiiColorTable[this.mii.glassColor];
 
     let eyeColor = SwitchMiiColorTable[this.mii.eyeColor];
@@ -275,24 +279,47 @@ export class MiiEditor {
       bottom: SwitchMiiColorTable[this.mii.mouthColor]
     };
 
-    this.ui.base.style({
-      "--eye-color": eyeColor,
-      "--icon-lip-color-top": mouthColor.top,
-      "--icon-lip-color-bottom": mouthColor.bottom,
-      "--icon-hair-tie":
-        "#" +
-        MiiFavoriteColorLookupTable[this.mii.favoriteColor]
-          .toString(16)
-          .padStart(6, "0"),
-      "--icon-eyebrow-fill": SwitchMiiColorTable[this.mii.eyebrowColor],
-      "--icon-hair-fill": SwitchMiiColorTable[this.mii.hairColor],
-      "--icon-facial-hair-fill": SwitchMiiColorTable[this.mii.beardColor],
-      "--icon-hat-fill": MiiFavoriteColorIconTable[this.mii.favoriteColor].top,
-      "--icon-hat-stroke":
-        MiiFavoriteColorIconTable[this.mii.favoriteColor].bottom,
-      "--icon-glasses-fill": glassesColor,
-      "--icon-glasses-shade": glassesColor + "77"
-    });
+    if (this.useAccessibility) {
+      this.ui.base.style({
+        "--eye-color": "#787880",
+        "--icon-lip-color-top": "#780c0c",
+        "--icon-lip-color-bottom": "#f00c08",
+        "--icon-hair-tie":
+          "#" +
+          MiiFavoriteColorLookupTable[this.mii.favoriteColor]
+            .toString(16)
+            .padStart(6, "0"),
+        "--icon-eyebrow-fill": "var(--text)",
+        "--icon-hair-fill": "var(--text)",
+        "--icon-facial-hair-fill": "#9b9b9b",
+        "--icon-hat-fill": MiiFavoriteColorIconTable[0].top,
+        "--icon-hat-stroke": MiiFavoriteColorIconTable[0].bottom,
+        "--icon-custom-hat-fill": MiiFavoriteColorIconTable[0].top,
+        "--icon-custom-hat-stroke": MiiFavoriteColorIconTable[0].bottom,
+        "--icon-glasses-fill": "#787880",
+        "--icon-glasses-shade": "#78788077"
+      });
+    } else {
+      this.ui.base.style({
+        "--eye-color": eyeColor,
+        "--icon-lip-color-top": mouthColor.top,
+        "--icon-lip-color-bottom": mouthColor.bottom,
+        "--icon-hair-tie":
+          "#" +
+          MiiFavoriteColorLookupTable[this.mii.favoriteColor]
+            .toString(16)
+            .padStart(6, "0"),
+        "--icon-eyebrow-fill": SwitchMiiColorTable[this.mii.eyebrowColor],
+        "--icon-hair-fill": SwitchMiiColorTable[this.mii.hairColor],
+        "--icon-facial-hair-fill": SwitchMiiColorTable[this.mii.beardColor],
+        "--icon-hat-fill":
+          MiiFavoriteColorIconTable[this.mii.favoriteColor].top,
+        "--icon-hat-stroke":
+          MiiFavoriteColorIconTable[this.mii.favoriteColor].bottom,
+        "--icon-glasses-fill": glassesColor,
+        "--icon-glasses-shade": glassesColor + "77"
+      });
+    }
   }
   #setupTabs() {
     const TabInit = (Tab: TabBase, CameraFocusPart: CameraPosition) => {
@@ -310,7 +337,8 @@ export class MiiEditor {
           },
           icons: this.icons,
           mii: this.mii,
-          editor: this
+          editor: this,
+          useAccessibility: this.useAccessibility
         });
         if (this.ui.scene) this.ui.scene.resize();
       };

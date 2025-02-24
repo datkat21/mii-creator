@@ -3,7 +3,6 @@ import {
   MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import {
-  MiiEyeColorTable,
   SwitchMiiColorTable,
   Ver3EyeColorTable
 } from "../../constants/ColorTables";
@@ -39,7 +38,7 @@ export function EyeTab(data: TabRenderInit) {
           )
         },
         eyeColor: {
-          label: EditorIcons.color,
+          label: data.useAccessibility ? "Color" : EditorIcons.color,
           items: [
             ...ArrayNum(6).map((k) => ({
               type: FeatureSetType.Icon,
@@ -72,7 +71,8 @@ export function EyeTab(data: TabRenderInit) {
               min: 0,
               max: 18,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Position" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -83,7 +83,8 @@ export function EyeTab(data: TabRenderInit) {
               soundEnd: "move_apart",
               min: 0,
               max: 12,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Spacing" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -95,7 +96,8 @@ export function EyeTab(data: TabRenderInit) {
               min: 0,
               max: 7,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? "Rotation" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -106,7 +108,8 @@ export function EyeTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 7,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Scale" : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -117,7 +120,8 @@ export function EyeTab(data: TabRenderInit) {
               soundEnd: "vert_stretch_up",
               min: 0,
               max: 6,
-              part: RenderPart.Face
+              part: RenderPart.Face,
+              label: data.useAccessibility ? "Stretch" : undefined
             }
           ]
         }

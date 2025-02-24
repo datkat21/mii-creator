@@ -3,19 +3,10 @@
 
 import _ from "./struct-fu-mini.js";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
 // Temporary, these may be changed into es module imports eventually
 import {FFLShaderMaterial} from "./FFLShaderMaterial.js";
 import {LUTShaderMaterial} from "./LUTShaderMaterial.js";
-import { cMaterialName } from "../../class/3d/shader/fflShaderConst.js";
-import JSZip from "jszip";
-import localforage from "localforage";
-
-const hatModels = [];
-
-
-
 
 // Web Worker shenanigans
 let global, isWorker = false;
@@ -26,88 +17,8 @@ if (typeof window === 'undefined') {
 	global = window;
 }
 
-var gltfLoader = new GLTFLoader();
-
 global.FFLShaderMaterial = FFLShaderMaterial;
 global.LUTShaderMaterial = LUTShaderMaterial;
-
-// Cloneable models used 
-let bodyModels = {
-	/**@type {THREE.Group} */
-	m: null, 
-	/**@type {THREE.Group} */
-	f: null
-};
-
-
-//! NOTE: THIS ASSUMES THE ROOT IS THE PUBLIC FOLDER
-function makeModelPath(gender, modelName) {
-	return `/assets/models/miiBody${gender}_${modelName}.glb`
-}
-async function loadBodyModel(modelPath) {
-	const model = await gltfLoader.loadAsync(modelPath);
-	
-	var mixer = new THREE.AnimationMixer(model.scene);
-	const scene = model.scene;
-
-	const idleClip = model.animations[0];
-	const idleAnim = mixer.clipAction(idleClip, scene);
-	idleAnim.stop();
-	const clip = model.animations.find(a => a.name === "Pose.01");
-	const anim = mixer.clipAction(clip, scene);
-	anim.play();
-	anim.timeScale = 0;
-	anim.paused = true;
-	mixer.update();
-
-	return scene;
-}
-
-let bodyType = "miitomo";
-export async function loadBodyModels() {
-	bodyType = await localforage.getItem("settings_bodyModel") || "miitomo";
-
-	if (bodyModels.m) {
-		bodyModels.m.traverse(o => {
-			if (o.isMesh) {
-				o.dispose();
-			}
-		})
-	}
-	if (bodyModels.f) {
-		bodyModels.f.traverse(o => {
-			if (o.isMesh) {
-				o.dispose();
-			}
-		})
-	}
-
-	bodyModels.m = await loadBodyModel(makeModelPath("M", bodyType));
-	bodyModels.f = await loadBodyModel(makeModelPath("F", bodyType));
-}
-
-(async() => {
-	if (isWorker) {
-		// Load hat models bundle
-		const data = await fetch("/assets/models/hat_models_bundle.zip").then((j) => j.blob());
-		const zip = await JSZip.loadAsync(data);
-		let promises = [];
-		const fileList = Object.keys(zip.files);
-		for (const file of fileList) {
-			promises.push(zip.files[file].async("blob"));
-		}
-		const resolves = await Promise.all(promises);
-		for (let i = 0; i < fileList.length; i++) {
-			console.log("File:", fileList[i]);
-			const url = URL.createObjectURL(resolves[i]);
-			const gltf = await gltfLoader.loadAsync(url);
-			hatModels[i] = gltf;
-			URL.revokeObjectURL(url);
-		}
-	}
-})();
-
-global.bodyModels = bodyModels;
 
 // Changes:
 // - Modularized by adding import/export
@@ -1373,7 +1284,7 @@ export class CharModel {
 	 * @constructor
 	 * @param {number} ptr - Pointer to the FFLiCharModel structure in heap.
 	 * @param {Module} [module=global.Module] - The Emscripten module.
-	 * @param {Function} materialClass - The material constructor (e.g., FFLShaderMaterial).
+	 * @param {new (...args: any[]) => any} materialClass - The material constructor (e.g., FFLShaderMaterial).
 	 * @param {any} materialParams - The material parameters to override.
 	 */
 	constructor(ptr, module = global.Module, materialClass = global.FFLShaderMaterial, materialParams = null) {
@@ -1536,7 +1447,6 @@ export class CharModel {
 		// Assume this is in working color space because it is used for clear color.
 	}
 
-	/** @private */
 	_getFavoriteColor(linear = false) {
 		const mod = this._module;
 		const favoriteColor = this._model.charInfo.personal.favoriteColor;
@@ -1759,7 +1669,7 @@ export class CharModel {
 	/**
 	 * @public
 	 * The parameters in which to transform hats and other accessories.
-	 * @returns {Object} The PartsTransform object containing THREE.Vector3.
+	 * @returns {any} The PartsTransform object containing THREE.Vector3.
 	 */
 	get partsTransform() {
 		if (!this._partsTransform) {
@@ -2730,7 +2640,7 @@ function getIdentCamera(flipY = false) {
  * @param {Object} [targetOptions={}] - Optional options for the render target.
  * @returns {THREE.RenderTarget} The render target (which contains .texture).
  */
-function createAndRenderToTarget(scene, camera, renderer, width, height, targetOptions = {}) {
+export function createAndRenderToTarget(scene, camera, renderer, width, height, targetOptions = {}) {
 	// Set default options for the RenderTarget.
 	const options = {
 		minFilter: THREE.LinearFilter,
@@ -2832,9 +2742,10 @@ export async function renderTargetToDataTexture(renderTarget, renderer, flipY = 
  * @param {THREE.RenderTarget} renderTarget - The render target.
  * @param {THREE.WebGLRenderer} renderer - The renderer (MUST be the same renderer used for the target).
  * @param {Boolean} [flipY=false] - Flip the Y axis. Default is oriented for OpenGL.
- * @returns {string} The data URL representing the RenderTarget's texture contents.
+ * @param {Boolean} [blob=false] - blob
+ * @returns {{type:string, result:any}} The data URL representing the RenderTarget's texture contents.
  */
-function renderTargetToDataURL(renderTarget, renderer, flipY = false) {
+export function renderTargetToDataURL(renderTarget, renderer, flipY = false, blob = true) {
 	return new Promise((resolve) => {
 	// Create a new scene using a full-screen quad.
 	const scene = new THREE.Scene();
@@ -2877,13 +2788,18 @@ function renderTargetToDataURL(renderTarget, renderer, flipY = false) {
 	}
 
 	// Convert the renderer's canvas to an image.
-	if (typeof window === 'undefined') {
+	if (blob) {
 		// assume this is a Web Worker, so it's offscreen canvas. an alt method is used
 		// using file reader was kind of dumb so i just create a blob URL in the main worker.ts file
-		renderer.domElement.convertToBlob({ type: "image/png" }).then(blob => {
+		const ok = blob => {
 			resolve({type:"blob", result:blob});
 			cleanup();
-		});
+		}
+		if (isWorker) {
+			renderer.domElement.convertToBlob({ type: "image/png" }).then(ok);
+		} else {
+			renderer.domElement.toBlob(ok);
+		}
 	} else {
 		const result = renderer.domElement.toDataURL('image/png');
 		// resolve(result);
@@ -2936,7 +2852,7 @@ export const ViewType = {
  * @returns {THREE.PerspectiveCamera} The camera representing the view type specified.
  * @throws {Error}
  */
-function getCameraForViewType(viewType, width = 1, height = 1, miiHeight = 63) {
+export function getCameraForViewType(viewType, width = 1, height = 1, miiHeight = 63) {
 	const aspect = width / height;
 	switch (viewType) {
 		case ViewType.Face: {
@@ -3041,8 +2957,6 @@ export function createCharModelIcon(charModel, renderer, viewType = ViewType.Mak
 	const iconScene = new THREE.Scene();
 	iconScene.background = null; // Transparent background.
 
-	const gender = charModel._getGender();
-
 	// Add meshes from the CharModel.
 	const headMesh = charModel.meshes.clone();
 	iconScene.add(headMesh);
@@ -3051,83 +2965,7 @@ export function createCharModelIcon(charModel, renderer, viewType = ViewType.Mak
 	// primary scene, however geometry/material etc are same
 
 	// Get camera based on viewType parameter.
-
-	const bodyScale = charModel.getBodyScale();
-	const iconCamera = getCameraForViewType(viewType, undefined, undefined, bodyScale.y);
-
-	if (useBody){
-		let bodyModel, bodyModelBody, bodyModelHands, bodyModelLegs;
-		
-
-		switch (gender) {
-			case 0: {
-				bodyModel = bodyModels.m;
-
-				bodyModelBody = bodyModel.getObjectByName("body_m");
-				bodyModelHands = bodyModel.getObjectByName("hands_m");
-				bodyModelLegs = bodyModel.getObjectByName("legs_m");
-				break;
-			}
-			case 1: {
-				bodyModel = bodyModels.f;
-
-				bodyModelBody = bodyModel.getObjectByName("body_f");
-				bodyModelHands = bodyModel.getObjectByName("hands_f");
-				bodyModelLegs = bodyModel.getObjectByName("legs_f");
-				break;
-			}
-		}
-
-		
-		var box = new THREE.Box3().setFromObject(bodyModel);
-		// console.log("pos y:", box.max.y);
-		
-		bodyModel.scale.set(bodyScale.x*7,bodyScale.y*7,bodyScale.z*7);
-		bodyModel.position.set(0, 0, 0);
-		iconScene.add(bodyModel);
-
-		var favoriteColor = charModel._getFavoriteColor(true);
-	
-		bodyModelBody.material = new charModel._materialClass({
-			...charModel._materialParams,
-			modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY,
-			modulateMode: 0,
-			modulateColor: new THREE.Vector4(
-				favoriteColor.r,
-				favoriteColor.g,
-				favoriteColor.b,
-				1
-			)
-		});
-
-		bodyModelHands.material = bodyModelBody.material;
-	
-		bodyModelLegs.material = new charModel._materialClass({
-			...charModel._materialParams,
-			modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS,
-			modulateMode: 0,
-			modulateColor: new THREE.Vector4(
-				0.3,
-				0.3,
-				0.3,
-				1
-			)
-		});
-
-		headMesh.position.set(0, bodyScale.y * 75, 0);
-
-
-		switch (viewType) {
-			case ViewType.Face: 
-			case ViewType.MakeIcon: 
-			case ViewType.IconFovy45:
-			case ViewType.CreditIcon: {
-				// Position the icon closer to the head
-				iconCamera.position.y += bodyScale.y*76;
-			}
-		}
-	}
-
+	const iconCamera = getCameraForViewType(viewType, undefined, undefined);
 
 	const target = createAndRenderToTarget(iconScene,
 		iconCamera, renderer, width, height);

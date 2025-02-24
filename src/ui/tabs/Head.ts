@@ -27,7 +27,7 @@ export function HeadTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         facelineType: {
-          label: EditorIcons.face,
+          label: data.useAccessibility ? "Shape" : EditorIcons.face,
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -36,7 +36,7 @@ export function HeadTab(data: TabRenderInit) {
           }))
         },
         facelineMake: {
-          label: EditorIcons.face_makeup,
+          label: data.useAccessibility ? "Makeup" : EditorIcons.face_makeup,
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -45,7 +45,7 @@ export function HeadTab(data: TabRenderInit) {
           }))
         },
         facelineWrinkle: {
-          label: EditorIcons.face_wrinkles,
+          label: data.useAccessibility ? "Wrinkles" : EditorIcons.face_wrinkles,
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -54,7 +54,7 @@ export function HeadTab(data: TabRenderInit) {
           }))
         },
         facelineColor: {
-          label: EditorIcons.color,
+          label: data.useAccessibility ? "Color" : EditorIcons.color,
           items: [
             ...ArrayNum(6).map((k) => ({
               type: FeatureSetType.Icon,
@@ -76,7 +76,7 @@ export function HeadTab(data: TabRenderInit) {
           ]
         },
         facePaintColor: {
-          label: EditorIcons.face_paint,
+          label: data.useAccessibility ? "Face Paint" : EditorIcons.face_paint,
           header:
             "Face paint is a CUSTOM property, and will not transfer to any other data formats.",
           items: [

@@ -355,7 +355,7 @@ export async function customRender(miiData: Mii) {
             k.name
           }">`
         : `<img class="lazy" width=128 height=128 data-src="${await getMiiIcon(
-            miiDataHex,
+            miiData,
             "customRender",
             "fflmakeicon",
             128,
