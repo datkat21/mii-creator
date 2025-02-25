@@ -116,7 +116,8 @@ export default class Mii {
     switch (input.length) {
       // Mii Studio data (decoded)
       case 46:
-        tempArray = allocateArray(46, input);
+      case 47:
+        tempArray = allocateArray(48, input);
         data = { ...EmptyMiiCreatorV4Data(), ...StudioData.unpack(tempArray) };
         break;
       // 74/76 byte RFLStoreData - .rsd

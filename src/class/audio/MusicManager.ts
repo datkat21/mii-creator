@@ -52,27 +52,27 @@ export class MusicManager {
 
     console.error("initMusic()", theme, document.documentElement.dataset.theme);
 
-    if (theme === "wiiu") {
-      this.setVolume(0.65);
-      this.previousVolume = 0.65;
-      await this.loadSong(
-        "./assets/audio/ffl_app_menu.mp3",
-        "mii_creator_music"
-      );
-      await this.loadSong(
-        "./assets/audio/ffl_app_edit.mp3",
-        "mii_editor_music"
-      );
-      //@ts-expect-error
-      window.music = this;
-    } else {
-      this.setVolume(0.28);
-      this.previousVolume = 0.28;
-      await this.loadSong(
-        "./assets/audio/miimakermusic.mp3",
-        "mii_creator_music"
-      );
-    }
+    // if (theme === "wiiu") {
+    //   this.setVolume(0.65);
+    //   this.previousVolume = 0.65;
+    //   await this.loadSong(
+    //     "./assets/audio/ffl_app_menu.mp3",
+    //     "mii_creator_music"
+    //   );
+    //   await this.loadSong(
+    //     "./assets/audio/ffl_app_edit.mp3",
+    //     "mii_editor_music"
+    //   );
+    //   //@ts-expect-error
+    //   window.music = this;
+    // } else {
+    this.setVolume(0.28);
+    this.previousVolume = 0.28;
+    await this.loadSong(
+      "./assets/audio/miimakermusic.mp3",
+      "mii_creator_music"
+    );
+    // }
 
     this.initMusicReady();
   }

@@ -25,17 +25,17 @@ export class SoundManager {
     document.addEventListener("theme-change", () => {
       const theme = document.documentElement.dataset.theme;
       if (theme !== currentTheme) {
-        if (theme === "wiiu") {
-          loadBaseSounds("./assets/audio/miiMakerU.zip");
-          this.previousVolume = 0.75;
-          this.setVolume(0.75);
-          this.previousVolume = 0.75;
-        } else {
-          loadBaseSounds("./assets/audio/miiMakerSwitch.zip");
-          this.previousVolume = 0.28;
-          this.setVolume(0.28);
-          this.previousVolume = 0.28;
-        }
+        // if (theme === "wiiu") {
+        //   loadBaseSounds("./assets/audio/miiMakerU.zip");
+        //   this.previousVolume = 0.75;
+        //   this.setVolume(0.75);
+        //   this.previousVolume = 0.75;
+        // } else {
+        loadBaseSounds("./assets/audio/miiMakerSwitch.zip");
+        this.previousVolume = 0.28;
+        this.setVolume(0.28);
+        this.previousVolume = 0.28;
+        // }
       }
       currentTheme = theme;
     });

@@ -54,7 +54,7 @@ export const miiCreateDialog = () => {
           .forEach((q) => q!.style({ display: "none" }));
         modal.qs(".modal-body")!.appendMany(
           new Html("span").text(
-            "Import Mii data file(s) here. Supported formats: .ffsd/.cfsd, .miic, .charinfo, .mnms"
+            "Import Mii data file(s) here. Supported formats: .ffsd/.cfsd, .miic, .charinfo, .rsd"
           ),
           new Html("input")
             .attr({ type: "file", accept: ".ffsd,.cfsd,.miic", multiple: "on" })

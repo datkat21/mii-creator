@@ -61,7 +61,7 @@ export const settingsInfo: Record<string, any> = {
       "When this is set to default, your device's color theme preferences will be used.",
     choices: [
       { label: "Default", value: "default" },
-      { label: "Wii U", value: "wiiu" }
+      { label: "Wii U", value: "wiiu", disabled: true }
     ]
   },
   shaderType: {
@@ -72,11 +72,11 @@ export const settingsInfo: Record<string, any> = {
     choices: [
       { label: "No Lighting", value: ShaderType.LightDisabled },
       { label: "Toon", value: ShaderType.WiiUToon },
-      { label: "Wii U (Default)", value: ShaderType.WiiU },
+      { label: "Wii U", value: ShaderType.WiiU },
       { label: "Wii U (Blinn)", value: ShaderType.WiiUBlinn },
-      { label: "Wii U (Alt)", value: ShaderType.WiiUFFLIconWithBody },
+      { label: "Wii U (Bright)", value: ShaderType.WiiUFFLIconWithBody },
       { label: "Switch (WIP)", value: ShaderType.Switch, disabled: true },
-      { label: "Miitomo", value: ShaderType.Miitomo }
+      { label: "Miitomo (Default)", value: ShaderType.Miitomo }
     ]
   },
   bodyModel: {

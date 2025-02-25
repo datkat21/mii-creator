@@ -143,152 +143,6 @@ export const newFromLookalike = async () => {
     ])
   );
 
-  async function confirmOrReviseMii(
-    mii: Mii,
-    options: FFLiDatabaseRandom_GetInit
-  ) {
-    const miiIcon = new Html("img").style({
-      opacity: "0",
-      width: "175px",
-      height: "175px",
-      transition: "opacity 0.35s ease"
-    });
-
-    getMiiIcon(mii, "lookalike_preview", "fflmakeicon", 175).then((icon) => {
-      miiIcon.attr({ src: icon }).style({ opacity: "1" });
-    });
-
-    Modal.modal(
-      "Is this OK?",
-      new Html("div").style({ margin: "0 auto" }).append(miiIcon),
-      "body",
-      // does nothing
-      {
-        text: "Cancel"
-      },
-      {
-        text: "Close",
-        type: "danger"
-      },
-      {
-        text: "Revise",
-        callback(e) {
-          let currentMii = mii;
-
-          const m = Modal.modal(
-            "Revise",
-            new Html("div").appendMany(
-              new Html("span")
-                .style({ margin: "0 auto" })
-                .text("Click any to reroll"),
-              new Html("div").class("menu").style({
-                display: "flex",
-                "flex-direction": "column",
-                gap: "0.5rem"
-              })
-            ),
-            "body",
-            { text: "Cancel" },
-            {
-              text: "Done",
-              callback(e) {
-                confirmOrReviseMii(currentMii, options);
-              }
-            }
-          );
-
-          m.qs(".modal-content")!.style({ "max-height": "max-content" });
-
-          const menuDiv = m.qs(".menu")!;
-
-          function regenerate() {
-            menuDiv.clear();
-
-            let rows: Mii[][] = [];
-            for (let i = 0; i < 9; i++) {
-              const row = Math.floor(i / 3);
-              const col = i % 3;
-
-              if (rows[row] === undefined) {
-                rows[row] = [];
-              }
-
-              if (i === 4) {
-                // Use the current version of the Mii for the middle icon
-                rows[row][col] = currentMii;
-              } else {
-                // do random generation
-                var mii = new Mii(currentMii.export());
-                RandomizeMii(mii, options);
-                rows[row][col] = mii;
-              }
-            }
-
-            // Populate
-            for (const row of rows) {
-              const rowElm = new Html("div")
-                .style({ display: "flex", gap: "0.5rem" })
-                .appendTo(menuDiv);
-
-              for (const child of row) {
-                const button = new Html("button").style({
-                  padding: "0"
-                });
-                const img = new Html("img")
-                  .style({
-                    width: "108px",
-                    height: "108px",
-                    opacity: "0",
-                    transition: "opacity 0.2s ease"
-                  })
-                  .appendTo(button);
-                rowElm.append(button);
-
-                button.on("click", (e) => {
-                  e.preventDefault();
-                  currentMii = child;
-                  requestAnimationFrame(() => {
-                    regenerate();
-                  });
-                });
-
-                getMiiIcon(
-                  child,
-                  "lookalike_regenerate",
-                  "fflmakeicon",
-                  108
-                ).then((icon) => {
-                  img.attr({ src: icon }).style({ opacity: "1" });
-                });
-              }
-            }
-          }
-
-          regenerate();
-        }
-      },
-      {
-        text: "Done",
-        type: "primary",
-        callback(e) {
-          const randomMiiB64 = dataToBase64(mii.export("miic"));
-          // Click the invisible "confirm" button to close the modal normally
-          m.qs(".flex-group button")?.elm.click();
-          _shutdown()();
-          new MiiEditor(
-            0,
-            async (m, shouldSave) => {
-              if (shouldSave === true)
-                await localforage.setItem(await newMiiId(), m);
-              Library();
-            },
-            randomMiiB64
-          );
-        }
-      }
-    );
-  }
-
   function reroll() {
     randomMiiContainer.clear();
     for (let i = 0; i < 24; i++) {
@@ -313,3 +167,153 @@ export const newFromLookalike = async () => {
   }
   reroll();
 };
+
+export function confirmOrReviseMii(
+  mii: Mii,
+  options: FFLiDatabaseRandom_GetInit,
+  m?: Html
+) {
+  const miiIcon = new Html("img").style({
+    opacity: "0",
+    width: "210px",
+    height: "210px",
+    transition: "opacity 0.35s ease"
+  });
+
+  getMiiIcon(mii, "lookalike_preview", "all_body_sugar", 210).then((icon) => {
+    miiIcon.attr({ src: icon }).style({ opacity: "1" });
+  });
+
+  Modal.modal(
+    "Is this OK?",
+    new Html("div").style({ margin: "0 auto" }).append(miiIcon),
+    "body",
+    // does nothing
+    {
+      text: "Cancel"
+    },
+    {
+      text: "Close",
+      type: "danger"
+    },
+    {
+      text: "Revise",
+      callback(e) {
+        let currentMii = mii;
+
+        const m = Modal.modal(
+          "Revise",
+          new Html("div").appendMany(
+            new Html("span")
+              .style({ margin: "0 auto" })
+              .text("Click any to reroll"),
+            new Html("div").class("menu").style({
+              display: "flex",
+              "flex-direction": "column",
+              gap: "0.5rem"
+            })
+          ),
+          "body",
+          { text: "Cancel" },
+          {
+            text: "Done",
+            callback(e) {
+              confirmOrReviseMii(currentMii, options);
+            }
+          }
+        );
+
+        m.qs(".modal-content")!.style({
+          height: "max-content",
+          "max-height": "100vh"
+        });
+
+        const menuDiv = m.qs(".menu")!;
+
+        function regenerate() {
+          menuDiv.clear();
+
+          let rows: Mii[][] = [];
+          for (let i = 0; i < 9; i++) {
+            const row = Math.floor(i / 3);
+            const col = i % 3;
+
+            if (rows[row] === undefined) {
+              rows[row] = [];
+            }
+
+            if (i === 4) {
+              // Use the current version of the Mii for the middle icon
+              rows[row][col] = currentMii;
+            } else {
+              // do random generation
+              var mii = new Mii(currentMii.export());
+              RandomizeMii(mii, options);
+              rows[row][col] = mii;
+            }
+          }
+
+          // Populate
+          for (const row of rows) {
+            const rowElm = new Html("div")
+              .style({ display: "flex", gap: "0.5rem" })
+              .appendTo(menuDiv);
+
+            for (const child of row) {
+              const button = new Html("button").style({
+                padding: "0"
+              });
+              const img = new Html("img")
+                .style({
+                  width: "108px",
+                  height: "108px",
+                  opacity: "0",
+                  transition: "opacity 0.2s ease"
+                })
+                .appendTo(button);
+              rowElm.append(button);
+
+              button.on("click", (e) => {
+                e.preventDefault();
+                currentMii = child;
+                requestAnimationFrame(() => {
+                  regenerate();
+                });
+              });
+
+              getMiiIcon(
+                child,
+                "lookalike_regenerate",
+                "fflmakeicon",
+                108
+              ).then((icon) => {
+                img.attr({ src: icon }).style({ opacity: "1" });
+              });
+            }
+          }
+        }
+
+        regenerate();
+      }
+    },
+    {
+      text: "Done",
+      type: "primary",
+      callback(e) {
+        const randomMiiB64 = dataToBase64(mii.export("miic"));
+        // Click the invisible "confirm" button to close the modal normally
+        if (m) m.qs(".flex-group button")?.elm.click();
+        _shutdown()();
+        new MiiEditor(
+          0,
+          async (m, shouldSave) => {
+            if (shouldSave === true)
+              await localforage.setItem(await newMiiId(), m);
+            Library();
+          },
+          randomMiiB64
+        );
+      }
+    }
+  );
+}

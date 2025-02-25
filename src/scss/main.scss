@@ -1,4 +1,4 @@
-@use "./wiiu.scss";
+// @use "./wiiu.scss";
 
 $checkbox-unchecked: url("data:image/svg+xml,%3Csvg width='128' height='128' viewBox='0 0 128 128' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='128' height='128' rx='27' fill='%23FF5C4A'/%3E%3Cpath d='M88 40L40 88' stroke='white' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M40 40L88 88' stroke='white' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 $checkbox-checked: url("data:image/svg+xml,%3Csvg width='128' height='128' viewBox='0 0 128 128' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='128' height='128' rx='27' fill='%2300BF50'/%3E%3Cpath d='M100 38L50.5 88L28 65.2727' stroke='white' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -378,7 +378,8 @@ $desktopWidth: 1875px;
   }
   &.random-mii-grid {
     .modal-content {
-      max-height: 720px;
+      height: 720px;
+      max-height: 100vh;
       width: 1280px;
       .modal-body {
         .random-mii-container {
@@ -1018,6 +1019,19 @@ canvas.scene {
         width: 100%;
         object-fit: contain;
         aspect-ratio: 1 / 1;
+
+        --scale: 0.1rem;
+        --blur: 0;
+        --color: rgba(255,255,255);
+        // filter: drop-shadow(calc(-1 * var(--scale)) calc(-1 * var(--scale)) var(--blur) var(--color))
+        // drop-shadow(0 calc(-1 * var(--scale)) var(--blur) var(--color))
+        // drop-shadow(calc(1 * var(--scale)) calc(-1 * var(--scale)) var(--blur) var(--color))
+        // drop-shadow(calc(-1 * var(--scale)) 0 var(--blur) var(--color))
+        // drop-shadow(calc(1 * var(--scale)) 0 var(--blur) var(--color))
+        // drop-shadow(calc(-1 * var(--scale)) calc(1 * var(--scale)) var(--blur) var(--color))
+        // drop-shadow(0 calc(1 * var(--scale)) var(--blur) var(--color))
+        // drop-shadow(calc(1 * var(--scale)) calc(1 * var(--scale)) var(--blur) var(--color));
+
       }
       span {
         width: 100%;
