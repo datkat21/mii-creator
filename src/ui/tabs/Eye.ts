@@ -98,7 +98,6 @@ export function EyeTab(data: TabRenderInit) {
               min: 0,
               max: 7,
               part: RenderPart.Face,
-              inverse: true,
               label: data.useAccessibility ? "Rotation" : undefined
             },
             {

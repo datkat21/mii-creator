@@ -66,8 +66,8 @@ export default {
           const t = e.target as HTMLElement;
           if (t == null) return;
           if (
-            t.closest(".modal-content") &&
-            !t.classList.contains("close-button")
+            !t.classList.contains("close-button") &&
+            t.closest(".modal-content") !== null
           )
             return;
           if (isClosing) return;

@@ -116,6 +116,13 @@ export interface FFLiDatabaseRandom_GetInit {
   eyeColor?: number;
 }
 
+export function roll(minPercentage: number) {
+  if (Math.floor(Math.random() * 100) >= 100 - minPercentage) {
+    return true;
+  }
+  return false;
+}
+
 // void FFLiDatabaseRandom::Get(FFLiCharInfo* pCharInfo, FFLGender gender, FFLAge age, FFLRace race)
 export function FFLiDatabaseRandom_Get(
   pCharInfo: Mii,
@@ -141,26 +148,14 @@ export function FFLiDatabaseRandom_Get(
 
   console.log("Gender,age,race", gender, age, race);
 
-  //     pCharInfo.miiVersion = 3;
   pCharInfo.originPlatform = MiiCreatorOriginPlatform.FFL_Wii_U;
-  //     s32 basePositionY = 0;
+
   let basePositionY = 0;
-  //     if (gender == FFL_GENDER_FEMALE || age == FFL_AGE_CHILD)
-  //         basePositionY = m_pRandomContext->Random(3);
+
   if (gender == FFLGender.FFL_GENDER_FEMALE || age == FFLAge.FFL_AGE_CHILD)
     basePositionY = Math.floor(Math.random() * 3);
-  //     pCharInfo.faceType = GetRandomParts(RANDOM_PARTS_ARRAY_FACE_TYPE[gender][age][race], m_pRandomContext);
-  //     pCharInfo.facelineColor = GetRandomParts(RANDOM_PARTS_ARRAY_FACELINE_COLOR[gender][race], m_pRandomContext);
-  //     pCharInfo.faceLine = GetRandomParts(RANDOM_PARTS_ARRAY_FACE_LINE[gender][age][race], m_pRandomContext);
-  //     pCharInfo.faceMakeup = GetRandomParts(RANDOM_PARTS_ARRAY_FACE_MAKEUP[gender][age][race], m_pRandomContext);
-  //     pCharInfo.hairType = GetRandomParts(RANDOM_PARTS_ARRAY_HAIR_TYPE[gender][age][race], m_pRandomContext);
-  //     pCharInfo.hairColor = GetRandomParts(RANDOM_PARTS_ARRAY_HAIR_COLOR[race][age], m_pRandomContext);
-  //     pCharInfo.hairDir = m_pRandomContext->Random(FFL_HAIR_DIR_MAX);
-  //     pCharInfo.eyeType = GetRandomParts(RANDOM_PARTS_ARRAY_EYE_TYPE[gender][age][race], m_pRandomContext);
-  //     pCharInfo.eyeColor = GetRandomParts(RANDOM_PARTS_ARRAY_EYE_COLOR[race], m_pRandomContext);
-  //     pCharInfo.eyeScale = 4;
-  //     pCharInfo.eyeScaleY = 3;
-  //     s32 eyeRotateOffsetTarget;
+
+  // faceline
   pCharInfo.facelineType = GetRandomParts(
     RANDOM_PARTS_ARRAY_FACE_TYPE[gender][age][race]
   );
@@ -173,6 +168,8 @@ export function FFLiDatabaseRandom_Get(
   pCharInfo.facelineMake = GetRandomParts(
     RANDOM_PARTS_ARRAY_FACE_MAKEUP[gender][age][race]
   );
+
+  // hair
   pCharInfo.hairType = GetRandomParts(
     RANDOM_PARTS_ARRAY_HAIR_TYPE[gender][age][race]
   );
@@ -184,6 +181,8 @@ export function FFLiDatabaseRandom_Get(
     pCharInfo.hairColor = Ver3HairColorTable[fixedSettings.hairColor];
   }
   pCharInfo.hairFlip = Math.ceil(Math.random() * 2) - 1;
+
+  // eyes
   pCharInfo.eyeType = GetRandomParts(
     RANDOM_PARTS_ARRAY_EYE_TYPE[gender][age][race]
   );
@@ -206,6 +205,8 @@ export function FFLiDatabaseRandom_Get(
   pCharInfo.eyeX = 2;
   pCharInfo.eyeY = basePositionY + 12;
   pCharInfo.eyeRotate += eyeRotateOffsetTarget - eyeRotateOffsetBase;
+
+  // eyebrows
   pCharInfo.eyebrowType = GetRandomParts(
     RANDOM_PARTS_ARRAY_EYEBROW_TYPE[gender][age][race]
   );
@@ -227,6 +228,8 @@ export function FFLiDatabaseRandom_Get(
   );
   pCharInfo.eyebrowRotate +=
     eyebrowRotateOffsetTarget - eyebrowRotateOffsetBase;
+
+  // mouth/nose
   pCharInfo.noseType = GetRandomParts(
     RANDOM_PARTS_ARRAY_NOSE_TYPE[gender][age][race]
   );
@@ -297,6 +300,173 @@ export function FFLiDatabaseRandom_Get(
     pCharInfo.favoriteColor = fixedSettings.favoriteColor;
   }
   pCharInfo.favorite = 0;
+}
+
+export function RandomizeMii(
+  pCharInfo: Mii,
+  fixedSettings: FFLiDatabaseRandom_GetInit
+) {
+  let [pGender, pAge, pRace] = [
+    FFLGender.FFL_GENDER_MAX,
+    FFLAge.FFL_AGE_MAX,
+    FFLRace.FFL_RACE_MAX
+  ];
+  let [gender, age, race] = DetermineParam(pGender, pAge, pRace);
+
+  if (fixedSettings.age !== undefined) {
+    age = fixedSettings.age;
+  }
+  if (fixedSettings.gender !== undefined) {
+    gender = fixedSettings.gender;
+  }
+  if (fixedSettings.race !== undefined) {
+    race = fixedSettings.race;
+  }
+
+  let basePositionY = 0;
+
+  if (gender == FFLGender.FFL_GENDER_FEMALE || age == FFLAge.FFL_AGE_CHILD)
+    basePositionY = Math.floor(Math.random() * 3);
+
+  // faceline
+  if (roll(6))
+    pCharInfo.facelineType = GetRandomParts(
+      RANDOM_PARTS_ARRAY_FACE_TYPE[gender][age][race]
+    );
+  if (roll(5))
+    pCharInfo.facelineColor = GetRandomParts(
+      RANDOM_PARTS_ARRAY_FACELINE_COLOR[gender][race]
+    );
+  if (roll(5))
+    pCharInfo.facelineWrinkle = GetRandomParts(
+      RANDOM_PARTS_ARRAY_FACE_LINE[gender][age][race]
+    );
+  if (roll(5))
+    pCharInfo.facelineMake = GetRandomParts(
+      RANDOM_PARTS_ARRAY_FACE_MAKEUP[gender][age][race]
+    );
+
+  // hair
+  if (roll(7))
+    pCharInfo.hairType = GetRandomParts(
+      RANDOM_PARTS_ARRAY_HAIR_TYPE[gender][age][race]
+    );
+  if (roll(5))
+    pCharInfo.hairColor =
+      Ver3HairColorTable[
+        GetRandomParts(RANDOM_PARTS_ARRAY_HAIR_COLOR[race][age])
+      ];
+  if (fixedSettings.hairColor !== undefined) {
+    pCharInfo.hairColor = Ver3HairColorTable[fixedSettings.hairColor];
+  }
+  if (roll(15)) pCharInfo.hairFlip = Math.ceil(Math.random() * 2) - 1;
+
+  // eyes
+  if (roll(10))
+    pCharInfo.eyeType = GetRandomParts(
+      RANDOM_PARTS_ARRAY_EYE_TYPE[gender][age][race]
+    );
+  if (roll(5))
+    pCharInfo.eyeColor =
+      Ver3EyeColorTable[GetRandomParts(RANDOM_PARTS_ARRAY_EYE_COLOR[race])];
+  if (fixedSettings.eyeColor !== undefined) {
+    pCharInfo.eyeColor = Ver3EyeColorTable[fixedSettings.eyeColor];
+  }
+  pCharInfo.eyeScale = 4;
+  pCharInfo.eyeAspect = 3;
+  let eyeRotateOffsetTarget: number;
+  if (gender == FFLGender.FFL_GENDER_MALE) {
+    pCharInfo.eyeRotate = 4;
+    eyeRotateOffsetTarget = FFLiiGetEyeRotateOffset(2);
+  } else {
+    pCharInfo.eyeRotate = 3;
+    eyeRotateOffsetTarget = FFLiiGetEyeRotateOffset(4);
+  }
+  const eyeRotateOffsetBase = FFLiiGetEyeRotateOffset(pCharInfo.eyeType);
+  pCharInfo.eyeX = 2;
+  pCharInfo.eyeY = basePositionY + 12;
+  pCharInfo.eyeRotate += eyeRotateOffsetTarget - eyeRotateOffsetBase;
+
+  // eyebrows
+  if (roll(15))
+    pCharInfo.eyebrowType = GetRandomParts(
+      RANDOM_PARTS_ARRAY_EYEBROW_TYPE[gender][age][race]
+    );
+  pCharInfo.eyebrowColor = pCharInfo.hairColor;
+  pCharInfo.eyebrowScale = 4;
+  pCharInfo.eyebrowAspect = 3;
+  pCharInfo.eyebrowRotate = 6;
+  pCharInfo.eyebrowX = 2;
+  let eyebrowRotateOffsetTarget;
+  if (race == FFLRace.FFL_RACE_ASIAN) {
+    pCharInfo.eyebrowY = basePositionY + 9;
+    eyebrowRotateOffsetTarget = FFLiiGetEyebrowRotateOffset(6);
+  } else {
+    pCharInfo.eyebrowY = basePositionY + 10;
+    eyebrowRotateOffsetTarget = FFLiiGetEyebrowRotateOffset(0);
+  }
+  const eyebrowRotateOffsetBase = FFLiiGetEyebrowRotateOffset(
+    pCharInfo.eyebrowType
+  );
+  pCharInfo.eyebrowRotate +=
+    eyebrowRotateOffsetTarget - eyebrowRotateOffsetBase;
+
+  // mouth/nose
+  if (roll(15))
+    pCharInfo.noseType = GetRandomParts(
+      RANDOM_PARTS_ARRAY_NOSE_TYPE[gender][age][race]
+    );
+  pCharInfo.noseScale = gender == FFLGender.FFL_GENDER_MALE ? 4 : 3;
+  pCharInfo.noseY = basePositionY + 9;
+  pCharInfo.mouthType = GetRandomParts(
+    RANDOM_PARTS_ARRAY_MOUTH_TYPE[gender][age][race]
+  );
+  if (roll(15))
+    pCharInfo.mouthColor =
+      Ver3MouthColorTable[
+        gender == FFLGender.FFL_GENDER_MALE
+          ? 0
+          : Math.floor(Math.random() * FFL_MOUTH_COLOR_MAX)
+      ];
+  pCharInfo.mouthScale = 4;
+  pCharInfo.mouthAspect = 3;
+  pCharInfo.mouthY = basePositionY + 13;
+  let mustacheType, beardType, mustachePositionY;
+  if (
+    gender == FFLGender.FFL_GENDER_MALE &&
+    (age == FFLAge.FFL_AGE_ADULT || age == FFLAge.FFL_AGE_ELDER) &&
+    Math.floor(Math.random() * 10) < 2
+  ) {
+    mustacheType = 0;
+    let randomBeardType = false;
+    switch (Math.floor(Math.random() * 3)) {
+      case 0:
+        randomBeardType = true;
+        break;
+      //@ts-ignore fallthrough
+      case 2:
+        randomBeardType = true; // fall-through
+      case 1:
+        if (roll(15)) mustacheType = Math.floor(Math.random() * 5) + 1;
+        break;
+    }
+    beardType = randomBeardType ? Math.floor(Math.random() * 5) + 1 : 0;
+    mustachePositionY = 10;
+  } else {
+    mustacheType = 0;
+    beardType = 0;
+    mustachePositionY = basePositionY + 10;
+  }
+  if (roll(20)) pCharInfo.mustacheType = mustacheType;
+  if (roll(20)) pCharInfo.beardType = beardType;
+  pCharInfo.beardColor = pCharInfo.hairColor;
+  pCharInfo.mustacheScale = 4;
+  pCharInfo.mustacheY = mustachePositionY;
+  pCharInfo.glassType = GetRandomGlassType(age);
+  if (roll(20))
+    pCharInfo.glassColor = Ver3GlassColorTable[Math.floor(Math.random() * 6)];
+  pCharInfo.glassScale = 4;
+  pCharInfo.glassY = basePositionY + 10;
 }
 
 //@ts-expect-error Debugging

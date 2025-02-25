@@ -99,7 +99,6 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 11,
               part: RenderPart.Face,
-              inverse: true,
               label: data.useAccessibility ? "Rotation" : undefined
             },
             {

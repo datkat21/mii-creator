@@ -1,7 +1,11 @@
 import Html from "@datkat21/html";
 import localforage from "localforage";
 import { MiiEditor } from "../../../../class/MiiEditor";
-import { FFLiDatabaseRandom_Get } from "../../../../external/ffl/FFLiDatabaseRandom";
+import {
+  FFLiDatabaseRandom_Get,
+  RandomizeMii,
+  type FFLiDatabaseRandom_GetInit
+} from "../../../../external/ffl/FFLiDatabaseRandom";
 import Mii from "../../../../class/MiiData";
 import Modal from "../../../components/Modal";
 import {
@@ -13,6 +17,7 @@ import {
 } from "../../Library";
 import { miiCreateDialog } from "./_dialog";
 import { dataToBase64 } from "../../../../util/dataConvert";
+import { AddButtonSounds } from "../../../../util/AddButtonSounds";
 
 export const newFromLookalike = async () => {
   var m = Modal.modal(
@@ -96,12 +101,12 @@ export const newFromLookalike = async () => {
       new Option("(Random)", "-1"),
       new Option("Black", "0"),
       new Option("Brown", "1"),
-      new Option("Red", "2"),
-      new Option("Light brown", "3"),
+      new Option("Auburn", "2"),
+      new Option("Hazel", "3"),
       new Option("Gray", "4"),
-      new Option("Green", "5"),
-      new Option("Dirty blonde", "6"),
-      new Option("Blonde", "7")
+      new Option("Olive", "5"),
+      new Option("Medium-blonde", "6"),
+      new Option("Light-blonde", "7")
     ]),
     makeSelect("favoriteColor", [
       new Option("Favorite color", "-1", true, true),
@@ -138,20 +143,28 @@ export const newFromLookalike = async () => {
     ])
   );
 
-  async function confirmOrReviseMii(mii: Mii) {
+  async function confirmOrReviseMii(
+    mii: Mii,
+    options: FFLiDatabaseRandom_GetInit
+  ) {
+    const miiIcon = new Html("img").style({
+      opacity: "0",
+      width: "175px",
+      height: "175px",
+      transition: "opacity 0.35s ease"
+    });
+
+    getMiiIcon(mii, "lookalike_preview", "fflmakeicon", 175).then((icon) => {
+      miiIcon.attr({ src: icon }).style({ opacity: "1" });
+    });
+
     Modal.modal(
       "Is this OK?",
-      new Html("div").append(
-        new Html("img")
-          .attr({
-            src: await getMiiIcon(mii, "lookalike_preview", "fflmakeicon", 160)
-          })
-          .style({ width: "160px", height: "160px" })
-      ),
+      new Html("div").style({ margin: "0 auto" }).append(miiIcon),
       "body",
+      // does nothing
       {
-        text: "Cancel",
-        type: "danger"
+        text: "Cancel"
       },
       {
         text: "Close",
@@ -160,7 +173,98 @@ export const newFromLookalike = async () => {
       {
         text: "Revise",
         callback(e) {
-          // Todo.
+          let currentMii = mii;
+
+          const m = Modal.modal(
+            "Revise",
+            new Html("div").appendMany(
+              new Html("span")
+                .style({ margin: "0 auto" })
+                .text("Click any to reroll"),
+              new Html("div").class("menu").style({
+                display: "flex",
+                "flex-direction": "column",
+                gap: "0.5rem"
+              })
+            ),
+            "body",
+            { text: "Cancel" },
+            {
+              text: "Done",
+              callback(e) {
+                confirmOrReviseMii(currentMii, options);
+              }
+            }
+          );
+
+          m.qs(".modal-content")!.style({ "max-height": "max-content" });
+
+          const menuDiv = m.qs(".menu")!;
+
+          function regenerate() {
+            menuDiv.clear();
+
+            let rows: Mii[][] = [];
+            for (let i = 0; i < 9; i++) {
+              const row = Math.floor(i / 3);
+              const col = i % 3;
+
+              if (rows[row] === undefined) {
+                rows[row] = [];
+              }
+
+              if (i === 4) {
+                // Use the current version of the Mii for the middle icon
+                rows[row][col] = currentMii;
+              } else {
+                // do random generation
+                var mii = new Mii(currentMii.export());
+                RandomizeMii(mii, options);
+                rows[row][col] = mii;
+              }
+            }
+
+            // Populate
+            for (const row of rows) {
+              const rowElm = new Html("div")
+                .style({ display: "flex", gap: "0.5rem" })
+                .appendTo(menuDiv);
+
+              for (const child of row) {
+                const button = new Html("button").style({
+                  padding: "0"
+                });
+                const img = new Html("img")
+                  .style({
+                    width: "108px",
+                    height: "108px",
+                    opacity: "0",
+                    transition: "opacity 0.2s ease"
+                  })
+                  .appendTo(button);
+                rowElm.append(button);
+
+                button.on("click", (e) => {
+                  e.preventDefault();
+                  currentMii = child;
+                  requestAnimationFrame(() => {
+                    regenerate();
+                  });
+                });
+
+                getMiiIcon(
+                  child,
+                  "lookalike_regenerate",
+                  "fflmakeicon",
+                  108
+                ).then((icon) => {
+                  img.attr({ src: icon }).style({ opacity: "1" });
+                });
+              }
+            }
+          }
+
+          regenerate();
         }
       },
       {
@@ -203,7 +307,7 @@ export const newFromLookalike = async () => {
       });
 
       button.on("click", async () => {
-        confirmOrReviseMii(randomMii);
+        confirmOrReviseMii(randomMii, options);
       });
     }
   }
