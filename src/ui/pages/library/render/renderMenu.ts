@@ -9,7 +9,6 @@ import {
 } from "three";
 import { GLTFExporter } from "three/examples/jsm/Addons.js";
 import { Mii3DScene, SetupType } from "../../../../class/3DScene";
-import type Mii from "../../../../external/mii-js/mii";
 import { sRGB } from "../../../../util/Color";
 import { saveArrayBuffer } from "../../../../util/downloadLink";
 import { getSetting } from "../../../../util/SettingsHelper";
@@ -19,6 +18,7 @@ import { customRender } from "./customRender";
 import { miiRenderPresets } from "./renderPresets";
 import { traverse3DMaterialFix } from "../util/3DModel";
 import { traverseAddShader } from "../../../../class/3d/shader/ShaderUtils";
+import type Mii from "../../../../class/MiiData";
 
 export const miiRender = (mii: MiiLocalforage, miiData: Mii) => {
   Modal.modal(
@@ -68,7 +68,7 @@ export const miiRender = (mii: MiiLocalforage, miiData: Mii) => {
             (gltf) => {
               console.log("gltf", gltf);
               if (gltf instanceof ArrayBuffer) {
-                saveArrayBuffer(gltf, miiData.miiName + "_head.glb");
+                saveArrayBuffer(gltf, miiData.nickname + "_head.glb");
               }
               scene.shutdown();
             },

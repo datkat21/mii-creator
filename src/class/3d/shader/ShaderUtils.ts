@@ -3,11 +3,8 @@ import {
   cLightAmbientFFLIconWithBody,
   cLightDiffuseFFLIconWithBody,
   cLightDirFFLIconWithBody,
-  cLightDirGlossy,
   cLightSpecularFFLIconWithBody,
   cMaterialName,
-  cRimColor,
-  cRimPower,
   FFLBlinnMaterial,
   FFLToonMaterial
 } from "./fflShaderConst";
