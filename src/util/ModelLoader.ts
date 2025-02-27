@@ -17,12 +17,14 @@ async function loadBodyModel(modelPath: string) {
   const idleClip = model.animations[0];
   const idleAnim = mixer.clipAction(idleClip, scene);
   idleAnim.stop();
-  const clip = model.animations.find((a) => a.name === "Pose.01")!;
-  const anim = mixer.clipAction(clip, scene);
-  anim.play();
-  anim.timeScale = 0;
-  anim.paused = true;
-  mixer.update(0);
+  try {
+    const clip = model.animations.find((a) => a.name === "Pose.01")!;
+    const anim = mixer.clipAction(clip, scene);
+    anim.play();
+    anim.timeScale = 0;
+    anim.paused = true;
+    mixer.update(0);
+  } catch (e) {}
 
   return scene;
 }

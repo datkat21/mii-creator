@@ -189,7 +189,7 @@ export function createMiiRender(
       bodyModelHands: THREE.Mesh,
       bodyModelLegs: THREE.Mesh;
 
-    if (request.drawBody) {
+    if (request.drawBody && getBodyModels().m !== null) {
       switch (gender) {
         case 0: {
           bodyModel = getBodyModels().m;
