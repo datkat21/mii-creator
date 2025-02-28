@@ -20,7 +20,7 @@ import { dataToBase64 } from "../../../../util/dataConvert";
 import { AddButtonSounds } from "../../../../util/AddButtonSounds";
 
 export const newFromLookalike = async () => {
-  var m = Modal.modal(
+  var lookalikeModal = Modal.modal(
     "Choose a look-alike",
     "",
     "body",
@@ -34,8 +34,8 @@ export const newFromLookalike = async () => {
       text: "Confirm"
     }
   );
-  m.classOn("random-mii-grid");
-  const container = m.qs(".modal-body")!;
+  lookalikeModal.classOn("random-mii-grid");
+  const container = lookalikeModal.qs(".modal-body")!;
   // Hide unused elements without deleting them
   container
     .qsa("span,.flex-group *")!
@@ -161,7 +161,7 @@ export const newFromLookalike = async () => {
       });
 
       button.on("click", async () => {
-        confirmOrReviseMii(randomMii, options);
+        confirmOrReviseMii(randomMii, options, lookalikeModal);
       });
     }
   }
@@ -171,7 +171,7 @@ export const newFromLookalike = async () => {
 export function confirmOrReviseMii(
   mii: Mii,
   options: FFLiDatabaseRandom_GetInit,
-  m?: Html
+  modalRef?: Html
 ) {
   const miiIcon = new Html("img").style({
     opacity: "0",
@@ -218,7 +218,7 @@ export function confirmOrReviseMii(
           {
             text: "Done",
             callback(e) {
-              confirmOrReviseMii(currentMii, options);
+              confirmOrReviseMii(currentMii, options, modalRef);
             }
           }
         );
@@ -248,6 +248,7 @@ export function confirmOrReviseMii(
             } else {
               // do random generation
               var mii = new Mii(currentMii.export());
+              console.log("options:", options);
               RandomizeMii(mii, options);
               rows[row][col] = mii;
             }
@@ -302,7 +303,7 @@ export function confirmOrReviseMii(
       callback(e) {
         const randomMiiB64 = dataToBase64(mii.export("miic"));
         // Click the invisible "confirm" button to close the modal normally
-        if (m) m.qs(".flex-group button")?.elm.click();
+        if (modalRef) modalRef.qs(".flex-group button")?.elm.click();
         _shutdown()();
         new MiiEditor(
           0,

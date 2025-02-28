@@ -114,6 +114,8 @@ export interface FFLiDatabaseRandom_GetInit {
   hairColor?: number;
   /** 0-5 */
   eyeColor?: number;
+
+  isOriginalMii?: boolean;
 }
 
 export function roll(minPercentage: number) {
@@ -304,7 +306,7 @@ export function FFLiDatabaseRandom_Get(
 
 export function RandomizeMii(
   pCharInfo: Mii,
-  fixedSettings: FFLiDatabaseRandom_GetInit
+  options: FFLiDatabaseRandom_GetInit
 ) {
   let [pGender, pAge, pRace] = [
     FFLGender.FFL_GENDER_MAX,
@@ -313,14 +315,14 @@ export function RandomizeMii(
   ];
   let [gender, age, race] = DetermineParam(pGender, pAge, pRace);
 
-  if (fixedSettings.age !== undefined) {
-    age = fixedSettings.age;
+  if (options.age !== undefined) {
+    age = options.age;
   }
-  if (fixedSettings.gender !== undefined) {
-    gender = fixedSettings.gender;
+  if (options.gender !== undefined) {
+    gender = options.gender;
   }
-  if (fixedSettings.race !== undefined) {
-    race = fixedSettings.race;
+  if (options.race !== undefined) {
+    race = options.race;
   }
 
   let basePositionY = 0;
@@ -356,8 +358,8 @@ export function RandomizeMii(
       Ver3HairColorTable[
         GetRandomParts(RANDOM_PARTS_ARRAY_HAIR_COLOR[race][age])
       ];
-  if (fixedSettings.hairColor !== undefined) {
-    pCharInfo.hairColor = Ver3HairColorTable[fixedSettings.hairColor];
+  if (options.hairColor !== undefined) {
+    pCharInfo.hairColor = Ver3HairColorTable[options.hairColor];
   }
   if (roll(15)) pCharInfo.hairFlip = Math.ceil(Math.random() * 2) - 1;
 
@@ -369,55 +371,61 @@ export function RandomizeMii(
   if (roll(5))
     pCharInfo.eyeColor =
       Ver3EyeColorTable[GetRandomParts(RANDOM_PARTS_ARRAY_EYE_COLOR[race])];
-  if (fixedSettings.eyeColor !== undefined) {
-    pCharInfo.eyeColor = Ver3EyeColorTable[fixedSettings.eyeColor];
+  if (options.eyeColor !== undefined) {
+    pCharInfo.eyeColor = Ver3EyeColorTable[options.eyeColor];
   }
-  pCharInfo.eyeScale = 4;
-  pCharInfo.eyeAspect = 3;
-  let eyeRotateOffsetTarget: number;
-  if (gender == FFLGender.FFL_GENDER_MALE) {
-    pCharInfo.eyeRotate = 4;
-    eyeRotateOffsetTarget = FFLiiGetEyeRotateOffset(2);
-  } else {
-    pCharInfo.eyeRotate = 3;
-    eyeRotateOffsetTarget = FFLiiGetEyeRotateOffset(4);
+  if (options.isOriginalMii !== true) {
+    pCharInfo.eyeScale = 4;
+    pCharInfo.eyeAspect = 3;
+    let eyeRotateOffsetTarget: number;
+    if (gender == FFLGender.FFL_GENDER_MALE) {
+      pCharInfo.eyeRotate = 4;
+      eyeRotateOffsetTarget = FFLiiGetEyeRotateOffset(2);
+    } else {
+      pCharInfo.eyeRotate = 3;
+      eyeRotateOffsetTarget = FFLiiGetEyeRotateOffset(4);
+    }
+    const eyeRotateOffsetBase = FFLiiGetEyeRotateOffset(pCharInfo.eyeType);
+    // pCharInfo.eyeX = 2;
+    // pCharInfo.eyeY = basePositionY + 12;
+    pCharInfo.eyeRotate += eyeRotateOffsetTarget - eyeRotateOffsetBase;
   }
-  const eyeRotateOffsetBase = FFLiiGetEyeRotateOffset(pCharInfo.eyeType);
-  pCharInfo.eyeX = 2;
-  pCharInfo.eyeY = basePositionY + 12;
-  pCharInfo.eyeRotate += eyeRotateOffsetTarget - eyeRotateOffsetBase;
 
   // eyebrows
   if (roll(15))
     pCharInfo.eyebrowType = GetRandomParts(
       RANDOM_PARTS_ARRAY_EYEBROW_TYPE[gender][age][race]
     );
-  pCharInfo.eyebrowColor = pCharInfo.hairColor;
-  pCharInfo.eyebrowScale = 4;
-  pCharInfo.eyebrowAspect = 3;
-  pCharInfo.eyebrowRotate = 6;
-  pCharInfo.eyebrowX = 2;
-  let eyebrowRotateOffsetTarget;
-  if (race == FFLRace.FFL_RACE_ASIAN) {
-    pCharInfo.eyebrowY = basePositionY + 9;
-    eyebrowRotateOffsetTarget = FFLiiGetEyebrowRotateOffset(6);
-  } else {
-    pCharInfo.eyebrowY = basePositionY + 10;
-    eyebrowRotateOffsetTarget = FFLiiGetEyebrowRotateOffset(0);
+  if (options.isOriginalMii !== true) {
+    pCharInfo.eyebrowColor = pCharInfo.hairColor;
+    pCharInfo.eyebrowScale = 4;
+    pCharInfo.eyebrowAspect = 3;
+    pCharInfo.eyebrowRotate = 6;
+    pCharInfo.eyebrowX = 2;
+    let eyebrowRotateOffsetTarget;
+    if (race == FFLRace.FFL_RACE_ASIAN) {
+      pCharInfo.eyebrowY = basePositionY + 9;
+      eyebrowRotateOffsetTarget = FFLiiGetEyebrowRotateOffset(6);
+    } else {
+      pCharInfo.eyebrowY = basePositionY + 10;
+      eyebrowRotateOffsetTarget = FFLiiGetEyebrowRotateOffset(0);
+    }
+    const eyebrowRotateOffsetBase = FFLiiGetEyebrowRotateOffset(
+      pCharInfo.eyebrowType
+    );
+    pCharInfo.eyebrowRotate +=
+      eyebrowRotateOffsetTarget - eyebrowRotateOffsetBase;
   }
-  const eyebrowRotateOffsetBase = FFLiiGetEyebrowRotateOffset(
-    pCharInfo.eyebrowType
-  );
-  pCharInfo.eyebrowRotate +=
-    eyebrowRotateOffsetTarget - eyebrowRotateOffsetBase;
 
   // mouth/nose
   if (roll(15))
     pCharInfo.noseType = GetRandomParts(
       RANDOM_PARTS_ARRAY_NOSE_TYPE[gender][age][race]
     );
-  pCharInfo.noseScale = gender == FFLGender.FFL_GENDER_MALE ? 4 : 3;
-  pCharInfo.noseY = basePositionY + 9;
+  if (options.isOriginalMii !== true) {
+    pCharInfo.noseScale = gender == FFLGender.FFL_GENDER_MALE ? 4 : 3;
+    pCharInfo.noseY = basePositionY + 9;
+  }
   pCharInfo.mouthType = GetRandomParts(
     RANDOM_PARTS_ARRAY_MOUTH_TYPE[gender][age][race]
   );
@@ -428,9 +436,11 @@ export function RandomizeMii(
           ? 0
           : Math.floor(Math.random() * FFL_MOUTH_COLOR_MAX)
       ];
-  pCharInfo.mouthScale = 4;
-  pCharInfo.mouthAspect = 3;
-  pCharInfo.mouthY = basePositionY + 13;
+  if (options.isOriginalMii !== true) {
+    pCharInfo.mouthScale = 4;
+    pCharInfo.mouthAspect = 3;
+    pCharInfo.mouthY = basePositionY + 13;
+  }
   let mustacheType, beardType, mustachePositionY;
   if (
     gender == FFLGender.FFL_GENDER_MALE &&
@@ -460,13 +470,17 @@ export function RandomizeMii(
   if (roll(20)) pCharInfo.mustacheType = mustacheType;
   if (roll(20)) pCharInfo.beardType = beardType;
   pCharInfo.beardColor = pCharInfo.hairColor;
-  pCharInfo.mustacheScale = 4;
-  pCharInfo.mustacheY = mustachePositionY;
+  if (options.isOriginalMii !== true) {
+    pCharInfo.mustacheScale = 4;
+    pCharInfo.mustacheY = mustachePositionY;
+  }
   pCharInfo.glassType = GetRandomGlassType(age);
   if (roll(20))
     pCharInfo.glassColor = Ver3GlassColorTable[Math.floor(Math.random() * 6)];
-  pCharInfo.glassScale = 4;
-  pCharInfo.glassY = basePositionY + 10;
+  if (options.isOriginalMii !== true) {
+    pCharInfo.glassScale = 4;
+    pCharInfo.glassY = basePositionY + 10;
+  }
 }
 
 //@ts-expect-error Debugging

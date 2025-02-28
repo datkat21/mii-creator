@@ -158,6 +158,22 @@ export const FFLiShapeType = {
 	MAX: 12
 };
 
+export const FFLiShapeTypeName = {
+	0: "OpaBeard",
+	1: "OpaFaceline",
+	2: "OpaHairNormal",
+	3: "OpaForeheadNormal",
+	4: "XluMask",
+	5: "XluNoseline",
+	6: "OpaNose",
+	7: "OpaHatNormal",
+	8: "XluGlass",
+	9: "OpaHairCap",
+	10: "OpaForeheadCap",
+	11: "OpaHatCap",
+	12: "Max"
+}
+
 /**
  * @enum {number}
  */
@@ -1318,12 +1334,10 @@ export class CharModel {
 
 		// Add RenderTargets for faceline and mask.
 		/**
-		 * @private
 		 * @type {THREE.RenderTarget}
 		 */
 		this._facelineTarget = null;
 		/**
-		 * @private
 		 * @type {Array<THREE.RenderTarget|null>}
 		 */
 		this._maskTargets = new Array(FFLExpression.MAX).fill(null);
@@ -1372,17 +1386,21 @@ export class CharModel {
 					 * The object ID representing the faceline shape.
 					 */
 					this._facelineID = mesh.id;
+					mesh.name = "OpaFaceline";
 					break;
 				}
 				case FFLiShapeType.XLU_MASK: {
 					/**
 					 * @private
 					 * The object ID representing the mask shape.
-					 */
+					*/
 					this._maskID = mesh.id;
+					mesh.name = "XluMask";
 					break;
 				}
 			}
+
+			mesh.name = FFLiShapeTypeName[shapeType];
 
 			this.meshes.add(mesh); // Add the mesh or null.
 		}
@@ -2157,6 +2175,7 @@ function drawParamToMesh(drawParam, materialClass, module, materialParams) {
 		mesh.geometry.userData.modulateType = drawParam.modulateParam.type;
 		// whoops, mii creator's shader parsing code DEMANDS modulateMode to exist!
 		mesh.geometry.userData.modulateMode = drawParam.modulateParam.mode;
+		mesh.geometry.userData.modulateColor = materialParam.modulateColor;
 	}
 	return mesh;
 }
@@ -2210,8 +2229,27 @@ function _bindDrawParamGeometry(drawParam, module) {
 				// gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
 				// // Bind vertex type GL_INT_2_10_10_10_REV/ / 0x8D9F.
 				// geometry.setAttribute('normal', new THREE.GLBufferAttribute(buf, 0x8D9F, 4, 4));
+
+
 				const data = module.HEAP8.subarray(buffer.ptr, buffer.ptr + buffer.size);
-				geometry.setAttribute('normal', new THREE.Int8BufferAttribute(data, buffer.stride, true));
+
+				// Calculate the number of vertices
+				const numVertices = data.length / buffer.stride;
+
+				// Create a new Int8Array to store only the 3 components per vertex
+				const newData = new Int8Array(numVertices * 3);
+
+				for (let i = 0; i < numVertices; i++) {
+					newData[i * 3] = data[i * buffer.stride];
+					newData[i * 3 + 1] = data[i * buffer.stride + 1];
+					newData[i * 3 + 2] = data[i * buffer.stride + 2];
+				}
+
+				// Use the new array with an itemSize of 3
+				geometry.setAttribute('normal', new THREE.Int8BufferAttribute(newData, 3, true));
+
+				// console.log("normal buffer:", buffer);
+				// geometry.setAttribute('normal', new THREE.Int8BufferAttribute(data, buffer.stride, true));
 				break;
 			}
 			case FFLAttributeBufferType.TANGENT: {

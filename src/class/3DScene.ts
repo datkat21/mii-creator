@@ -52,7 +52,7 @@ export class Mii3DScene {
   #scene: THREE.Scene;
   #renderer: THREE.WebGLRenderer;
   #parent: HTMLElement;
-  #pastCharModel!: CharModel | null;
+  charModel!: CharModel | null;
   mii: Mii;
   ready: boolean;
   headReady: boolean;
@@ -591,6 +591,11 @@ export class Mii3DScene {
 
     console.log("READY");
   }
+  getShirtColor() {
+    return this.mii.shirtColor !== -1 && this.mii.shirtColor < 100
+      ? SwitchMiiColorTableSRGB[this.mii.shirtColor]
+      : MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor];
+  }
   getPantsColor() {
     if (
       this.mii.pantsColor !== -1 &&
@@ -804,11 +809,7 @@ export class Mii3DScene {
         .getObjectByName("body_" + type)! as THREE.Mesh;
       if (isWiiUShader) {
         (nBody.material as THREE.ShaderMaterial).uniforms.u_const1.value =
-          new THREE.Vector4(
-            ...(this.mii.shirtColor !== -1 && this.mii.shirtColor < 100
-              ? SwitchMiiColorTableSRGB[this.mii.shirtColor]
-              : MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor])
-          );
+          new THREE.Vector4(...this.getShirtColor());
       }
       const nLegs = bodyN
         .getObjectByName(type)!
@@ -1046,14 +1047,14 @@ export class Mii3DScene {
           const bodyModelType = this.bodyModel;
 
           if (Config.renderer.useRendererServer === false) {
-            if (this.#pastCharModel) {
+            if (this.charModel) {
               // console.log("Past Char Model:", this.#pastCharModel);
-              if (this.#pastCharModel.dispose) {
-                this.#pastCharModel.dispose();
-                this.#pastCharModel = null;
+              if (this.charModel.dispose) {
+                this.charModel.dispose();
+                this.charModel = null;
               }
             }
-            this.#pastCharModel = (GLB as any).CharModel;
+            this.charModel = (GLB as any).CharModel;
           }
 
           this.#scene.add(GLB.scene);

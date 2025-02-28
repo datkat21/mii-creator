@@ -29,13 +29,13 @@ async function loadBodyModel(modelPath: string) {
   return scene;
 }
 
-let bodyType = "miitomo";
+let bodyType = "wiiu";
 export async function loadBodyModels() {
   if (Object.keys(bodyModels).length > 0) {
     // todo: dispose them? idk
     bodyModels = {};
   }
-  bodyType = (await localforage.getItem("settings_bodyModel")) || "miitomo";
+  bodyType = (await localforage.getItem("settings_bodyModel")) || "wiiu";
 
   if (bodyModels.m) {
     bodyModels.m.traverse((o: any) => {

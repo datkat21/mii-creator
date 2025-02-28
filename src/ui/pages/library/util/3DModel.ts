@@ -13,6 +13,13 @@ import { sRGB } from "../../../../util/Color";
 import { cMaterialName } from "../../../../class/3d/shader/fflShaderConst";
 import * as THREE from "three";
 import { ShaderType } from "../../../../constants/BodyShaderTypes";
+import type { FFLShaderMaterial } from "../../../../external/ffl.js/FFLShaderMaterial";
+import { renderTargetToDataTexture } from "../../../../external/ffl.js/ffl";
+import { colorMixTexture } from "../../../../class/3d/shader/ColorMix";
+import {
+  SwitchMiiColorTable,
+  SwitchMiiColorTableSRGB
+} from "../../../../constants/ColorTables";
 
 export async function traverse3DMaterialFix(
   scene: Mii3DScene
@@ -33,7 +40,7 @@ export async function traverse3DMaterialFix(
       }
     });
 
-    scene.getScene().traverse((o) => {
+    scene.getScene().traverse(async (o) => {
       if ((o as Mesh).isMesh !== true) return;
 
       const m = o as Mesh;
@@ -55,95 +62,143 @@ export async function traverse3DMaterialFix(
         console.log(m.name, (m.material as MeshBasicMaterial).type);
         if ((m.material as MeshBasicMaterial).type !== "ShaderMaterial") return;
 
-        map = (m.material as ShaderMaterial).uniforms.s_texture.value;
+        console.log("current map:", (m.material as any).map);
 
-        if (map !== null) {
-          // Wii U shader textures need to be converted from linear to sRGB
+        let mapFixed = false;
 
-          // Create a temporary canvas
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d")!;
+        switch (m.name) {
+          case "OpaFaceline": {
+            if (scene.charModel!._facelineTarget !== null) {
+              const texture = await renderTargetToDataTexture(
+                scene.charModel!._facelineTarget,
+                scene.getRenderer()
+              );
 
-          // Set canvas dimensions
-          canvas.width = map.image.width;
-          canvas.height = map.image.height;
+              (m.material as FFLShaderMaterial).map = texture;
 
-          let image = map.image,
-            isImageData = false;
-
-          if (typeof map.image.data !== "undefined") {
-            // assume multiplyTexture was used, so it's ImageData
-            image = new ImageData(
-              map.image.data,
-              map.image.width,
-              map.image.height
-            );
-            isImageData = true;
+              map = (m.material as FFLShaderMaterial).map;
+              mapFixed = true;
+            }
+            break;
           }
+          case "XluMask": {
+            if (Object.values(scene.charModel!._maskTargets)[0]! !== null) {
+              const texture = await renderTargetToDataTexture(
+                Object.values(scene.charModel!._maskTargets)[0]!,
+                scene.getRenderer()
+              );
 
-          // Draw the texture to the canvas
-          if (isImageData) context.putImageData(image, 0, 0);
-          else context.drawImage(image, 0, 0);
+              (m.material as FFLShaderMaterial).map = texture;
 
-          // Get image data from the canvas
-          const imageData = context.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
-          const data = imageData.data;
-
-          // Convert from sRGB Linear to sRGB
-          for (let i = 0; i < data.length; i += 4) {
-            // Extract RGB components
-            let r = data[i] / 255;
-            let g = data[i + 1] / 255;
-            let b = data[i + 2] / 255;
-
-            // Convert from sRGB Linear to sRGB
-            r = sRGB(r);
-            g = sRGB(g);
-            b = sRGB(b);
-
-            // Convert back to 0-255 range
-            data[i] = Math.round(r * 255);
-            data[i + 1] = Math.round(g * 255);
-            data[i + 2] = Math.round(b * 255);
+              map = (m.material as FFLShaderMaterial).map;
+              mapFixed = true;
+            }
+            break;
           }
-
-          // Update the canvas with the modified image data
-          context.putImageData(imageData, 0, 0);
-
-          const newMap = new CanvasTexture(canvas);
-
-          // Make sure to apply previous map properties!
-          newMap.flipY = map.flipY;
-          newMap.wrapS = map.wrapS;
-          newMap.wrapT = map.wrapS;
-
-          // leak?
-          map = newMap;
-          map.needsUpdate = true;
-
-          // await new Promise((resolve) => {
-          //   createImageBitmap(canvas)
-          //     .then((imageBitmap) => {
-          //       // Assign the ImageBitmap to the map's source.data
-          //       // map!.source.data = imageBitmap;
-          //       console.log(map!.source.data);
-          //       // Re-generate mipmaps
-          //       map!.needsUpdate = true;
-          //       resolve(true);
-          //     })
-          //     .catch((error) => {
-          //       console.error("Error creating ImageBitmap:", error);
-          //     });
-          // });
-
-          // Re-generate mipmaps
-          map.needsUpdate = true;
         }
+
+        if (mapFixed) console.log("fixed map:", map);
+        else {
+          map = (m.material as any).map;
+          console.log("map wasnt fixed but here you go:", map);
+        }
+
+        requestAnimationFrame(() => {
+          debugger;
+          requestAnimationFrame(() => {
+            debugger;
+          });
+        });
+
+        // if (map !== null) {
+        //   // Wii U shader textures need to be converted from linear to sRGB
+
+        //   // Create a temporary canvas
+        //   const canvas = document.createElement("canvas");
+        //   const context = canvas.getContext("2d")!;
+
+        //   // Set canvas dimensions
+        //   canvas.width = map.image.width;
+        //   canvas.height = map.image.height;
+
+        //   // let image = map.image,
+        //   let image = map,
+        //     isImageData = false;
+
+        //   // if (typeof map.image.data !== "undefined") {
+        //   //   // assume multiplyTexture was used, so it's ImageData
+        //   //   image = new ImageData(
+        //   //     map.image.data,
+        //   //     map.image.width,
+        //   //     map.image.height
+        //   //   );
+        //   //   isImageData = true;
+        //   // }
+
+        //   // Draw the texture to the canvas
+
+        //   // if (isImageData) context.putImageData(image, 0, 0);
+        //   // else context.drawImage(image, 0, 0);
+
+        //   // // Get image data from the canvas
+        //   // const imageData = context.getImageData(
+        //   //   0,
+        //   //   0,
+        //   //   canvas.width,
+        //   //   canvas.height
+        //   // );
+        //   // const data = imageData.data;
+
+        //   // // Convert from sRGB Linear to sRGB
+        //   // for (let i = 0; i < data.length; i += 4) {
+        //   //   // Extract RGB components
+        //   //   let r = data[i] / 255;
+        //   //   let g = data[i + 1] / 255;
+        //   //   let b = data[i + 2] / 255;
+
+        //   //   // Convert from sRGB Linear to sRGB
+        //   //   r = sRGB(r);
+        //   //   g = sRGB(g);
+        //   //   b = sRGB(b);
+
+        //   //   // Convert back to 0-255 range
+        //   //   data[i] = Math.round(r * 255);
+        //   //   data[i + 1] = Math.round(g * 255);
+        //   //   data[i + 2] = Math.round(b * 255);
+        //   // }
+
+        //   // // Update the canvas with the modified image data
+        //   // context.putImageData(imageData, 0, 0);
+
+        //   // const newMap = new CanvasTexture(canvas);
+
+        //   // // Make sure to apply previous map properties!
+        //   // newMap.flipY = map.flipY;
+        //   // newMap.wrapS = map.wrapS;
+        //   // newMap.wrapT = map.wrapS;
+
+        //   // // leak?
+        //   // map = newMap;
+        //   // map.needsUpdate = true;
+
+        //   // // await new Promise((resolve) => {
+        //   // //   createImageBitmap(canvas)
+        //   // //     .then((imageBitmap) => {
+        //   // //       // Assign the ImageBitmap to the map's source.data
+        //   // //       // map!.source.data = imageBitmap;
+        //   // //       console.log(map!.source.data);
+        //   // //       // Re-generate mipmaps
+        //   // //       map!.needsUpdate = true;
+        //   // //       resolve(true);
+        //   // //     })
+        //   // //     .catch((error) => {
+        //   // //       console.error("Error creating ImageBitmap:", error);
+        //   // //     });
+        //   // // });
+
+        //   // // Re-generate mipmaps
+        //   // map.needsUpdate = true;
+        // }
       } else if (shaderSetting === "switch") {
         // Can't remember what the uniform for texture is on switch
       } else {
@@ -173,12 +228,23 @@ export async function traverse3DMaterialFix(
         return Number(`0x${hexR}${hexG}${hexB}`);
       }
 
+      console.log(
+        `${m.name} color:`,
+        Array.isArray(userData.modulateColor)
+          ? userData.modulateColor
+          : (userData.modulateColor as THREE.Vector4).toArray()
+      );
+
+      THREE.ColorManagement.enabled = false;
+
       // define params for the model material export
-      let color: THREE.ColorRepresentation | undefined = rgbaToHex(
-          userData.modulateColor
+      let color: THREE.ColorRepresentation | undefined = new THREE.Color(
+          userData.modulateColor.x,
+          userData.modulateColor.y,
+          userData.modulateColor.z
         ),
-        metalness: number = 1,
-        roughness: number = 1;
+        metalness: number = 0,
+        roughness: number = 0.5;
 
       if (m.parent) {
         if (m.parent.name.includes("Hat")) {
@@ -193,6 +259,21 @@ export async function traverse3DMaterialFix(
         }
       }
 
+      // hack
+      if (
+        userData.modulateColor.x === 0 &&
+        userData.modulateColor.y === 0 &&
+        userData.modulateColor.z === 0 &&
+        userData.modulateColor.w === 0
+      ) {
+        // don't multiply color in blender?
+        color = undefined;
+      }
+
+      if (color !== undefined) {
+        color.convertSRGBToLinear();
+      }
+
       var mat = new MeshPhysicalMaterial({
         color,
         metalness,
@@ -203,13 +284,52 @@ export async function traverse3DMaterialFix(
 
       switch (userData.modulateType) {
         case cMaterialName.FFL_MODULATE_TYPE_SHAPE_MASK:
-        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSELINE:
           mat.side = THREE.FrontSide;
           mat.transparent = true;
           break;
-        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_GLASS:
+        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSELINE: {
+          mat.side = THREE.FrontSide;
+          mat.transparent = true;
+          const tex = (m.material as FFLShaderMaterial).map!;
+          mat.map = tex;
+
+          const newTexture = await colorMixTexture(tex, {
+            x: 0,
+            y: 0,
+            z: 0,
+            w: 1
+          });
+
+          mat.map = await loadBlobTexture(newTexture);
+          mat.map!.wrapS = tex.wrapS;
+          mat.map!.wrapT = tex.wrapT;
+          break;
+        }
+        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_GLASS: {
           mat.side = THREE.DoubleSide;
           mat.transparent = true;
+          const tex = (m.material as FFLShaderMaterial).map!;
+
+          // Fix the texture
+          const newTexture = await colorMixTexture(
+            tex,
+            new THREE.Vector4(...SwitchMiiColorTableSRGB[scene.mii.glassColor]),
+            new THREE.Vector4(0, 0, 0, 0)
+          );
+
+          mat.map = await loadBlobTexture(newTexture);
+          mat.map!.wrapS = tex.wrapS;
+          mat.map!.wrapT = tex.wrapT;
+          break;
+        }
+        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY:
+          // get pants color from the scene
+          const shirtColor = scene.getShirtColor();
+          mat.color = new THREE.Color(
+            shirtColor[0],
+            shirtColor[1],
+            shirtColor[2]
+          );
           break;
         case cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS:
           // get pants color from the scene
@@ -222,13 +342,41 @@ export async function traverse3DMaterialFix(
           break;
       }
 
-      m.material = mat;
+      if (mat !== undefined) m.material = mat;
+      else console.warn(`WARNING: ${m.name}'s material is empty.`);
 
       count++;
 
       if (count === total) {
         resolve(mats);
+
+        requestAnimationFrame(() => {
+          debugger;
+
+          requestAnimationFrame(() => {
+            debugger;
+          });
+        });
       }
     });
+  });
+}
+
+function loadBlobTexture(blob: Blob): Promise<THREE.Texture> {
+  return new Promise((resolve) => {
+    var texture = new THREE.Texture();
+    var url = URL.createObjectURL(blob);
+
+    var image = new Image();
+    image.src = url;
+    image.onload = function () {
+      // texture.flipY = false;
+      texture.image = image;
+      texture.needsUpdate = true;
+
+      resolve(texture);
+
+      URL.revokeObjectURL(url);
+    };
   });
 }

@@ -11,6 +11,7 @@ import {
 import Html from "@datkat21/html";
 import { miiRender } from "./render/renderMenu";
 import { miiExportData } from "./export";
+import { confirmOrReviseMii } from "./new/lookalike";
 
 export const miiSelect = (
   mii: MiiLocalforage,
@@ -44,6 +45,15 @@ export const miiSelect = (
               mii.mii
             );
           }
+        }
+      },
+      {
+        text: "Revise",
+        async callback() {
+          confirmOrReviseMii(miiData, {
+            gender: miiData.gender,
+            isOriginalMii: true
+          });
         }
       },
       {

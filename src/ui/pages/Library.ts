@@ -555,7 +555,7 @@ export async function Library(highlightMiiId?: string) {
                   "datkat21",
                   "https://github.com/datkat21",
                   "Lead developer of Mii Creator",
-                  "00070e555d5863674e53666975777c767c7d848b9299989f9ea1a8a9b5bc89e1e9efececf6ecf6ece8f3faf7fbfdfe"
+                  "000040030c040320020c0407050213030a0000000008000804000a07003e5303010a09031303130d04000a030d0a"
                 );
                 createMiiCard(
                   container,
@@ -571,7 +571,7 @@ export async function Library(highlightMiiId?: string) {
                   "objecty",
                   "https://x.com/objecty_twitt",
                   "Composed the music for the site",
-                  "00070e3b3f3c4649555e5c6675777a7a7f7e818890979ea5b4b7bebbbac188bdc6ced4ccd6cccfe3f5f8fffcff0513"
+                  "00003a030a030407020b030805040902080400010000000804000a0800403e02010311031304130d04000a040109"
                 );
                 createMiiCard(
                   container,
@@ -579,7 +579,7 @@ export async function Library(highlightMiiId?: string) {
                   "Timimimi",
                   "https://github.com/Timiimiimii",
                   "Modeled many of the custom hats and helped with debugging",
-                  "00070e3c4554575c616c6872818b909da0b1b7bec3cad0d78f93a1b1c0c78ce8f0f8fdf2f8f3f7ebebf6fdfcfffffb"
+                  "00003b0208040206040d0308050206040a0100020003005f03090b0800426d01010e16031403130f04000804070b "
                 );
                 createMiiCard(
                   container,
