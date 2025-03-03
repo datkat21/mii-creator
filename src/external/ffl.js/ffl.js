@@ -283,10 +283,6 @@ const FFLAttributeBuffer = _.struct([
 	_.uintptr('ptr')
 ]);
 
-// const snorm_10_10_10_2 = _.struct([
-
-// ])
-
 /**
  * @typedef {Object} FFLAttributeBufferParam
  * @property {Array<FFLAttributeBuffer>} attributeBuffers
@@ -2221,7 +2217,6 @@ function _bindDrawParamGeometry(drawParam, module) {
 				const ptr = buffer.ptr / 4;
 				const data = module.HEAPF32.subarray(ptr, ptr + (vertexCount * 4));
 				const interleavedBuffer = new THREE.InterleavedBuffer(data, 4);
-
 				// Only works on Three.js r109 and above (previously used addAttribute which can be remapped)
 				geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(interleavedBuffer, 3, 0));
 				break;
@@ -2234,6 +2229,7 @@ function _bindDrawParamGeometry(drawParam, module) {
 				// gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
 				// // Bind vertex type GL_INT_2_10_10_10_REV/ / 0x8D9F.
 				// geometry.setAttribute('normal', new THREE.GLBufferAttribute(buf, 0x8D9F, 4, 4));
+
 
 				const data = module.HEAP8.subarray(buffer.ptr, buffer.ptr + buffer.size);
 
@@ -2251,7 +2247,8 @@ function _bindDrawParamGeometry(drawParam, module) {
 
 				// // Use the new array with an itemSize of 3
 				// geometry.setAttribute('normal', new THREE.Int8BufferAttribute(newData, 3, true));
-				
+
+				// console.log("normal buffer:", buffer);
 				geometry.setAttribute('normal', new THREE.Int8BufferAttribute(data, buffer.stride, true));
 				break;
 			}
@@ -2642,6 +2639,7 @@ function createSceneFromDrawParams(drawParams, bgColor = null, materialClass, mo
 	const meshes = [];
 	drawParams.forEach((dp) => {
 		const mesh = drawParamToMesh(dp, materialClass, module);
+		// console.log(dp, mesh);
 		if (mesh) {
 			scene.add(mesh);
 			meshes.push(mesh);

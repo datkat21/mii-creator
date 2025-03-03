@@ -97,10 +97,14 @@ export function GetRandomParts(array: any[]) {
   return array[1][Math.floor(Math.random() * array[0])];
 }
 
-const RANDOM_GLASS_TYPE: any[] = [
+const RANDOM_GLASS_TYPE: number[][] = [
   [90, 94, 96, 100, 0, 0, 0, 0, 0],
   [83, 86, 90, 93, 94, 96, 98, 100, 0],
   [78, 83, 0, 93, 0, 0, 98, 100, 0]
+];
+
+const EYE_Y_TO_GLASS_Y: any[] = [
+  0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16
 ];
 
 // set these fields to "lock in" options when generating a random Mii
@@ -473,6 +477,11 @@ export function RandomizeMii(
   if (options.isOriginalMii !== true) {
     pCharInfo.mustacheScale = 4;
     pCharInfo.mustacheY = mustachePositionY;
+  } else {
+    // Calculate glass y position
+    if (pCharInfo.glassType === 0) {
+      pCharInfo.glassY = EYE_Y_TO_GLASS_Y[pCharInfo.eyeY];
+    }
   }
   pCharInfo.glassType = GetRandomGlassType(age);
   if (roll(20))

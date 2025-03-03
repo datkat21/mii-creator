@@ -102,8 +102,6 @@ export function colorMixTexture(
       renderer.domElement.toBlob((blob) => {
         if (blob === null) return console.error("blob is null???");
         resolve(blob);
-        renderer.dispose();
-        geometry.dispose();
       });
     }
     render();

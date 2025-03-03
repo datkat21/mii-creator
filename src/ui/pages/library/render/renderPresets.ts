@@ -1,6 +1,5 @@
 import { WebGLRenderer } from "three";
 import type Mii from "../../../../class/MiiData";
-import { getFFL } from "../../../../main";
 import { downloadLink, saveBlob } from "../../../../util/downloadLink";
 import {
   createMiiRender,
@@ -10,6 +9,7 @@ import {
 import Modal from "../../../components/Modal";
 import type { MiiLocalforage } from "../../Library";
 import { ViewType } from "../../../../external/ffl.js/ffl";
+import { getFFL } from "../../../../util/FFLLoader";
 
 export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
   const renderer = new WebGLRenderer({ alpha: true });
@@ -28,7 +28,8 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
       hatType: miiData.hatType,
       pantsColor: miiData.pantsColor,
       shirtColor: miiData.shirtColor,
-      special: miiData.special
+      special: miiData.special,
+      temporary: miiData.temporary
     }
   };
   Modal.modal(

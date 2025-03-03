@@ -12,11 +12,14 @@ import {
 } from "./pages/Settings";
 import { customRender } from "./pages/library/render/customRender";
 
+import { prepareFFL } from "../util/FFLLoader";
 export async function setupUi() {
   let mm = getMusicManager();
   getSoundManager();
 
   updateSettings(true);
+
+  await prepareFFL();
 
   displayUpdateNotice();
 

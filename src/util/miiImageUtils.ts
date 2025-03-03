@@ -8,7 +8,9 @@ import { AddButtonSounds } from "./AddButtonSounds";
 import { Config } from "../config";
 import { getMiiIcon } from "../ui/pages/Library";
 import { parseHexOrB64ToUint8Array, ViewType } from "../external/ffl.js/ffl";
-import { getFFLWorkerMakeIcon } from "../main";
+import EditorIcons from "../constants/EditorIcons";
+import { MiiCreatorV4AppendData } from "../class/struct/MiiCreatorV4Data";
+import { getFFLWorkerMakeIcon } from "./FFLLoader";
 
 const makeQrCodeImage = async (mii: Mii): Promise<HTMLImageElement> => {
   let convertedVer3Data: Uint8Array, ver3QRData: Uint8Array | any[];
@@ -70,7 +72,8 @@ export const QRCodeCanvas = async (
   mii: Mii,
   extendedColors: boolean = true
 ) => {
-  let render: HTMLImageElement;
+  let render: HTMLImageElement,
+    renderPos = { y: 0, x: 0, width: 0, height: 0 };
   if (Config.renderer.useRendererServer) {
     render = await loadImage(
       `${Config.renderer.renderFullBodyAltURL}&data=${encodeURIComponent(
@@ -81,6 +84,7 @@ export const QRCodeCanvas = async (
         mii.hatFavoriteColor - 1 + Config.renderer.hatColorAdd
       }`
     );
+    renderPos = { x: 54, y: -54, width: 714, height: 953 };
   } else {
     // TODO
     // render
@@ -110,9 +114,30 @@ export const QRCodeCanvas = async (
         return resolve(img);
       };
     });
+    renderPos = { x: -65, y: -54, width: 952, height: 952 };
   }
+  console.log("got render");
   const qrCodeSource = await makeQrCodeImage(mii);
   const background = await getBackground(extendedColors);
+
+  let favoriteIcon: HTMLImageElement | undefined = undefined;
+  if (mii.favorite === 1 || mii.special === 1) {
+    console.log("loading favorite icon");
+    favoriteIcon = await new Promise<HTMLImageElement>((resolve) => {
+      var img = new Image();
+      img.onload = function () {
+        resolve(img);
+      };
+
+      if (mii.favorite === 1)
+        img.src =
+          "data:image/svg+xml," + encodeURIComponent(EditorIcons.favorite);
+      if (mii.special === 1)
+        img.src =
+          "data:image/svg+xml," + encodeURIComponent(EditorIcons.special);
+    });
+    console.log("loaded favorite icon");
+  }
 
   const canvas = document.createElement("canvas");
   canvas.width = 1280;
@@ -133,7 +158,13 @@ export const QRCodeCanvas = async (
   ctx.textBaseline = "top";
   ctx.fillStyle = "#cccccc";
   ctx.fillText(`Made with Mii Creator ${Config.version.string}`, 1248, 667);
-  ctx.drawImage(render, 54, -54, 714, 953);
+  ctx.drawImage(
+    render,
+    renderPos.x,
+    renderPos.y,
+    renderPos.width,
+    renderPos.height
+  );
   // qr code container
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
@@ -145,6 +176,13 @@ export const QRCodeCanvas = async (
   ctx.beginPath();
   ctx.roundRect(769, 542, 463, 99, [0, 0, 16, 16]);
   ctx.fill();
+
+  // favorite icon (if exists)
+  if (favoriteIcon) {
+    ctx.drawImage(favoriteIcon, 1172, 480, 102, 102);
+    console.log("drawing favorite icon");
+  }
+
   // mii name
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";

@@ -13,11 +13,11 @@ import {
   StudioCharInfo,
   updateCharModel
 } from "../external/ffl.js/ffl";
-import { getFFL } from "../main";
 import {
   getMaterialOverridesFromShaderType,
   getShaderMaterialFromShaderType
 } from "../class/3d/shader/ShaderUtils";
+import { getFFL } from "./FFLLoader";
 
 export type GLTFLike = {
   animations: any[];
@@ -37,40 +37,40 @@ export type ModelFlag =
   | "NEW_EXPRESSIONS"
   | "NEW_MASK_ONLY";
 
-async function createOrUpdateCharModel(
-  rendererRef: THREE.WebGLRenderer,
-  modelDesc: any,
-  newStudioData: Uint8Array,
-  charModelRef?: CharModel
-) {
-  let currentCharModel: CharModel;
-  if (charModelRef) {
-    if (!rendererRef)
-      throw new Error("Missing renderer when trying to update CharModel");
+// async function createOrUpdateCharModel(
+//   rendererRef: THREE.WebGLRenderer,
+//   modelDesc: any,
+//   newStudioData: Uint8Array,
+//   charModelRef?: CharModel
+// ) {
+//   let currentCharModel: CharModel;
+//   if (charModelRef) {
+//     if (!rendererRef)
+//       throw new Error("Missing renderer when trying to update CharModel");
 
-    currentCharModel = charModelRef;
+//     currentCharModel = charModelRef;
 
-    // Create new charinfo data
-    const studioCharInfo = StudioCharInfo.unpack(newStudioData);
-    const newCharInfo = FFLiCharInfo.pack(
-      convertStudioCharInfoToFFLiCharInfo(studioCharInfo)
-    );
+//     // Create new charinfo data
+//     const studioCharInfo = StudioCharInfo.unpack(newStudioData);
+//     const newCharInfo = FFLiCharInfo.pack(
+//       convertStudioCharInfoToFFLiCharInfo(studioCharInfo)
+//     );
 
-    // update char model
-    updateCharModel(currentCharModel, newCharInfo, rendererRef, modelDesc);
-  } else {
-    currentCharModel = createCharModel(
-      newStudioData,
-      modelDesc,
-      await getShaderMaterialFromShaderType(),
-      getFFL(),
-      false,
-      await getMaterialOverridesFromShaderType()
-    );
-  }
+//     // update char model
+//     updateCharModel(currentCharModel, newCharInfo, rendererRef, modelDesc);
+//   } else {
+//     currentCharModel = createCharModel(
+//       newStudioData,
+//       modelDesc,
+//       await getShaderMaterialFromShaderType(),
+//       getFFL(),
+//       false,
+//       await getMaterialOverridesFromShaderType()
+//     );
+//   }
 
-  return currentCharModel;
-}
+//   return currentCharModel;
+// }
 
 export async function getHeadModel(
   mii: Mii,

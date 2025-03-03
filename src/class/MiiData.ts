@@ -2,7 +2,12 @@ import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
 // import Notify from "../ui/components/Notify";
 import { allocateArray } from "../util/allocateArray";
 import { dataToBase64, dataToHex } from "../util/dataConvert";
-import { FFLiCreateID, Ver3StoreData } from "./struct/FFLStoreData";
+import { randomizeUint8Array } from "../util/Numbers";
+import {
+  FFLiAuthorID,
+  FFLiCreateID,
+  Ver3StoreData
+} from "./struct/FFLStoreData";
 import {
   MiiCreatorV3Data,
   MiiCreatorV3DataToMiiCreatorV4Data as MiiCreatorV3DataToV4
@@ -129,10 +134,11 @@ export default class Mii {
         tempArray = allocateArray(96, input);
         data = RFLStoreDataToMiiCreatorV4Data(RFLStoreData.unpack(tempArray));
         break;
-      // 88 byte nn::mii::CharInfo - .charinfo
+      // 87-88 byte nn::mii::CharInfo - .charinfo
+      case 87:
       case 88:
-        // tempArray = allocateArray(88, input);
-        const d = NnMiiCharInfo.unpack(input) as NnMiiCharInfo;
+        tempArray = allocateArray(88, input);
+        const d = NnMiiCharInfo.unpack(tempArray) as NnMiiCharInfo;
 
         var tmpCreateId = new Uint8Array(10);
         tmpCreateId.set(d.createId.slice(0, 10), 0);
@@ -144,6 +150,7 @@ export default class Mii {
         data.createId.set(d.createId.slice(0, 10), 0);
         data.authorId.set(d.createId.slice(10), 0);
         data.creator = "";
+        data.originPlatform = MiiCreatorOriginPlatform.nn_mii_Switch;
         break;
       // 92/96-byte Ver3StoreData - .cfsd/.ffsd
       case 92:
@@ -277,7 +284,7 @@ export default class Mii {
     };
   }
 
-  #getNickameSafe() {
+  #getNicknameSafe() {
     if (this.nickname.trim() !== "") return this.nickname;
     else return "A Mii";
   }
@@ -292,7 +299,7 @@ export default class Mii {
     else {
       this.valid = false;
       console.warn(
-        `${this.#getNickameSafe()} has invalid data:`,
+        `${this.#getNicknameSafe()} has invalid data:`,
         verify.reasons.join(", ")
       );
       throw new Error(
@@ -364,7 +371,6 @@ export default class Mii {
     this.mustacheScale = data.mustacheScale;
     this.mustacheType = data.mustacheType;
     this.mustacheY = data.mustacheY;
-    this.temporary = data.temporary;
     this.noseScale = data.noseScale;
     this.noseType = data.noseType;
     this.noseY = data.noseY;
@@ -373,17 +379,25 @@ export default class Mii {
     this.regionMove = data.regionMove;
     this.shirtColor = data.shirtColor;
     this.special = data.special;
+    this.temporary = data.temporary;
 
-    // Parse CreateID just in case
-    const createId = FFLiCreateID.unpack(this.createId) as FFLiCreateID;
+    if (
+      this.originPlatform === MiiCreatorOriginPlatform.CFL_3DS ||
+      this.originPlatform === MiiCreatorOriginPlatform.FFL_Wii_U
+    ) {
+      // Parse CreateID just in case
+      const createId = FFLiCreateID.unpack(this.createId) as FFLiCreateID;
 
-    if (!createId.flag_normal) {
-      this.special = 1;
+      if (!createId.flag_normal) {
+        this.special = 1;
+      }
+      if (createId.flag_temporary) {
+        this.special = 0;
+        this.temporary = 1;
+      }
     }
-    if (createId.flag_temporary) {
-      this.special = 0;
-      this.temporary = 1;
-    }
+
+    this.fixInternalIDs();
   }
 
   /** outputs in specific format */
@@ -426,6 +440,28 @@ export default class Mii {
 
   hasExtendedColors(): boolean {
     // TODO: implement a check for non-ver3 colors
-    return true;
+    // return true;
+    return false;
+  }
+
+  // helper function to fix bad AuthorID/CreateID.
+  // (3DS/Wii U systems will complain)
+  // Easiest solution is to just randomize them
+  fixInternalIDs() {
+    const createId = FFLiCreateID.unpack(this.createId) as FFLiCreateID;
+    const authorId = this.authorId;
+
+    // If empty, randomize CreateID base value
+    if (Array.from(createId.base).every((e) => e === 0)) {
+      createId.base = randomizeUint8Array(createId.base);
+    }
+
+    // If empty, randomize AuthorID value
+    if (Array.from(authorId).every((e) => e === 0)) {
+      this.authorId = randomizeUint8Array(authorId);
+    }
+
+    // Re-pack CreateID value
+    this.createId = FFLiCreateID.pack(createId);
   }
 }

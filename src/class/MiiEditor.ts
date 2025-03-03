@@ -259,7 +259,6 @@ export class MiiEditor {
     if (this.ui.scene && Config.renderer.useRendererServer === false) {
       this.ui.scene.cameraPan = Boolean(this.renderingMode);
       this.ui.scene.focusCameraUpdate();
-      console.log("why this not work :(", this.renderingMode);
     }
     await this.ui.scene.init();
     this.ui.mii.append(this.ui.scene.getRendererElement());

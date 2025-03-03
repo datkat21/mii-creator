@@ -83,7 +83,8 @@ export const MiiCreatorV4Data = _.struct([
   _.uint8("personality"),
   _.uint8("regionMove"),
   _.uint8("shirtColor"),
-  _.uint8("special")
+  _.uint8("special"),
+  _.uint8("temporary")
 ]) as Struct;
 
 export const MiiCreatorV4AppendData = _.struct([
@@ -99,16 +100,16 @@ export const MiiCreatorV4AppendData = _.struct([
   _.uint8("mouthColor"),
 
   // miic specific fields
-  _.uint8("birthYear"),
+  _.uint8("hatType"),
   _.uint8("facePaintColor"),
   _.uint8("hatCommonColor"),
   _.uint8("hatFavoriteColor"),
-  _.uint8("hatType"),
-  _.uint8("hideNose"), // unused
-  _.uint8("originPlatform"), // unused
   _.uint8("pantsColor"),
   _.uint8("personality"),
-  _.uint8("shirtColor")
+  _.uint8("shirtColor"),
+  _.uint8("birthYear"),
+  _.uint8("hideNose"), // unused
+  _.uint8("originPlatform") // unused
 ]) as Struct;
 
 export type MiiCreatorV4Data = {
@@ -179,6 +180,7 @@ export type MiiCreatorV4Data = {
   regionMove: number;
   shirtColor: number;
   special: number;
+  temporary: number;
 };
 
 export enum MiiCreatorOriginPlatform {
@@ -261,7 +263,8 @@ const EmptyMiiCreatorData: MiiCreatorV4Data = {
   personality: -1,
   regionMove: 0,
   shirtColor: -1,
-  special: 0
+  special: 0,
+  temporary: 0
 };
 export const EmptyMiiCreatorV4Data = () => ({ ...EmptyMiiCreatorData });
 
@@ -280,6 +283,7 @@ export function MiiCreatorV4DataToFFSD(
   appendBytes: boolean = false
 ): Uint8Array | Ver3StoreData {
   // TODO
+
   const output: Partial<Ver3StoreData> = {
     author_id: FFLiAuthorID.unpack(input.authorId),
     author_type: 0,
@@ -289,9 +293,9 @@ export function MiiCreatorV4DataToFFSD(
     beard_y: input.mustacheY,
     birth_day: input.birthDay,
     birth_month: input.birthMonth,
-    birth_platform: Math.min(
-      input.originPlatform,
-      MiiCreatorOriginPlatform.FFL_Wii_U
+    birth_platform: Math.max(
+      2,
+      Math.min(input.originPlatform, MiiCreatorOriginPlatform.FFL_Wii_U)
     ),
     build: input.build,
     checksum: 0,
@@ -351,6 +355,9 @@ export function MiiCreatorV4DataToFFSD(
     room_index: 0,
     region_move: 0
   };
+
+  // Set special flag based on if special or not.
+  output.create_id!.flag_normal = Number(!input.special);
 
   output.checksum = calculateCRC16(Ver3StoreData.pack(output));
 
@@ -529,7 +536,8 @@ export const validationThing: Partial<Record<keyof MiiCreatorV4Data, Prop>> = {
   pantsColor: { type: PropType.Number, default: -1, min: -1, max: 99 },
   personality: { type: PropType.Number, default: -1, min: -1, max: 255 },
   shirtColor: { type: PropType.Number, default: -1, min: -1, max: 99 },
-  special: { type: PropType.Number, default: 0, min: 0, max: 1 }
+  special: { type: PropType.Number, default: 0, min: 0, max: 1 },
+  temporary: { type: PropType.Number, default: 0, min: 0, max: 1 }
 };
 
 export function validate(input: MiiCreatorV4Data) {

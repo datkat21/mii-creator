@@ -2,7 +2,12 @@
 
 // Settings relating to local rendering.
 const useRendererServer = false; // Allow use of the renderer server (legacy rendering)
-const fflResourcePath = "/FFLResHigh.dat"; // Configure the path for where the resource file is located.
+const fflResourcePath = [
+  "/FFLResLow.dat",
+  "/FFLResMiddle.dat",
+  "/FFLResHigh.dat"
+]; // Configure the path for where the resource file is located.
+const fflResourcesNames = ["Low", "Middle", "High"]; // Configure the path for where the resource file is located.
 
 // Instance of FFL-Testing/Mii Studio API compatible renderer.
 // const baseURL = "http://localhost:5000/miis/image"; // <-- Uncomment this when using local FFL-testing for development
@@ -21,6 +26,7 @@ export const Config = {
     baseURL,
     useRendererServer,
     fflResourcePath,
+    fflResourcesNames,
     renderFFLMakeIcon: `${baseURL}.png?shaderType=miitomo&type=fflmakeicon&width=360&verifyCharInfo=0`,
     renderHeadshotURL: `${baseURL}.png?shaderType=wiiu&type=face&width=260&verifyCharInfo=0`,
     renderHeadshotURLNoParams: `${baseURL}.png`,

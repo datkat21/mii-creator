@@ -123,7 +123,7 @@ self.onmessage = async (e) => {
               url = URL.createObjectURL(result.result as Blob);
               setTimeout(() => {
                 URL.revokeObjectURL(url!);
-              }, 500);
+              }, 50_000);
             }
           } else {
             if (result.type === "blob") {

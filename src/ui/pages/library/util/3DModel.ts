@@ -74,16 +74,14 @@ export async function traverse3DMaterialFix(
                 scene.getRenderer()
               );
 
-              const oldMat = m.material as FFLShaderMaterial;
-              map = (m.material as FFLShaderMaterial).map;
-
-              if (map) {
-                map.wrapS = oldMat.map.wrapS;
-                map.wrapT = oldMat.map.wrapT;
+              (m.material as FFLShaderMaterial).map = texture;
+              const map2 = (m.material as FFLShaderMaterial).map as Texture;
+              if (map2) {
+                map2.wrapS = THREE.MirroredRepeatWrapping;
+                map2.wrapT = THREE.MirroredRepeatWrapping;
               }
 
-              oldMat.map = texture;
-
+              map = (m.material as FFLShaderMaterial).map;
               mapFixed = true;
             }
             break;
@@ -251,7 +249,8 @@ export async function traverse3DMaterialFix(
           userData.modulateColor.z
         ),
         metalness: number = 0,
-        roughness: number = 0.5;
+        // roughness: number = 0.5;
+        roughness: number = 0.0;
 
       if (m.parent) {
         if (m.parent.name.includes("Hat")) {

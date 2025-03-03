@@ -148,7 +148,9 @@ export function MiiCreatorV3DataToMiiCreatorV4Data(
   data.noseType = input.nose_type;
   data.noseY = input.nose_y;
   data.regionMove = input.region_move;
-  data.special = Number(!input.create_id.flag_normal);
+  if (input.create_id.flag_temporary !== 0)
+    data.special = Number(!input.create_id.flag_normal);
+  data.temporary = Number(input.create_id.flag_temporary);
 
   return data;
 }
