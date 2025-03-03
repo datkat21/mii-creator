@@ -119,7 +119,8 @@ export const getMiiIcon = async (
             pantsColor: miiData.pantsColor,
             shirtColor: miiData.shirtColor,
             favorite: miiData.favorite,
-            special: miiData.special
+            special: miiData.special,
+            temporary: miiData.temporary
           },
           drawBody,
           size

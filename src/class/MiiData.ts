@@ -2,13 +2,14 @@ import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
 // import Notify from "../ui/components/Notify";
 import { allocateArray } from "../util/allocateArray";
 import { dataToBase64, dataToHex } from "../util/dataConvert";
-import { Ver3StoreData } from "./struct/FFLStoreData";
+import { FFLiCreateID, Ver3StoreData } from "./struct/FFLStoreData";
 import {
   MiiCreatorV3Data,
   MiiCreatorV3DataToMiiCreatorV4Data as MiiCreatorV3DataToV4
 } from "./struct/MiiCreatorV3Data";
 import {
   EmptyMiiCreatorV4Data,
+  MiiCreatorOriginPlatform,
   MiiCreatorV4Data,
   MiiCreatorV4DataToFFSD,
   validate
@@ -88,6 +89,7 @@ export default class Mii {
   mustacheScale!: number;
   mustacheType!: number;
   mustacheY!: number;
+  temporary!: number;
   noseScale!: number;
   noseType!: number;
   noseY!: number;
@@ -119,6 +121,7 @@ export default class Mii {
       case 47:
         tempArray = allocateArray(48, input);
         data = { ...EmptyMiiCreatorV4Data(), ...StudioData.unpack(tempArray) };
+        data.originPlatform = MiiCreatorOriginPlatform.Mii_Creator_v4;
         break;
       // 74/76 byte RFLStoreData - .rsd
       case 74:
@@ -161,7 +164,7 @@ export default class Mii {
         break;
       // 114-byte mii creator v4 extension data
       case 114:
-        tempArray = allocateArray(122, input);
+        tempArray = allocateArray(123, input);
         data = MiiCreatorV3DataToV4(
           MiiCreatorV3Data.unpack(
             MiiCreatorV3Data.pack(Ver3StoreData.unpack(tempArray))
@@ -170,7 +173,8 @@ export default class Mii {
         break;
       // mii creator v4 data
       case 122:
-        tempArray = allocateArray(122, input);
+      case 123:
+        tempArray = allocateArray(123, input);
         data = MiiCreatorV4Data.unpack(tempArray);
         break;
       default:
@@ -187,7 +191,7 @@ export default class Mii {
     if (data.personality === 255) data.personality = -1;
     if (data.shirtColor === 255) data.shirtColor = -1;
 
-    console.log("new data:", data);
+    // console.log("new data:", data);
 
     return data;
   }
@@ -260,6 +264,7 @@ export default class Mii {
       mustacheScale: this.mustacheScale,
       mustacheType: this.mustacheType,
       mustacheY: this.mustacheY,
+      temporary: this.temporary,
       noseScale: this.noseScale,
       noseType: this.noseType,
       noseY: this.noseY,
@@ -359,6 +364,7 @@ export default class Mii {
     this.mustacheScale = data.mustacheScale;
     this.mustacheType = data.mustacheType;
     this.mustacheY = data.mustacheY;
+    this.temporary = data.temporary;
     this.noseScale = data.noseScale;
     this.noseType = data.noseType;
     this.noseY = data.noseY;
@@ -367,6 +373,17 @@ export default class Mii {
     this.regionMove = data.regionMove;
     this.shirtColor = data.shirtColor;
     this.special = data.special;
+
+    // Parse CreateID just in case
+    const createId = FFLiCreateID.unpack(this.createId) as FFLiCreateID;
+
+    if (!createId.flag_normal) {
+      this.special = 1;
+    }
+    if (createId.flag_temporary) {
+      this.special = 0;
+      this.temporary = 1;
+    }
   }
 
   /** outputs in specific format */

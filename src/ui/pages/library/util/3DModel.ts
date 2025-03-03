@@ -74,9 +74,16 @@ export async function traverse3DMaterialFix(
                 scene.getRenderer()
               );
 
-              (m.material as FFLShaderMaterial).map = texture;
-
+              const oldMat = m.material as FFLShaderMaterial;
               map = (m.material as FFLShaderMaterial).map;
+
+              if (map) {
+                map.wrapS = oldMat.map.wrapS;
+                map.wrapT = oldMat.map.wrapT;
+              }
+
+              oldMat.map = texture;
+
               mapFixed = true;
             }
             break;

@@ -21,6 +21,7 @@ import type { MiiCreatorAdditionalData } from "../external/ffl.js/MiiCreatorType
 import { getBodyModels, getHatModels } from "./ModelLoader";
 import {
   cMaterialName,
+  cPantsColorBlue,
   cPantsColorGold,
   cPantsColorGray,
   cPantsColorRed
@@ -97,11 +98,20 @@ export function createMiiRender(
     const shaderMaterial = await getShaderMaterialFromShaderType();
     const shaderOverrides = await getMaterialOverridesFromShaderType();
 
+    let texResolution = 512;
+
+    // Use a higher resolution texture
+    if (request.size > 512) {
+      texResolution = 1024;
+    } else if (request.size > 1024) {
+      texResolution = 2048;
+    }
+
     // Set up a temporary CharModel.
     const charModel = createCharModel(
       dataInput,
       {
-        resolution: 512,
+        resolution: texResolution,
         resourceType: FFLResourceType.HIGH,
         allExpressionFlag: makeExpressionFlag([
           isNaN(request.expression) ? FFLExpression.NORMAL : request.expression
@@ -248,6 +258,9 @@ export function createMiiRender(
       }
       if (request.additionalInfo!.special === 1) {
         pantsColor = cPantsColorGold;
+      }
+      if (request.additionalInfo!.temporary === 1) {
+        pantsColor = cPantsColorBlue;
       }
 
       if (

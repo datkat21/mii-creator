@@ -38,6 +38,7 @@ export const miiRender = (mii: MiiLocalforage, miiData: Mii) => {
         );
         // hide body
         scene.init().then(async () => {
+          scene.texResolution = 1024;
           await scene.updateMiiHead();
           scene.getScene().getObjectByName("m")!.visible = false;
           scene.getScene().getObjectByName("f")!.visible = false;

@@ -75,7 +75,8 @@ async function createOrUpdateCharModel(
 export async function getHeadModel(
   mii: Mii,
   rendererRef: THREE.WebGLRenderer,
-  modelFlag?: ModelFlag
+  modelFlag?: ModelFlag,
+  texResolution?: number
 ): Promise<GLTF> {
   const dataU8 = mii.export("studioData");
 
@@ -83,6 +84,7 @@ export async function getHeadModel(
   modelDesc.resolution = 512;
   modelDesc.allExpressionFlag = new Uint32Array([1, 0, 0]);
   if (modelFlag) modelDesc.modelFlag = FFLModelFlag[modelFlag];
+  if (texResolution) modelDesc.resolution = texResolution;
 
   let currentCharModel: CharModel | null;
 

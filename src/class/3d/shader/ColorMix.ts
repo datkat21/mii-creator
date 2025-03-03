@@ -77,7 +77,8 @@ export function colorMixTexture(
 
     // Create the WebGL renderer and add its canvas to the document.
     const renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
-    renderer.setClearColor(0x314c4b);
+    // renderer.setClearColor(0x314c4b);
+    renderer.setClearAlpha(0);
     renderer.setSize(width, height);
     document.body.appendChild(renderer.domElement);
 
@@ -101,6 +102,8 @@ export function colorMixTexture(
       renderer.domElement.toBlob((blob) => {
         if (blob === null) return console.error("blob is null???");
         resolve(blob);
+        renderer.dispose();
+        geometry.dispose();
       });
     }
     render();

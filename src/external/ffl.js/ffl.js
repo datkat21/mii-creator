@@ -283,6 +283,10 @@ const FFLAttributeBuffer = _.struct([
 	_.uintptr('ptr')
 ]);
 
+// const snorm_10_10_10_2 = _.struct([
+
+// ])
+
 /**
  * @typedef {Object} FFLAttributeBufferParam
  * @property {Array<FFLAttributeBuffer>} attributeBuffers
@@ -2217,6 +2221,7 @@ function _bindDrawParamGeometry(drawParam, module) {
 				const ptr = buffer.ptr / 4;
 				const data = module.HEAPF32.subarray(ptr, ptr + (vertexCount * 4));
 				const interleavedBuffer = new THREE.InterleavedBuffer(data, 4);
+
 				// Only works on Three.js r109 and above (previously used addAttribute which can be remapped)
 				geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(interleavedBuffer, 3, 0));
 				break;
@@ -2230,26 +2235,24 @@ function _bindDrawParamGeometry(drawParam, module) {
 				// // Bind vertex type GL_INT_2_10_10_10_REV/ / 0x8D9F.
 				// geometry.setAttribute('normal', new THREE.GLBufferAttribute(buf, 0x8D9F, 4, 4));
 
-
 				const data = module.HEAP8.subarray(buffer.ptr, buffer.ptr + buffer.size);
 
-				// Calculate the number of vertices
-				const numVertices = data.length / buffer.stride;
+				// // Calculate the number of vertices
+				// const numVertices = data.length / buffer.stride;
 
-				// Create a new Int8Array to store only the 3 components per vertex
-				const newData = new Int8Array(numVertices * 3);
+				// // Create a new Int8Array to store only the 3 components per vertex
+				// const newData = new Int8Array(numVertices * 3);
 
-				for (let i = 0; i < numVertices; i++) {
-					newData[i * 3] = data[i * buffer.stride];
-					newData[i * 3 + 1] = data[i * buffer.stride + 1];
-					newData[i * 3 + 2] = data[i * buffer.stride + 2];
-				}
+				// for (let i = 0; i < numVertices; i++) {
+				// 	newData[i * 3] = data[i * buffer.stride];
+				// 	newData[i * 3 + 1] = data[i * buffer.stride + 1];
+				// 	newData[i * 3 + 2] = data[i * buffer.stride + 2];
+				// }
 
-				// Use the new array with an itemSize of 3
-				geometry.setAttribute('normal', new THREE.Int8BufferAttribute(newData, 3, true));
-
-				// console.log("normal buffer:", buffer);
-				// geometry.setAttribute('normal', new THREE.Int8BufferAttribute(data, buffer.stride, true));
+				// // Use the new array with an itemSize of 3
+				// geometry.setAttribute('normal', new THREE.Int8BufferAttribute(newData, 3, true));
+				
+				geometry.setAttribute('normal', new THREE.Int8BufferAttribute(data, buffer.stride, true));
 				break;
 			}
 			case FFLAttributeBufferType.TANGENT: {

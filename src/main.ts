@@ -25,6 +25,7 @@ import { dataToHex } from "./util/dataConvert.js";
 import Notify from "./ui/components/Notify.js";
 import { loadBodyModels, loadHatModels } from "./util/ModelLoader.js";
 import { defaultParams, type RenderRequest } from "./util/IconRendering.js";
+import { Ver3StoreData } from "./class/struct/FFLStoreData.js";
 
 declare global {
   interface Window {
@@ -189,3 +190,5 @@ window.dataToHex = dataToHex;
 window.validationThing = validationThing;
 //@ts-expect-error
 window.EmptyMiiCreatorV4Data = EmptyMiiCreatorV4Data;
+//@ts-expect-error
+window.Ver3StoreData = Ver3StoreData;

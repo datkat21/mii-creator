@@ -17,6 +17,7 @@ import {
   ForbiddenShirtPantColors
 } from "../constants/ColorTables";
 import {
+  cPantsColorBlue,
   cPantsColorGold,
   cPantsColorGray,
   cPantsColorRed,
@@ -71,7 +72,7 @@ export class Mii3DScene {
   hatModels!: GLTF[];
   editor?: MiiEditor;
   camSetup!: () => void;
-  // stats: Stats;
+  texResolution: number;
 
   constructor(
     mii: Mii,
@@ -95,6 +96,7 @@ export class Mii3DScene {
     );
     this.ready = false;
     this.headReady = false;
+    this.texResolution = 512;
     if (initCallback) this.#initCallback = initCallback;
     this.shaderOverride = shaderOverride;
     this.editor = editor;
@@ -611,6 +613,9 @@ export class Mii3DScene {
     if (this.mii.favorite) {
       return cPantsColorRed;
     }
+    if (this.mii.temporary) {
+      return cPantsColorBlue;
+    }
     return cPantsColorGray;
   }
   async updateBody(force?: boolean) {
@@ -994,7 +999,12 @@ export class Mii3DScene {
                 break;
             }
 
-            GLB = await getHeadModel(tmpMii, this.getRenderer(), modelType);
+            GLB = await getHeadModel(
+              tmpMii,
+              this.getRenderer(),
+              modelType,
+              this.texResolution
+            );
           }
           //@ts-expect-error
           window.GLB = GLB;

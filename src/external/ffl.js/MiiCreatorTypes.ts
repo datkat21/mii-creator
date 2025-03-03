@@ -7,5 +7,6 @@ export type MiiCreatorAdditionalData =
       pantsColor: number;
       favorite: number;
       special: number;
+      temporary: number;
     }
   | undefined;
