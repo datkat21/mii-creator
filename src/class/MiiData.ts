@@ -26,6 +26,9 @@ import {
 } from "./struct/RFLStoreData";
 import { StudioData } from "./struct/StudioData";
 
+import { _ } from "../util/Lang";
+const __ = _();
+
 export type MiiDataExportType =
   | "rsd"
   | "miic"
@@ -185,7 +188,9 @@ export default class Mii {
         data = MiiCreatorV4Data.unpack(tempArray);
         break;
       default:
-        throw new Error(`Mii data type not supported (${input.length} bytes)`);
+        throw new Error(
+          __("Mii data type not supported (%1 bytes)", input.length)
+        );
     }
 
     // HACK: struct-fu is returning uint of -1 as 255,

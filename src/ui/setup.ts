@@ -12,7 +12,10 @@ import {
 } from "./pages/Settings";
 import { customRender } from "./pages/library/render/customRender";
 
+import { _ } from "../util/Lang";
 import { prepareFFL } from "../util/FFLLoader";
+const __ = _();
+
 export async function setupUi() {
   let mm = getMusicManager();
   getSoundManager();
@@ -29,8 +32,10 @@ export async function setupUi() {
   ) {
     sessionStorage.setItem("seen-firefox-notice", "yes");
     Modal.modal(
-      "Notice",
-      "You're using Mii Creator under Firefox. The Firefox browser may have slowdowns.",
+      __("Warning"),
+      __(
+        "You're using Mii Creator under Firefox. Using the Firefox browser WILL experience slowdowns and lag."
+      ),
       "body",
       ...buttonsOkCancel
     );
@@ -156,8 +161,8 @@ export async function setupUi() {
         searchParams.get("data")!
       );
     } else if (searchParams.has("select")) {
-      alert("Selection library is currently not implemented yet");
-      throw new Error("Selection library is currently not implemented yet");
+      alert(__("Selection library is currently not implemented yet"));
+      throw new Error(__("Selection library is currently not implemented yet"));
       // const miiData = await SelectionLibrary();
 
       // console.log("selection:", miiData);

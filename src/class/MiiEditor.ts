@@ -65,6 +65,9 @@ let activeMii: Mii;
 export const getMii = () => activeMii;
 let currentEditor: MiiEditor | null = null;
 
+import { _ } from "../util/Lang";
+const __ = _();
+
 export class MiiEditor {
   mii: Mii;
   icons!: IconSet;
@@ -219,8 +222,12 @@ export class MiiEditor {
         .on("click", () => {
           if (Config.renderer.allow3DMode === false)
             return Modal.alert(
-              "You can't use this feature",
-              "Sorry, but you can't use this feature because 3D mode is disabled at the moment."
+              // 3D mode disabled dialog title
+              __("You can't use this feature"),
+              // 3D mode disabled dialog description
+              __(
+                "Sorry, but you can't use this feature because 3D mode is disabled at the moment."
+              )
             );
           renderModeToggle.text(this.#renderModeText(this.renderingMode));
           switch (this.renderingMode) {

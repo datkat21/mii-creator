@@ -21,12 +21,15 @@ import {
   type FeatureSetEntry,
   type FeatureSetIconItem
 } from "../../../components/MiiPagedFeatureSet";
-import Modal, { buttonsOkCancel } from "../../../components/Modal";
+import Modal from "../../../components/Modal";
 import { importMiiConfirmation } from "../importDialog";
 import { traverse3DMaterialFix } from "../util/3DModel";
 import { cMaterialName } from "../../../../class/3d/shader/fflShaderConst";
 import { getMiiIcon } from "../../Library";
 import { parseHexOrB64ToUint8Array } from "../../../../external/ffl.js/ffl";
+
+import { _ } from "../../../../util/Lang";
+const __ = _();
 
 enum ExpressionModifier {
   HideNose,
@@ -166,9 +169,10 @@ export async function customRender(miiData: Mii) {
 
   const e: Record<string, FeatureSetEntry> = {
     camera: {
-      label: "Camera",
-      header:
-        "Use mouse or touch to move the camera around.\nUsing touch, rotate the camera around with one finger, and drag with two fingers to pan. Pinch with two fingers to zoom.\nIf you like this site, please consider sharing it with others and credit me or the site when you post your renders! 🙂",
+      label: __("Camera"),
+      header: __(
+        "Use mouse or touch to move the camera around.\nUsing touch, rotate the camera around with one finger, and drag with two fingers to pan. Pinch with two fingers to zoom.\nIf you like this site, please consider sharing it with others and credit me or the site when you post your renders! 🙂"
+      ),
       items: [
         {
           type: FeatureSetType.Slider,
@@ -182,33 +186,37 @@ export async function customRender(miiData: Mii) {
         {
           type: FeatureSetType.Misc,
           html: new Html("div").class("flex-group", "col").appendMany(
-            new Html("label").text("Position"),
+            new Html("label").text(__("Position")),
             new Html("div").class("flex-group").appendMany(
-              new Html("button").text("Center horizontally").on("click", () => {
-                const newPosition = scene.focusCamera(
-                  CameraPosition.MiiFullBody,
-                  true,
-                  false,
-                  true
-                )!;
-                let target = new Vector3();
-                controls.getTarget(target);
-                target.x = newPosition.x;
-                controls.moveTo(target.x, target.y, target.z);
-              }),
-              new Html("button").text("Center vertically").on("click", () => {
-                const newPosition = scene.focusCamera(
-                  CameraPosition.MiiFullBody,
-                  true,
-                  false,
-                  true
-                )!;
-                let target = new Vector3();
-                controls.getTarget(target);
-                target.y = newPosition.y;
-                controls.moveTo(target.x, target.y, target.z);
-              }),
-              new Html("button").text("Reset").on("click", () => {
+              new Html("button")
+                .text(__("Center horizontally"))
+                .on("click", () => {
+                  const newPosition = scene.focusCamera(
+                    CameraPosition.MiiFullBody,
+                    true,
+                    false,
+                    true
+                  )!;
+                  let target = new Vector3();
+                  controls.getTarget(target);
+                  target.x = newPosition.x;
+                  controls.moveTo(target.x, target.y, target.z);
+                }),
+              new Html("button")
+                .text(__("Center vertically"))
+                .on("click", () => {
+                  const newPosition = scene.focusCamera(
+                    CameraPosition.MiiFullBody,
+                    true,
+                    false,
+                    true
+                  )!;
+                  let target = new Vector3();
+                  controls.getTarget(target);
+                  target.y = newPosition.y;
+                  controls.moveTo(target.x, target.y, target.z);
+                }),
+              new Html("button").text(__("Reset")).on("click", () => {
                 const newPosition = scene.focusCamera(
                   CameraPosition.MiiFullBody,
                   true,
@@ -220,9 +228,9 @@ export async function customRender(miiData: Mii) {
                   .moveTo(newPosition.x, newPosition.y, newPosition.z);
               })
             ),
-            new Html("label").text("Rotate"),
+            new Html("label").text(__("Rotate")),
             new Html("div").class("flex-group").appendMany(
-              new Html("button").text("Up").on("click", () => {
+              new Html("button").text(__("Up")).on("click", () => {
                 scene
                   .getControls()
                   .rotateTo(
@@ -230,7 +238,7 @@ export async function customRender(miiData: Mii) {
                     controls.polarAngle - rotationFactor
                   );
               }),
-              new Html("button").text("Down").on("click", () => {
+              new Html("button").text(__("Down")).on("click", () => {
                 scene
                   .getControls()
                   .rotateTo(
@@ -238,7 +246,7 @@ export async function customRender(miiData: Mii) {
                     controls.polarAngle + rotationFactor
                   );
               }),
-              new Html("button").text("Left").on("click", () => {
+              new Html("button").text(__("Left")).on("click", () => {
                 scene
                   .getControls()
                   .rotateTo(
@@ -246,7 +254,7 @@ export async function customRender(miiData: Mii) {
                     controls.polarAngle
                   );
               }),
-              new Html("button").text("Right").on("click", () => {
+              new Html("button").text(__("Right")).on("click", () => {
                 scene
                   .getControls()
                   .rotateTo(
@@ -254,7 +262,7 @@ export async function customRender(miiData: Mii) {
                     controls.polarAngle
                   );
               }),
-              new Html("button").text("Reset").on("click", () => {
+              new Html("button").text(__("Reset")).on("click", () => {
                 controls.rotateTo(0, Math.PI / 2);
               })
             )
@@ -285,12 +293,19 @@ export async function customRender(miiData: Mii) {
     //   ],
     // },
     pose: {
-      label: "Pose",
+      label: __("Pose"),
       header: new Html("div").appendMany(
         new Html("span").html(
-          'Change the Body Model option in Settings to get many different options of poses!<br/><br/>Do you like the Mii that does the poses? His name is "dummy".&nbsp;'
+          __(
+            "Change the Body Model option in Settings to get many different options of poses!"
+          ) +
+            "<br/><br/>" +
+            __(
+              'Do you like the Mii that does the poses? His name is "dummy".'
+            ) +
+            "&nbsp;"
         ),
-        new Html("a").text("Click here").on("click", (e) => {
+        new Html("a").text(__("Click here")).on("click", (e) => {
           // goodbye custom render :(
           scene.shutdown();
           parent.cleanup();
@@ -302,9 +317,9 @@ export async function customRender(miiData: Mii) {
               "A0EAwAAAAAAAAAAAgP9wmS/5Fhz6rQAAAABkAHUAbQBtAHkAAAAAAAAAAAAAAEBAEgAeARJoYxoHA2YWIRQTZgwAAAEAUkhQTQBpAGkAQwByAGUAYQB0AG8AcgAAAK6gAAAICAAAAAAAAGQA"
             )
           );
-          importMiiConfirmation(mii, "Mii Creator (Special Mii)");
+          importMiiConfirmation(mii, __("Mii Creator (Special Mii)"));
         }),
-        new Html("span").html("&nbsp;to obtain him in your library :)")
+        new Html("span").html("&nbsp;" + __("to obtain him in your library :)"))
       ),
       headerIsHtml: true,
       items: ArrayNum(poseCount).map((k) => ({
@@ -321,13 +336,12 @@ export async function customRender(miiData: Mii) {
       }))
     },
     expression: {
-      label: "Expression",
+      label: __("Expression"),
       items: []
     },
     animation: {
-      label: "Animation",
-      header:
-        "This usually only applies to Miitomo body model which has animations for its poses.",
+      label: __("Animation"),
+      header: __("Control the animation speed."),
       items: [
         {
           type: FeatureSetType.Slider,
@@ -389,7 +403,7 @@ export async function customRender(miiData: Mii) {
 
   let pauseButton = AddButtonSounds(
     new Html("button")
-      .text(playing ? "Pause Animation" : "Pause Animation")
+      .text(playing ? __("Pause Animation") : __("Pause Animation"))
       .on("click", () => {
         if (playing === true) {
           playing = false;
@@ -399,10 +413,10 @@ export async function customRender(miiData: Mii) {
         scene.anim.forEach((anim) => {
           if (playing === true) {
             anim.paused = false;
-            pauseButton.text("Pause Animation");
+            pauseButton.text(__("Pause Animation"));
           } else {
             anim.paused = true;
-            pauseButton.text("Play Animation");
+            pauseButton.text(__("Play Animation"));
           }
         });
       })
@@ -410,12 +424,12 @@ export async function customRender(miiData: Mii) {
   );
 
   new Html("button")
-    .text("Download PNG")
+    .text(__("Download PNG"))
     .on("click", finalizeRender)
     .appendTo(tabsContent);
 
   new Html("button")
-    .text("Download 3D model")
+    .text(__("Download 3D model"))
     .on("click", save3DModel)
     .appendTo(tabsContent);
 
@@ -584,10 +598,10 @@ export async function customRender(miiData: Mii) {
       scene.anim.forEach((anim) => {
         if (playing === true) {
           anim.paused = false;
-          pauseButton.text("Pause Animation");
+          pauseButton.text(__("Pause Animation"));
         } else {
           anim.paused = true;
-          pauseButton.text("Play Animation");
+          pauseButton.text(__("Play Animation"));
         }
       });
     }
@@ -609,7 +623,7 @@ export async function customRender(miiData: Mii) {
       image.onload = () => {
         downloadLink(
           image.src,
-          `${miiData.nickname}_all_body_${new Date().toJSON()}.png`
+          `${miiData.nickname}_${__("all_body")}_${new Date().toJSON()}.png`
         );
         if (shouldClose) {
           scene.shutdown();
@@ -622,15 +636,9 @@ export async function customRender(miiData: Mii) {
 
   async function save3DModel() {
     const shaderSetting = await getSetting("shaderType");
-    // const bodyModelHands = await getSetting("bodyModelHands");
 
     if (shaderSetting === "none") {
-      const result = await Modal.prompt(
-        "Notice",
-        "3D model export looks best when using the Wii U shader, which you aren't using.\nThis may result in incorrect color output. Do you still want to continue?",
-        "body"
-      );
-      if (result === false) return;
+      return;
     }
 
     // fix up the materials
@@ -645,7 +653,7 @@ export async function customRender(miiData: Mii) {
         if (gltf instanceof ArrayBuffer) {
           saveArrayBuffer(
             gltf,
-            `${miiData.nickname}_all_body_${new Date().toJSON()}.glb`
+            `${miiData.nickname}_${__("all_body")}_${new Date().toJSON()}.glb`
           );
         }
         if (shouldClose) {

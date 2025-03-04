@@ -13,7 +13,8 @@ import {
   cPantsColorRedHex
 } from "../../class/3d/shader/fflShaderConst";
 import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
-import { getString as _ } from "../../l10n/manager";
+import { _ } from "../../util/Lang";
+const __ = _();
 import { replayUpdateNotice, Settings } from "./Settings";
 import {
   adjustShaderQuery,
@@ -33,11 +34,15 @@ import {
   parseHexOrB64ToUint8Array,
   ViewType
 } from "../../external/ffl.js/ffl";
-import { getFFL, getFFLWorkerExists, getFFLWorkerMakeIcon } from "../../main";
 import { WebGLRenderer } from "three";
 import { MiiExpression } from "../../external/ffl/FFLTypes";
 import Notify from "../components/Notify";
 import { dataToBase64 } from "../../util/dataConvert";
+import {
+  getFFL,
+  getFFLWorkerExists,
+  getFFLWorkerMakeIcon
+} from "../../util/FFLLoader";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -241,7 +246,7 @@ export async function Library(highlightMiiId?: string) {
 
   const sidebar = new Html("div").class("library-sidebar").appendTo(container);
 
-  sidebar.append(new Html("h1").text(_("generic.app_title")));
+  sidebar.append(new Html("h1").text(__("Mii Creator")));
 
   const libraryList = new Html("div").class("library-list").appendTo(container);
 
@@ -259,7 +264,7 @@ export async function Library(highlightMiiId?: string) {
     libraryList.append(
       new Html("div")
         .style({ position: "absolute", top: "2rem", left: "2rem" })
-        .text("You have no Miis yet. Create one to get started!")
+        .text(__("You have no Miis yet. Create one to get started!"))
     );
   }
   let miiErrorCount = 0;
@@ -339,7 +344,10 @@ export async function Library(highlightMiiId?: string) {
           miiImage.attr({ src: r }).style({ opacity: "1" });
         })
         .catch((e) => {
-          Notify.show("Notice", `Failed to load ${miiData!.nickname}'s icon`);
+          Notify.show(
+            __("Notice"),
+            __("Failed to load %1's icon", miiData!.nickname)
+          );
         });
 
       // Special
@@ -417,14 +425,14 @@ export async function Library(highlightMiiId?: string) {
 
       miiContainer.on("click", async () => {
         Modal.modal(
-          "Oops",
-          "This Mii might be corrupted. Choose an option below.",
+          __("Warning"),
+          __("This Mii might be corrupted. Choose an option below."),
           "body",
           {
             text: "Cancel"
           },
           {
-            text: "Download a copy",
+            text: __("Download a copy"),
             callback(e) {
               console.log(mii);
               saveArrayBuffer(
@@ -434,7 +442,7 @@ export async function Library(highlightMiiId?: string) {
             }
           },
           {
-            text: "Download a copy (Base64 encoded)",
+            text: __("Download a copy (Base64 encoded)"),
             callback(e) {
               console.log(mii);
               saveArrayBuffer(
@@ -444,11 +452,11 @@ export async function Library(highlightMiiId?: string) {
             }
           },
           {
-            text: "Delete",
+            text: __("Delete"),
             callback(e) {
               Modal.modal(
-                "Warning",
-                "Are you sure you want to delete this Mii?",
+                __("Warning"),
+                __("Are you sure you want to delete this Mii?"),
                 "body",
                 {
                   async callback(e) {
@@ -456,11 +464,11 @@ export async function Library(highlightMiiId?: string) {
                     await shutdown();
                     Library();
                   },
-                  text: "Yes",
+                  text: __("Yes"),
                   type: "danger"
                 },
                 {
-                  text: "No"
+                  text: __("No")
                 }
               );
             }
@@ -472,8 +480,11 @@ export async function Library(highlightMiiId?: string) {
 
   if (miiErrorCount > 0) {
     Modal.modal(
-      "Error",
-      `It appears that ${miiErrorCount} of your Miis have failed to load. Their data may be corrupted.\n\nIf you'd like to try and recover the Mii data, you can select the Miis with errors and choose to either save a copy or delete them.`,
+      __("Error"),
+      __(
+        "It appears that %1 of your Miis have failed to load. Their data may be corrupted.\n\nIf you'd like to try and recover the Mii data, you can select the Miis with errors and choose to either save a copy or delete them.",
+        miiErrorCount
+      ),
       "body",
       ...buttonsOkCancel
     );
@@ -484,12 +495,12 @@ export async function Library(highlightMiiId?: string) {
   sidebar.appendMany(
     new Html("div").class("sidebar-buttons").appendMany(
       AddButtonSounds(
-        new Html("button").text("Create Mii").on("click", async () => {
+        new Html("button").text(__("Create Mii")).on("click", async () => {
           miiCreateDialog();
         })
       ),
       AddButtonSounds(
-        new Html("button").text("Settings").on("click", async () => {
+        new Html("button").text(__("Settings")).on("click", async () => {
           Settings();
         })
       )
@@ -504,7 +515,7 @@ export async function Library(highlightMiiId?: string) {
               .text("Credits")
               .on("click", async () => {
                 var m = Modal.modal(
-                  "Credits",
+                  __("Credits"),
                   "",
                   "body",
                   { text: "Cancel" },
@@ -519,7 +530,7 @@ export async function Library(highlightMiiId?: string) {
                 m.qs(".modal-content")!.style({ position: "relative" });
                 const container = new Html("div").class("col").prependTo(mb);
                 new Html("span")
-                  .text("Check out the people behind Mii Creator!")
+                  .text(__("Check out the people behind Mii Creator!"))
                   .style({
                     "font-size": "20px",
                     "flex-shrink": "0",
@@ -529,7 +540,10 @@ export async function Library(highlightMiiId?: string) {
 
                 // hey stop snooping! you'll ruin the fun :(
                 new Html("a")
-                  .text("secret?")
+                  .text(
+                    // Text for when finding a Secret Mii
+                    __("secret?")
+                  )
                   .style({
                     "font-size": "10px",
                     opacity: "0.3",
@@ -546,48 +560,68 @@ export async function Library(highlightMiiId?: string) {
                         "A8EAwELycUHCpfBSXhcDbS/5Fhz6rQAAWS1KAGEAcwBtAGkAbgBlAAAAAAAAABw3ExB7ASFuQxwNZMcYAAgegg0AMEGzW4JtcwBvAHMAaQBnAG8AbgBhAGwAAAAAAMwDAAAAAAAAAAAAAAAA"
                       )
                     );
-                    importMiiConfirmation(mii, "Mii Creator (Special Mii)");
+                    importMiiConfirmation(
+                      mii,
+                      // Label under secret Mii's name
+                      __("Mii Creator (Special Mii)")
+                    );
                   })
                   .appendTo(mb);
 
                 createMiiCard(
                   container,
-                  "Austin☆²¹ / Kat21",
+                  // Kat21's name
+                  __("Austin☆²¹ / Kat21"),
                   "datkat21",
                   "https://github.com/datkat21",
-                  "Lead developer of Mii Creator",
+                  // Kat21's attribution
+                  __("Lead developer of Mii Creator"),
                   "000040030c040320020c0407050213030a0000000008000804000a07003e5303010a09031303130d04000a030d0a"
                 );
                 createMiiCard(
                   container,
-                  "Arian",
+                  // Arian's name
+                  __("Arian"),
                   "ariankordi",
                   "https://github.com/ariankordi",
-                  'Creator of <a target="_blank" href="https://mii-unsecure.ariankordi.net">Mii Renderer (REAL)</a>, made FFL.js and ported Miitomo shader, and was a big help with debugging many issues',
+                  // Arian's attribution
+                  __(
+                    'Creator of <a target="_blank" href="https://mii-unsecure.ariankordi.net">Mii Renderer (REAL)</a>, made FFL.js and ported Miitomo shader, and was a big help with debugging many issues'
+                  ),
                   "080037030d020531020c030105040a0209000001000a011004010b0100662f04000214031603140d04000a020109"
                 );
                 createMiiCard(
                   container,
-                  "obj",
+                  // obj (objecty)'s name
+                  __("obj"),
                   "objecty",
                   "https://x.com/objecty_twitt",
-                  "Composed the music for the site",
+                  // obj (objecty)'s attribution
+                  __("Composed the music for Mii Creator"),
                   "00003a030a030407020b030805040902080400010000000804000a0800403e02010311031304130d04000a040109"
                 );
                 createMiiCard(
                   container,
-                  "Timothy",
+                  // Timothy's name
+                  __("Timothy"),
                   "Timimimi",
                   "https://github.com/Timiimiimii",
-                  "Modeled many of the custom hats and helped with debugging",
+                  // Timothy's attribution
+                  __(
+                    "Modeled many of the custom hats and helped with debugging"
+                  ),
                   "00003b0208040206040d0308050206040a0100020003005f03090b0800426d01010e16031403130f04000804070b "
                 );
                 createMiiCard(
                   container,
-                  "David J.",
+                  // David J.'s name
+                  __("David J."),
                   "dwyazzo90",
                   "https://x.com/dwyazzo90",
-                  "Helped with design and created the Wii U theme",
+                  // David J.'s attribution
+                  __(
+                    "Helped with design, localization, and created the Wii U theme"
+                  ),
                   "0800450308040402020c0308060406020a0001000006000804000a0800326702010314031304190d04000a040109"
                 );
               })
@@ -616,7 +650,7 @@ export async function Library(highlightMiiId?: string) {
                   .style({ gap: "0" })
                   .prependTo(mb);
                 new Html("span")
-                  .text("Here's where you can contact the author, Kat21")
+                  .text(__("Here's where you can contact the author, Kat21"))
                   .style({
                     "font-size": "20px",
                     "flex-shrink": "0",
@@ -626,7 +660,7 @@ export async function Library(highlightMiiId?: string) {
 
                 // hey stop snooping! you'll ruin the fun :(
                 new Html("a")
-                  .text("secret?")
+                  .text(__("secret?"))
                   .style({
                     "font-size": "10px",
                     opacity: "0.3",
@@ -643,27 +677,27 @@ export async function Library(highlightMiiId?: string) {
                         "AwEAwAAAAAAAAAAAAP91dC/5Fhz6rQAAAChiAG8AbwBlAHkAAAAAAAAAAAAAABRvEwBJBBJvQxgNVGUUABoTqAoAACmwUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE8TAGMyCAAANgACC2QA"
                       )
                     );
-                    importMiiConfirmation(mii, "Mii Creator (Special Mii)");
+                    importMiiConfirmation(mii, __("Mii Creator (Special Mii)"));
                   })
                   .appendTo(mb);
 
                 createIconCard(
                   container,
-                  "E-mail (Preferred)",
+                  __("E-mail (Preferred)"),
                   "mailto:datkat21.yt@gmail.com",
                   "datkat21.yt@gmail.com",
                   EditorIcons.contact_email
                 );
                 createIconCard(
                   container,
-                  "Discord",
+                  __("Discord"),
                   "",
                   "kat21",
                   EditorIcons.contact_discord
                 );
                 createIconCard(
                   container,
-                  "File an issue on GitHub",
+                  __("File an issue on GitHub"),
                   "https://github.com/datkat21/mii-creator",
                   "datkat21/mii-creator",
                   EditorIcons.contact_github
@@ -672,7 +706,7 @@ export async function Library(highlightMiiId?: string) {
               .style({ flex: "1" })
           )
         ),
-      new Html("strong").text("This site is not affiliated with Nintendo."),
+      new Html("strong").text(__("This site is not affiliated with Nintendo.")),
       new Html("small")
         .text(`${Config.version.string} (${Config.version.name})`)
         .style({ cursor: "pointer" })
@@ -692,8 +726,10 @@ export type MiiLocalforage = {
 export const miiQRConversionWarning = async (miiData: Mii) => {
   if (miiData.hasExtendedColors() === true) {
     let result = await Modal.prompt(
-      "Warning",
-      "This Mii is using extended Switch colors, but those colors will never show up if you scan this QR Code anywhere outside of this app. Is this OK?",
+      __("Warning"),
+      __(
+        "This Mii is using extended Switch colors, but those colors will never show up if you scan this QR Code anywhere outside of this app. Is this OK?"
+      ),
       "body",
       false
     );
@@ -705,8 +741,10 @@ export const miiQRConversionWarning = async (miiData: Mii) => {
 export const miiFFSDWarning = async (miiData: Mii) => {
   if (miiData.hasExtendedColors() === true) {
     let result = await Modal.prompt(
-      "Warning",
-      'This Mii is using extended Switch colors and/or MiiCreator features, but those features will be lost when converting to FFSD.\nUse "Save MiiCreator data" or "Save CharInfo (Switch) data" if you want to keep the data.\nIs this OK?',
+      __("Warning"),
+      __(
+        'This Mii is using extended Switch colors and/or Mii Creator features, but those features will be lost when converting to FFSD.\nUse "Save Mii Creator data" if you want to keep the data.\nIs this OK?'
+      ),
       "body",
       false
     );

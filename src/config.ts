@@ -1,5 +1,7 @@
 // Configuration file used client-side.
 
+import { _ } from "./util/Lang";
+
 // Settings relating to local rendering.
 const useRendererServer = false; // Allow use of the renderer server (legacy rendering)
 const fflResourcePath = [
@@ -20,6 +22,8 @@ const newApiParams = true;
 // Origin used for NNID, PNID, and random NNID fetch.
 // Details: https://github.com/ariankordi/nwf-mii-cemu-toy/blob/ffl-renderer-proto-integrate/README.md
 const nnidFetchOrigin = "https://mii-unsecure.ariankordi.net";
+
+const __ = _();
 
 export const Config = {
   renderer: {
@@ -60,12 +64,16 @@ export const Config = {
     // ^^ scaleLimit, scaleLimitClampY, scaleApply
   },
   version: {
-    string: "v0.9.3.1",
-    name: "Patch Update",
+    string: "v1.0.0",
+    name:
+      // Current version string name ("Patch Update", "Minor Update", "Major Update")
+      __("Major Update"),
 
     // ignore that I'm just writing HTML here
     changelog: `
+    <p style="text-align:center;margin-top:20px;margin-bottom:200px;font-size:32px;color:var(--error-color)">The update changelog hasn't been written yet, so just ignore this for now</p>
     <h1 style="font-size: 20px;text-align: center;">v0.9.2 - QR Code and MiiC v3 Support</h1>
+
 
     <div class="flex-group">
       <img draggable="false" width=96 height=96 src="https://i.imgur.com/sMtNF5a.png">

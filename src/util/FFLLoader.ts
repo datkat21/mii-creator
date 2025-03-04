@@ -3,6 +3,7 @@ import Notify from "../ui/components/Notify";
 import { loadBodyModels, loadHatModels } from "../util/ModelLoader";
 import { defaultParams, type RenderRequest } from "../util/IconRendering";
 
+import { _, loadLang } from "./Lang";
 import type {
   FFLWorkerInitializeMessage,
   FFLWorkerMessage
@@ -10,6 +11,8 @@ import type {
 import { Config } from "../config.js";
 import { initializeFFLWithResource } from "../external/ffl.js/ffl.js";
 import { getSetting } from "./SettingsHelper.js";
+
+const __ = _();
 
 let FFL: any, FFLWorker: Worker | undefined;
 export const getFFL = () => FFL;
@@ -41,10 +44,10 @@ export async function prepareFFL() {
   // Depending on config, load FFL.js
   if (Config.renderer.useRendererServer === false) {
     var m = Modal.modal(
-      "Notice",
+      __("Notice"),
       // TODO: Make a better message? 😅
       // Displayed in a modal while loading resource files.
-      "Mii Creator is loading assets, please wait..."
+      __("Mii Creator is loading assets, please wait...")
     );
 
     FFL = (await import("../external/ffl.js/ffl-emscripten.js")).default
@@ -112,20 +115,20 @@ export async function prepareFFL() {
         });
       } else {
         Modal.modal(
-          "Notice",
-          
+          __("Notice"),
+          __(
             "Your browser doesn't support OffscreenCanvas, so Mii Creator may experience lag."
-          ,
+          ),
           "body",
           ...buttonsOkCancel
         );
       }
     } else {
       Modal.modal(
-        "Notice",
-        
+        __("Notice"),
+        __(
           "Your browser doesn't support Web Workers, so Mii Creator may experience lag."
-        ,
+        ),
         "body",
         ...buttonsOkCancel
       );

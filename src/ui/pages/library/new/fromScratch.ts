@@ -6,6 +6,9 @@ import { miiCreateDialog } from "./_dialog";
 import EditorIcons from "../../../../constants/EditorIcons";
 import Html from "@datkat21/html";
 
+import { _ } from "../../../../util/Lang";
+const __ = _();
+
 export const newFromScratch = () => {
   function cb(gender: MiiGender) {
     return () => {
@@ -18,15 +21,15 @@ export const newFromScratch = () => {
   }
 
   var m = Modal.modal(
-    "Create New",
-    "Select the Mii's gender",
+    __("Create Mii"),
+    __("Select the Mii's gender"),
     "body",
     {
-      text: "Male",
+      text: __("Male"),
       callback: cb(MiiGender.Male)
     },
     {
-      text: "Female",
+      text: __("Female"),
       callback: cb(MiiGender.Female)
     },
     {
@@ -35,6 +38,7 @@ export const newFromScratch = () => {
     }
   );
 
+  // Add gender select icons
   const genderMaleButton = m.qs(".modal-body button:nth-child(1)")!;
   const genderFemaleButton = m.qs(".modal-body button:nth-child(2)")!;
   if (genderMaleButton) {

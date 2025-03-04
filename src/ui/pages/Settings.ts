@@ -15,12 +15,15 @@ import Notify from "../components/Notify";
 
 let needsToNotify = true;
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export const updateSettings = async (force: boolean = false) => {
   function askRefreshNotice() {
     if (needsToNotify && force === false) {
       Notify.show(
-        "Refresh to apply changes",
-        "Icons won't be affected until you reload.",
+        __("Refresh to apply changes"),
+        __("Icons won't be affected until you reload."),
         () => {
           location.reload();
         },
@@ -69,6 +72,12 @@ export const updateSettings = async (force: boolean = false) => {
   }
 
   // Update library images on shader type change
+  if (
+    prevSetting["resourceType"] !==
+    (await localforage.getItem("settings_resourceType"))
+  ) {
+    askRefreshNotice();
+  }
   if (
     prevSetting["shaderType"] !==
     (await localforage.getItem("settings_shaderType"))
@@ -142,7 +151,7 @@ for (const key in settingsInfo) {
 }
 
 export async function Settings() {
-  const modal = Modal.modal("Settings", "", "body", {
+  const modal = Modal.modal(__("Settings"), "", "body", {
     text: "Cancel"
   });
 
@@ -256,7 +265,11 @@ export async function Settings() {
                   : (undefined as any)
               )
               .attr({ "data-setting": prefixedKey })
-              .text(c.label)
+              .text(
+                settingsInfo[key].default === c.value
+                  ? `${c.label} ${__("(Default)")}`
+                  : c.label
+              )
               .on("click", async (e) => {
                 prevSetting[key] = String(
                   await localforage.getItem(prefixedKey)

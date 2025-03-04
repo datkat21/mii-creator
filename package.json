@@ -3,11 +3,12 @@
   "module": "build.ts",
   "type": "module",
   "scripts": {
-    "build-ts": "bun build.ts",
+    "dev": "bun build.ts",
     "serve": "bunx serve -l 3000 -C ./public"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "po2json": "^0.4.5"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -16,12 +17,15 @@
     "@datkat21/html": "^1.2.0",
     "@sentry/browser": "^8.53.0",
     "@types/assert": "^1.5.10",
+    "@types/gettext.js": "^1.0.3",
     "@types/gsap": "^3.0.0",
     "@types/md5": "^2.3.5",
     "@types/three": "^0.173.0",
     "assert": "^2.1.0",
     "buffer": "^6.0.3",
     "camera-controls": "^2.9.0",
+    "gettext-extractor": "^3.8.0",
+    "gettext.js": "^2.0.3",
     "iconv-lite": "^0.6.3",
     "jszip": "^3.10.1",
     "kaitai-struct": "^0.10.0",

@@ -2,30 +2,25 @@ import MiiData from "./class/MiiData";
 import { setupUi } from "./ui/setup";
 import { MiiEditor } from "./class/MiiEditor";
 import LazyLoad, { type ILazyLoadInstance } from "vanilla-lazyload";
-import { langManager } from "./l10n/manager";
 import * as Sentry from "@sentry/browser";
 import { Config } from "./config";
-import Modal, { buttonsOkCancel, closeModal } from "./ui/components/Modal";
-import {
-  FFLExpression,
-  initializeFFLWithResource,
-  parseHexOrB64ToUint8Array
-} from "./external/ffl.js/ffl.js";
-import type { FFLShaderMaterial } from "./external/ffl.js/FFLShaderMaterial.js";
-import type { LUTShaderMaterial } from "./external/ffl.js/LUTShaderMaterial.js";
-import type { FFLWorkerInitializeMessage, FFLWorkerMessage } from "./worker.js";
+import { parseHexOrB64ToUint8Array } from "./external/ffl.js/ffl.js";
+import type { FFLShaderMaterial } from "./external/ffl.js/FFLShaderMaterial";
+import type { LUTShaderMaterial } from "./external/ffl.js/LUTShaderMaterial";
 import {
   EmptyMiiCreatorV4Data,
   MiiCreatorV4Data,
   MiiCreatorV4DataToRSD,
   validationThing
-} from "./class/struct/MiiCreatorV4Data.js";
-import { MiiCreatorV3Data } from "./class/struct/MiiCreatorV3Data.js";
-import { dataToHex } from "./util/dataConvert.js";
-import Notify from "./ui/components/Notify.js";
-import { loadBodyModels, loadHatModels } from "./util/ModelLoader.js";
-import { defaultParams, type RenderRequest } from "./util/IconRendering.js";
-import { Ver3StoreData } from "./class/struct/FFLStoreData.js";
+} from "./class/struct/MiiCreatorV4Data";
+import { MiiCreatorV3Data } from "./class/struct/MiiCreatorV3Data";
+import { dataToHex } from "./util/dataConvert";
+import {
+  FFLiAuthorID,
+  FFLiCreateID,
+  Ver3StoreData
+} from "./class/struct/FFLStoreData.js";
+import localforage from "localforage";
 
 declare global {
   interface Window {
@@ -57,6 +52,7 @@ if (Config.apis.useSentry) {
 
 // Make the theme ready before settings is initialized
 document.documentElement.dataset.theme = "default";
+window.localforage = localforage;
 
 setupUi();
 

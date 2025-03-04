@@ -10,30 +10,34 @@ import { newFromLookalike } from "./lookalike";
 import { newFromRandonNNID } from "./randomNnid";
 import { dataToBase64 } from "../../../../util/dataConvert";
 
+import { _ } from "../../../../util/Lang";
+import { parseHexOrB64ToUint8Array } from "../../../../external/ffl.js/ffl";
+const __ = _();
+
 export const miiCreateDialog = () => {
   const m = Modal.modal(
-    "New Mii",
-    "How would you like to create the Mii?",
+    __("Create Mii"),
+    __("How would you like to create the Mii?"),
     "body",
     {
-      text: "From Scratch",
+      text: __("From Scratch"),
       type: "primary",
       callback: () => {
         newFromScratch();
       }
     },
     {
-      text: "QR Code",
+      text: __("QR Code"),
       callback: () => {
         newFromQRCode();
       }
     },
     {
-      text: "Mii data file",
+      text: __("Mii data file"),
       callback: () => {
         let id: string;
         let modal = Modal.modal(
-          "Mii data files import",
+          __("Mii data files import"),
           "",
           "body",
           {
@@ -49,15 +53,22 @@ export const miiCreateDialog = () => {
             }
           }
         );
+        // hide buttons/labels
         modal
           .qsa(".modal-body .flex-group,.modal-body span")!
           .forEach((q) => q!.style({ display: "none" }));
         modal.qs(".modal-body")!.appendMany(
           new Html("span").text(
-            "Import Mii data file(s) here. Supported formats: .ffsd/.cfsd, .miic, .charinfo, .rsd"
+            __(
+              "Import Mii data file(s) here. Supported formats: .ffsd/.cfsd, .miic, .charinfo, .rsd"
+            )
           ),
           new Html("input")
-            .attr({ type: "file", accept: ".ffsd,.cfsd,.miic", multiple: "on" })
+            .attr({
+              type: "file",
+              accept: ".ffsd,.cfsd,.miic,.charinfo,.rsd",
+              multiple: "on"
+            })
             .style({ margin: "auto" })
             .on("change", async (e) => {
               const target = e.target as HTMLInputElement;
@@ -91,7 +102,7 @@ export const miiCreateDialog = () => {
                     throw e;
                   });
                 } catch (e) {
-                  Modal.alert("Error", `Invalid Mii data: ${e}`);
+                  Modal.alert(__("Error"), __("Invalid Mii data: $1", e));
                   console.error(e);
                   target.value = "";
                   continue;
@@ -107,23 +118,48 @@ export const miiCreateDialog = () => {
       }
     },
     {
-      text: "Enter NNID/PNID",
+      text: __("Raw Mii data"),
+      callback: async () => {
+        const result = await Modal.input(
+          __("Raw Mii data import"),
+          __("Paste raw Mii data here."),
+          __("Hex/Base64 data"),
+          "body"
+        );
+
+        if (result === false) return;
+
+        const miiData = parseHexOrB64ToUint8Array(result);
+
+        const mii = new Mii(miiData);
+
+        const miiDataToSave = dataToBase64(mii.export("miic"));
+
+        let id = await newMiiId();
+
+        await localforage.setItem(id, miiDataToSave);
+        _shutdown()();
+        Library(id);
+      }
+    },
+    {
+      text: __("Enter NNID/PNID"),
       callback: () => {
         Modal.modal(
-          "Enter NNID/PNID",
-          "Select a service to look up",
+          __("Enter NNID/PNID"),
+          __("Select a service to look up"),
           "body",
           {
             text: "Cancel"
           },
           {
-            text: "Enter Nintendo Network ID",
+            text: __("Enter Nintendo Network ID"),
             callback(e) {
               newFromNNID();
             }
           },
           {
-            text: "Enter Pretendo Network ID",
+            text: __("Enter Pretendo Network ID"),
             callback(e) {
               newFromPNID();
             }
@@ -132,13 +168,13 @@ export const miiCreateDialog = () => {
       }
     },
     {
-      text: "Choose a look-alike",
+      text: __("Choose a look-alike"),
       callback: () => {
         newFromLookalike();
       }
     },
     {
-      text: "Random NNID",
+      text: __("Random NNID"),
       callback: () => {
         newFromRandonNNID();
       }

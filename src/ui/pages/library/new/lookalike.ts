@@ -19,9 +19,12 @@ import { miiCreateDialog } from "./_dialog";
 import { dataToBase64 } from "../../../../util/dataConvert";
 import { AddButtonSounds } from "../../../../util/AddButtonSounds";
 
+import { _ } from "../../../../util/Lang";
+const __ = _();
+
 export const newFromLookalike = async () => {
   var lookalikeModal = Modal.modal(
-    "Choose a look-alike",
+    __("Choose a look-alike"),
     "",
     "body",
     {
@@ -31,7 +34,7 @@ export const newFromLookalike = async () => {
       }
     },
     {
-      text: "Confirm"
+      text: __("Confirm")
     }
   );
   lookalikeModal.classOn("random-mii-grid");
@@ -59,8 +62,10 @@ export const newFromLookalike = async () => {
         "flex-shrink": "0"
       })
       .text(
-        // arian wrote this for me.. because i didn't want to offend anyone having "race" in my mii creator😭
-        "All of the options here are what Nintendo originally programmed in. Please let me know if you want more options added."
+        // Message used at the top of lookalike screen
+        __(
+          "All of the options here are what Nintendo originally programmed in. Please let me know if you want more options added."
+        )
       )
   );
 
@@ -84,62 +89,130 @@ export const newFromLookalike = async () => {
 
   group.prependMany(
     makeSelect("race", [
-      new Option("Skin tone", "-1", true, true),
-      new Option("(Random)", "-1"),
-      new Option("Black", "0"),
-      new Option("White", "1"),
-      new Option("Asian", "2")
+      new Option(
+        // lookalike skin tone dropdown
+        __("Skin tone"),
+        "-1",
+        true,
+        true
+      ),
+      new Option(__("(Random)"), "-1"),
+      new Option(
+        // skin tone black
+        __("Black"),
+        "0"
+      ),
+      new Option(
+        // skin tone white
+        __("White"),
+        "1"
+      ),
+      new Option(
+        // skin tone asian
+        __("Asian"),
+        "2"
+      )
     ]),
     makeSelect("gender", [
-      new Option("Gender", "-1", true, true),
-      new Option("(Random)", "-1"),
-      new Option("Male", "0"),
-      new Option("Female", "1")
+      new Option(__("Gender"), "-1", true, true),
+      new Option(__("(Random)"), "-1"),
+      new Option(__("Male"), "0"),
+      new Option(__("Female"), "1")
     ]),
     makeSelect("hairColor", [
-      new Option("Hair color", "-1", true, true),
-      new Option("(Random)", "-1"),
-      new Option("Black", "0"),
-      new Option("Brown", "1"),
-      new Option("Auburn", "2"),
-      new Option("Hazel", "3"),
-      new Option("Gray", "4"),
-      new Option("Olive", "5"),
-      new Option("Medium-blonde", "6"),
-      new Option("Light-blonde", "7")
+      new Option(__("Hair color"), "-1", true, true),
+      new Option(__("(Random)"), "-1"),
+      new Option(
+        // hair color black
+        __("Black"),
+        "0"
+      ),
+      new Option(
+        // hair color brown
+        __("Brown"),
+        "1"
+      ),
+      new Option(
+        // hair color reddish
+        __("Auburn"),
+        "2"
+      ),
+      new Option(
+        // hair color hazel
+        __("Hazel"),
+        "3"
+      ),
+      new Option(
+        // hair color gray
+        __("Gray"),
+        "4"
+      ),
+      new Option(
+        // hair color olive
+        __("Olive"),
+        "5"
+      ),
+      new Option(
+        // hair color dark blond
+        __("Medium-blonde"),
+        "6"
+      ),
+      new Option(
+        // hair color light blond
+        __("Light-blonde"),
+        "7"
+      )
     ]),
     makeSelect("favoriteColor", [
-      new Option("Favorite color", "-1", true, true),
-      new Option("(Random)", "-1"),
-      new Option("Red", "0"),
-      new Option("Orange", "1"),
-      new Option("Yellow", "2"),
-      new Option("Lime", "3"),
-      new Option("Green", "4"),
-      new Option("Blue", "5"),
-      new Option("Cyan", "6"),
-      new Option("Pink", "7"),
-      new Option("Purple", "8"),
-      new Option("Brown", "9"),
-      new Option("White", "10"),
-      new Option("Black", "11")
+      new Option(
+        // lookalike favorite color dropdown
+        __("Favorite color"),
+        "-1",
+        true,
+        true
+      ),
+      new Option(__("(Random)"), "-1"),
+      new Option(__("Red"), "0"),
+      new Option(__("Orange"), "1"),
+      new Option(__("Yellow"), "2"),
+      new Option(__("Lime"), "3"),
+      new Option(__("Green"), "4"),
+      new Option(__("Blue"), "5"),
+      new Option(__("Cyan"), "6"),
+      new Option(__("Pink"), "7"),
+      new Option(__("Purple"), "8"),
+      new Option(__("Brown"), "9"),
+      new Option(__("White"), "10"),
+      new Option(__("Black"), "11")
     ]),
     makeSelect("eyeColor", [
-      new Option("Eye color", "-1", true, true),
-      new Option("(Random)", "-1"),
-      new Option("Black", "0"),
-      new Option("Gray", "1"),
-      new Option("Brown", "2"),
-      new Option("Hazel", "3"),
-      new Option("Blue", "4"),
-      new Option("Green", "5")
+      new Option(
+        // lookalike eye color dropdown
+        __("Eye color"),
+        "-1",
+        true,
+        true
+      ),
+      new Option(__("(Random)"), "-1"),
+      new Option(__("Black"), "0"),
+      new Option(__("Gray"), "1"),
+      new Option(__("Brown"), "2"),
+      new Option(__("Hazel"), "3"),
+      new Option(__("Blue"), "4"),
+      new Option(__("Green"), "5")
     ]),
     makeSelect("age", [
-      new Option("Age", "-1", true, true),
-      new Option("(Random)", "-1"),
-      new Option("Child", "0"),
-      new Option("Adult", "1"),
-      new Option("Elder", "2")
+      new Option(
+        // lookalike age dropdown
+        __("Age"),
+        "-1",
+        true,
+        true
+      ),
+      new Option(__("(Random)"), "-1"),
+      new Option(__("Child"), "0"),
+      new Option(__("Adult"), "1"),
+      new Option(__("Elder"), "2")
     ])
   );
 
@@ -185,7 +258,8 @@ export function confirmOrReviseMii(
   });
 
   Modal.modal(
-    "Is this OK?",
+    // Confirmation message
+    __("Is this OK?"),
     new Html("div").style({ margin: "0 auto" }).append(miiIcon),
     "body",
     // does nothing
@@ -193,20 +267,21 @@ export function confirmOrReviseMii(
       text: "Cancel"
     },
     {
-      text: "Close",
+      text: __("Close"),
       type: "danger"
     },
     {
-      text: "Revise",
+      text: __("Revise"),
       callback(e) {
         let currentMii = mii;
 
         const m = Modal.modal(
           "Revise",
           new Html("div").appendMany(
-            new Html("span")
-              .style({ margin: "0 auto" })
-              .text("Click any to reroll"),
+            new Html("span").style({ margin: "0 auto" }).text(
+              // lookalike revise screen message
+              __("Click any to reroll")
+            ),
             new Html("div").class("menu").style({
               display: "flex",
               "flex-direction": "column",
@@ -216,7 +291,7 @@ export function confirmOrReviseMii(
           "body",
           { text: "Cancel" },
           {
-            text: "Done",
+            text: __("Done"),
             callback(e) {
               confirmOrReviseMii(currentMii, options, modalRef);
             }
@@ -298,7 +373,7 @@ export function confirmOrReviseMii(
       }
     },
     {
-      text: "Done",
+      text: __("Done"),
       type: "primary",
       callback(e) {
         const randomMiiB64 = dataToBase64(mii.export("miic"));

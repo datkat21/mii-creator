@@ -13,12 +13,14 @@ import {
 import { numToHex } from "../../util/NumberToHexString";
 import {
   makeSeparatorFSI,
-  makeSeparatorGapThinDesktop,
   makeSeparatorGapThinFSI,
   makeSeparatorGapThinLaptop,
   MiiSwitchColorTable,
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function ExtHatTab(data: TabRenderInit) {
   data.container.append(
@@ -27,15 +29,20 @@ export function ExtHatTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         hatType: {
-          label: "Hat",
-          header:
-            "Hat type is a CUSTOM property, and will not transfer to any other data formats.",
+          label:
+            // hat tab name
+            __("Hat"),
+          header: __(
+            "%1 is a CUSTOM property, and will not transfer to any other data formats.",
+            // Hat type warning label
+            __("Hat type")
+          ),
           items: [
             {
               type: FeatureSetType.Icon,
               forceRender: true,
               value: -1,
-              icon: '<span class="disable-item">Disabled</span>',
+              icon: `<span class="disable-item">${__("Disabled")}</span>`,
               part: RenderPart.Head
             },
             makeSeparatorGapThinFSI(),
@@ -51,15 +58,19 @@ export function ExtHatTab(data: TabRenderInit) {
           ]
         },
         hatColor: {
-          label: "Hat Color",
-          header:
-            "Hat color is a CUSTOM property, and will not transfer to any other data formats.",
+          // hat color tab name
+          label: __("Hat Color"),
+          header: __(
+            "%1 is a CUSTOM property, and will not transfer to any other data formats.",
+            // Hat color warning label
+            __("Hat color")
+          ),
           items: [
             {
               type: FeatureSetType.Icon,
               forceRender: true,
               value: -1,
-              icon: '<span class="disable-item">Disabled</span>',
+              icon: `<span class="disable-item">${__("Disabled")}</span>`,
               part: RenderPart.Head,
               property: ["hatFavoriteColor", "hatCommonColor"],
               selectedCondition: () =>
