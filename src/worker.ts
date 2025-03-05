@@ -99,8 +99,11 @@ self.onmessage = async (e) => {
           renderer: workerRenderer,
           size,
           module: FFLModule
+        }).catch((e) => {
+          console.error("Oopsie", e);
+          postMessage({ id: input.id, result: null, error: e });
+          throw e;
         });
-
         // console.log(`charModel for ${mii.miiName}:`, model);
       } catch (e) {
         console.error(`Worker error: Could not make icon`, e);

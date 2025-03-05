@@ -142,7 +142,6 @@ export async function customRender(miiData: Mii) {
     expression: 0,
     renderWidth: 720,
     renderHeight: 720,
-    cameraPosition: 1,
     animSpeed: 100
   };
 
@@ -188,44 +187,35 @@ export async function customRender(miiData: Mii) {
           html: new Html("div").class("flex-group", "col").appendMany(
             new Html("label").text(__("Position")),
             new Html("div").class("flex-group").appendMany(
-              new Html("button")
-                .text(__("Center horizontally"))
-                .on("click", () => {
-                  const newPosition = scene.focusCamera(
-                    CameraPosition.MiiFullBody,
-                    true,
-                    false,
-                    true
-                  )!;
-                  let target = new Vector3();
-                  controls.getTarget(target);
-                  target.x = newPosition.x;
-                  controls.moveTo(target.x, target.y, target.z);
-                }),
-              new Html("button")
-                .text(__("Center vertically"))
-                .on("click", () => {
-                  const newPosition = scene.focusCamera(
-                    CameraPosition.MiiFullBody,
-                    true,
-                    false,
-                    true
-                  )!;
-                  let target = new Vector3();
-                  controls.getTarget(target);
-                  target.y = newPosition.y;
-                  controls.moveTo(target.x, target.y, target.z);
-                }),
-              new Html("button").text(__("Reset")).on("click", () => {
+              new Html("button").text(__("Center X")).on("click", () => {
                 const newPosition = scene.focusCamera(
                   CameraPosition.MiiFullBody,
                   true,
                   false,
                   true
                 )!;
-                scene
-                  .getControls()
-                  .moveTo(newPosition.x, newPosition.y, newPosition.z);
+                let target = new Vector3();
+                controls.getTarget(target);
+                target.x = newPosition.x;
+                controls.moveTo(target.x, target.y, target.z);
+              }),
+              new Html("button").text(__("Center Y")).on("click", () => {
+                const newPosition = scene.focusCamera(
+                  CameraPosition.MiiFullBody,
+                  true,
+                  false,
+                  true
+                )!;
+                let target = new Vector3();
+                controls.getTarget(target);
+                target.y = newPosition.y;
+                controls.moveTo(target.x, target.y, target.z);
+              }),
+              new Html("button").text(__("Center to body")).on("click", () => {
+                scene.focusCamera(CameraPosition.MiiFullBody, true, false)!;
+              }),
+              new Html("button").text(__("Center to head")).on("click", () => {
+                scene.focusCamera(CameraPosition.MiiHead, true, false)!;
               })
             ),
             new Html("label").text(__("Rotate")),
@@ -357,25 +347,32 @@ export async function customRender(miiData: Mii) {
   };
 
   expressionTable.forEach(async (k) => {
+    let iconTag;
+
+    if (Config.renderer.useRendererServer) {
+      iconTag = `<img class="lazy" width=128 height=128 data-src="${
+        Config.renderer.renderHeadshotURLNoParams
+      }?width=128&scale=1&data=${encodeURIComponent(miiDataHex)}&expression=${
+        k.id
+      }&type=fflmakeicon&verifyCharInfo=0" title="${k.name}">`;
+    } else {
+      const icon = await getMiiIcon(
+        miiData,
+        "customRender",
+        "fflmakeicon",
+        128,
+        k.id,
+        false
+      ).catch((e) => {
+        console.error("oh noes, Icon didnt Load", e);
+      });
+      iconTag = `<img class="lazy" width=128 height=128 data-src="${icon}" title="${k.name}">`;
+    }
+
     const expressionItem = {
       type: FeatureSetType.Icon,
       value: String(k.id),
-      icon: Config.renderer.useRendererServer
-        ? `<img class="lazy" width=128 height=128 data-src="${
-            Config.renderer.renderHeadshotURLNoParams
-          }?width=128&scale=1&data=${encodeURIComponent(
-            miiDataHex
-          )}&expression=${k.id}&type=fflmakeicon&verifyCharInfo=0" title="${
-            k.name
-          }">`
-        : `<img class="lazy" width=128 height=128 data-src="${await getMiiIcon(
-            miiData,
-            "customRender",
-            "fflmakeicon",
-            128,
-            k.id,
-            false
-          )}" title="${k.name}">`,
+      icon: iconTag,
       part: RenderPart.Head
     };
     e["expression"].items.push(expressionItem as FeatureSetIconItem);
@@ -491,21 +488,12 @@ export async function customRender(miiData: Mii) {
     expression: 0,
     renderWidth: 720,
     renderHeight: 720,
-    cameraPosition: 1,
     animSpeed: 1
   };
 
   function updateConfiguration() {
     scene.getCamera()!.fov = configuration.fov;
     scene.getCamera()!.updateProjectionMatrix();
-    switch (configuration.cameraPosition) {
-      case 0:
-        scene.focusCamera(CameraPosition.MiiHead);
-        break;
-      case 1:
-        scene.focusCamera(CameraPosition.MiiFullBody);
-        break;
-    }
 
     // Only update expression when expression is changed.
     // console.log(oldConfiguration.expression, configuration.expression);

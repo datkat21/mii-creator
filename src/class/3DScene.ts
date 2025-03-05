@@ -319,20 +319,32 @@ export class Mii3DScene {
       }
       return pos;
     } else if (part === CameraPosition.MiiHead) {
-      if (body !== undefined) {
-        const box = new THREE.Box3().setFromObject(body);
-        pos.y = box.max.y - box.min.y;
-      }
-      if (onlyReturn === false) {
-        this.#controls.moveTo(pos.x, pos.y + 2, pos.z, transition);
-        this.#controls.rotateTo(0, Math.PI / 2, transition);
-        this.#controls.dollyTo(25, transition);
-        if (this.cameraPan === false) {
+      switch (this.setupType) {
+        case SetupType.Normal:
+          if (body !== undefined) {
+            const box = new THREE.Box3().setFromObject(body);
+            pos.y = box.max.y - box.min.y;
+          }
+          if (onlyReturn === false) {
+            this.#controls.moveTo(pos.x, pos.y + 2, pos.z, transition);
+            this.#controls.rotateTo(0, Math.PI / 2, transition);
+            this.#controls.dollyTo(25, transition);
+            if (this.cameraPan === false) {
+              this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
+              this.#controls.dollyTo(65, transition);
+            }
+          }
+          return pos;
+        case SetupType.Screenshot:
+          if (this.getHead() !== undefined) {
+            const box = new THREE.Box3().setFromObject(this.getHead()!);
+            pos.y = box.max.y - box.min.y;
+          }
           this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
-          this.#controls.dollyTo(65, transition);
-        }
+          this.#controls.rotateTo(0, Math.PI / 2, transition);
+          this.#controls.dollyTo(30, transition);
+          break;
       }
-      return pos;
     }
   }
   focusCameraUpdate() {

@@ -35,7 +35,7 @@ export function MiscTab(data: TabRenderInit) {
             if (nameStr.trim() === "") return "Name is empty";
 
             // Name length check
-            if (nameBuffer.length >= 0x14) return "Name is too long";
+            if (nameBuffer.length > 0x14) return "Name is too long";
             if (nameBuffer.length === 0) return "Name is too short";
 
             return true;
@@ -56,7 +56,7 @@ export function MiscTab(data: TabRenderInit) {
             if (nameStr.trim() === "") return "Creator name is empty";
 
             // Name length check
-            if (nameBuffer.length >= 0x14) return "Creator name is too long";
+            if (nameBuffer.length > 0x14) return "Creator name is too long";
 
             return true;
           },

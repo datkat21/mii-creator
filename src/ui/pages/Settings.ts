@@ -18,6 +18,8 @@ let needsToNotify = true;
 import { _ } from "../../util/Lang";
 const __ = _();
 
+let resourceRefreshFlag = false;
+
 export const updateSettings = async (force: boolean = false) => {
   function askRefreshNotice() {
     if (needsToNotify && force === false) {
@@ -76,7 +78,7 @@ export const updateSettings = async (force: boolean = false) => {
     prevSetting["resourceType"] !==
     (await localforage.getItem("settings_resourceType"))
   ) {
-    askRefreshNotice();
+    resourceRefreshFlag = true;
   }
   if (
     prevSetting["shaderType"] !==
@@ -152,7 +154,22 @@ for (const key in settingsInfo) {
 
 export async function Settings() {
   const modal = Modal.modal(__("Settings"), "", "body", {
-    text: "Cancel"
+    text: "Cancel",
+    callback(e) {
+      if (resourceRefreshFlag) {
+        Modal.modal(
+          __("Notice"),
+          __("A refresh is required to apply resource changes."),
+          "body",
+          {
+            text: __("OK"),
+            callback(e) {
+              location.reload();
+            }
+          }
+        );
+      }
+    }
   });
 
   const modalBody = modal.qs(".modal-body")!.clear();
@@ -436,12 +453,12 @@ export async function displayUpdateNotice() {
 
     await setSetting(`has-seen-${Config.version.string}`, true);
 
+    let changelog = Config.version.changelog;
+
     m.qs(".modal-body span")!.cleanup();
     // free vulnerability for you
     m.qs(".modal-body")!.prepend(
-      new Html("div")
-        .style({ "max-width": "720px" })
-        .html(Config.version.changelog)
+      new Html("div").style({ "max-width": "720px" }).html(changelog)
     );
     // Modify <a> tags in the changelog
     m.qsa("a")!.forEach((b) => {

@@ -76,7 +76,7 @@ export const Config = {
 
 
     <div class="flex-group">
-      <img draggable="false" width=96 height=96 src="https://i.imgur.com/sMtNF5a.png">
+      <img draggable="false" width=96 height=96 src="./assets/images/update_notice/image.png">
       <div class="col" style="gap:12px">
         <small>Austin☆²¹ / Kat21</small>
         <div>Let's go over the new changes!</div>

@@ -66,7 +66,10 @@ export const miiCreateDialog = () => {
           new Html("input")
             .attr({
               type: "file",
-              accept: ".ffsd,.cfsd,.miic,.charinfo,.rsd",
+              accept:
+                ".ffsd,.cfsd,.charinfo,.rsd," +
+                // add unofficial formats
+                ".miic,.mii,.miigx,.cfcd,.ufsd,.mnms,.nfcd",
               multiple: "on"
             })
             .style({ margin: "auto" })
