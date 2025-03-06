@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import localforage from "localforage";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import { BodyType } from "../constants/BodyShaderTypes";
 
 //! NOTE: THIS ASSUMES THE ROOT IS THE PUBLIC FOLDER
 var gltfLoader = new GLTFLoader();
@@ -14,17 +15,19 @@ async function loadBodyModel(modelPath: string) {
   var mixer = new THREE.AnimationMixer(model.scene);
   const scene = model.scene;
 
-  const idleClip = model.animations[0];
-  const idleAnim = mixer.clipAction(idleClip, scene);
-  idleAnim.stop();
-  try {
-    const clip = model.animations.find((a) => a.name === "Pose.01")!;
-    const anim = mixer.clipAction(clip, scene);
-    anim.play();
-    anim.timeScale = 0;
-    anim.paused = true;
-    mixer.update(0);
-  } catch (e) {}
+  if (model.animations.length > 0) {
+    const idleClip = model.animations[0];
+    const idleAnim = mixer.clipAction(idleClip, scene);
+    idleAnim.stop();
+    try {
+      const clip = model.animations.find((a) => a.name === "Pose.01")!;
+      const anim = mixer.clipAction(clip, scene);
+      anim.play();
+      anim.timeScale = 0;
+      anim.paused = true;
+      mixer.update(0);
+    } catch (e) {}
+  } else console.warn("Body model has no animations");
 
   return scene;
 }
@@ -36,6 +39,10 @@ export async function loadBodyModels() {
     bodyModels = {};
   }
   bodyType = (await localforage.getItem("settings_bodyModel")) || "wiiu";
+
+  if (bodyType === BodyType.Streetpass) {
+    isStreetpassBody = true;
+  }
 
   if (bodyModels.m) {
     bodyModels.m.traverse((o: any) => {
@@ -86,5 +93,8 @@ let bodyModels: Record<string, THREE.Group | null> = {
 };
 let hatModels: THREE.Group[] = [];
 
+let isStreetpassBody = false;
+
+export const isStreetpass = () => isStreetpassBody;
 export const getBodyModels = () => bodyModels as Record<"m" | "f", THREE.Group>;
 export const getHatModels = () => hatModels;

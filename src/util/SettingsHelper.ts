@@ -58,7 +58,6 @@ export const settingsInfo: Record<string, any> = {
       "When this is disabled, the camera won't be used and some errors may not appear."
     )
   },
-
   editMode: {
     type: "multi",
     label: __("Editing Mode"),
@@ -91,7 +90,7 @@ export const settingsInfo: Record<string, any> = {
     choices: [
       ...Config.renderer.fflResourcesNames.map((n, i) => ({
         label: __(n),
-        value: i
+        value: String(i)
       }))
     ]
   },
@@ -120,9 +119,10 @@ export const settingsInfo: Record<string, any> = {
     ),
     default: BodyType.WiiU,
     choices: [
-      { label: "Wii U", value: BodyType.WiiU },
-      { label: "Switch", value: BodyType.Switch, disabled: true },
-      { label: "Miitomo", value: BodyType.Miitomo }
+      { label: __("Wii U"), value: BodyType.WiiU },
+      { label: __("Switch"), value: BodyType.Switch, disabled: true },
+      { label: __("Miitomo"), value: BodyType.Miitomo },
+      { label: __("Streetpass"), value: BodyType.Streetpass }
     ]
   },
   bodyModelHands: {

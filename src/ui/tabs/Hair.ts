@@ -19,6 +19,9 @@ import {
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function HairTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -29,7 +32,7 @@ export function HairTab(data: TabRenderInit) {
       },
       entries: {
         hairType: {
-          label: "Type",
+          label: __("Type"),
           items: rearrangeArray(
             ArrayNum(132).map((k) => ({
               type: FeatureSetType.Icon,
@@ -42,7 +45,7 @@ export function HairTab(data: TabRenderInit) {
           )
         },
         hairColor: {
-          label: data.useAccessibility ? "Color" : EditorIcons.color,
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,
@@ -64,15 +67,15 @@ export function HairTab(data: TabRenderInit) {
           ]
         },
         hairPosition: {
-          label: "Hair Flip",
+          label: __("Hair Flip"),
           items: [
             {
               type: FeatureSetType.Switch,
               iconOff: data.useAccessibility
-                ? "Unflipped"
+                ? __("Unflipped")
                 : EditorIcons.positionHairFlip,
               iconOn: data.useAccessibility
-                ? "Flipped"
+                ? __("Flipped")
                 : EditorIcons.positionHairFlipped,
               property: "hairFlip",
               part: RenderPart.Head

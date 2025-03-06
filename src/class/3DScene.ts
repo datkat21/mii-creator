@@ -469,13 +469,17 @@ export class Mii3DScene {
     this.currentAnim = newAnim;
     let x: ("m" | "f")[] = ["m", "f"];
     for (const key of x) {
-      this.anim.set(
-        key,
-        this.mixer.clipAction(
+      let clip;
+
+      try {
+        clip = this.mixer.clipAction(
           this.animations.get(`${key}-${newAnim}`)!,
           this.#scene.getObjectByName(key)
-        )
-      );
+        );
+      } catch (e) {
+        return;
+      }
+      this.anim.set(key, clip);
       this.anim
         .get(key)!
         .reset()
@@ -688,8 +692,49 @@ export class Mii3DScene {
     // @ts-expect-error debug
     window.scaleFactors = scaleFactors;
 
+    let body = this.type === "m" ? bodyM : bodyF;
+
     const traverseBones = (object: THREE.Object3D) => {
       object.scale.set(scaleFactors.x, scaleFactors.y, scaleFactors.z);
+
+      if (this.bodyModel === "streetpass") {
+        // Tuning constant: adjust this to get the smooth effect you like.
+        const k = 0.4; // 20% adjustment
+
+        var scaleVec = new THREE.Vector3();
+        body.getWorldScale(scaleVec);
+
+        // Compute the base compensation factors
+        const baseHandScaleX = 1 / scaleVec.x;
+        const baseHandScaleY = 1 / scaleVec.y;
+
+        // Create an adjustment factor that is 1 when scaleVec.y is 1.
+        // If scaleVec.y < 1, (scaleVec.y - 1) is negative so the factor is less than 1.
+        // If scaleVec.y > 1, the factor becomes greater than 1.
+        const adjustmentY = 1 + k * (scaleVec.y - 1);
+        const adjustmentX = 1 + k * (scaleVec.x - 1);
+
+        // Apply the adjusted compensation factor for the y-axis.
+        // Here we use the original inverse for x and z, but you can also adjust those if needed.
+        const adjustedHandScaleX = baseHandScaleX * adjustmentX;
+        const adjustedHandScaleY = baseHandScaleY * adjustmentY;
+
+        console.log(baseHandScaleX, baseHandScaleY);
+
+        const handL = body.getObjectByName("handLPs")!;
+        const handR = body.getObjectByName("handRPs")!;
+
+        handL.scale.set(
+          adjustedHandScaleX,
+          adjustedHandScaleY,
+          adjustedHandScaleX
+        );
+        handR.scale.set(
+          adjustedHandScaleX,
+          adjustedHandScaleY,
+          adjustedHandScaleX
+        );
+      }
 
       // this.#scene
       //   .getObjectByName("MiiHead")!

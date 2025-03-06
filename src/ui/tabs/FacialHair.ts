@@ -18,6 +18,9 @@ import {
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function FacialHairTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -25,7 +28,7 @@ export function FacialHairTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         mustacheType: {
-          label: "Mustache",
+          label: __("Mustache"),
           items: ArrayNum(6).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -34,7 +37,7 @@ export function FacialHairTab(data: TabRenderInit) {
           }))
         },
         mustachePosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
@@ -64,7 +67,7 @@ export function FacialHairTab(data: TabRenderInit) {
           ]
         },
         beardType: {
-          label: "Goatee",
+          label: __("Beard"),
           items: ArrayNum(6).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -73,7 +76,7 @@ export function FacialHairTab(data: TabRenderInit) {
           }))
         },
         beardColor: {
-          label: data.useAccessibility ? "Color" : EditorIcons.color,
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,

@@ -18,7 +18,7 @@ import {
   getShaderMaterialFromShaderType
 } from "../class/3d/shader/ShaderUtils";
 import type { MiiCreatorAdditionalData } from "../external/ffl.js/MiiCreatorTypes";
-import { getBodyModels, getHatModels } from "./ModelLoader";
+import { getBodyModels, getHatModels, isStreetpass } from "./ModelLoader";
 import {
   cMaterialName,
   cPantsColorBlue,
@@ -229,6 +229,7 @@ export function createMiiRender(
 
       bodyModel.scale.set(bodyScale.x * 7, bodyScale.y * 7, bodyScale.z * 7);
       bodyModel.position.set(0, 0, 0);
+
       iconScene.add(bodyModel);
 
       var shirtColor = MiiFavoriteColorVec3Table[mii.favoriteColor];
@@ -288,6 +289,18 @@ export function createMiiRender(
           // Position the icon closer to the head
           iconCamera.position.y += bodyScale.y * 76;
         }
+      }
+
+      if (isStreetpass()) {
+        console.log("is streetpass");
+        bodyModel
+          .getObjectByName("handLPs")!
+          .scale.set(bodyScale.y / 1, bodyScale.x / 1, bodyScale.y / 1);
+        bodyModel
+          .getObjectByName("handRPs")!
+          .scale.set(bodyScale.y / 1, bodyScale.x / 1, bodyScale.y / 1);
+      } else {
+        console.log("not streetpass");
       }
     }
 

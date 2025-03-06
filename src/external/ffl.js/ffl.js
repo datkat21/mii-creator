@@ -2233,23 +2233,23 @@ function _bindDrawParamGeometry(drawParam, module) {
 
 				const data = module.HEAP8.subarray(buffer.ptr, buffer.ptr + buffer.size);
 
-				// // Calculate the number of vertices
-				// const numVertices = data.length / buffer.stride;
+				// Calculate the number of vertices
+				const numVertices = data.length / buffer.stride;
 
-				// // Create a new Int8Array to store only the 3 components per vertex
-				// const newData = new Int8Array(numVertices * 3);
+				// Create a new Int8Array to store only the 3 components per vertex
+				const newData = new Int8Array(numVertices * 3);
 
-				// for (let i = 0; i < numVertices; i++) {
-				// 	newData[i * 3] = data[i * buffer.stride];
-				// 	newData[i * 3 + 1] = data[i * buffer.stride + 1];
-				// 	newData[i * 3 + 2] = data[i * buffer.stride + 2];
-				// }
+				for (let i = 0; i < numVertices; i++) {
+					newData[i * 3] = data[i * buffer.stride];
+					newData[i * 3 + 1] = data[i * buffer.stride + 1];
+					newData[i * 3 + 2] = data[i * buffer.stride + 2];
+				}
 
-				// // Use the new array with an itemSize of 3
-				// geometry.setAttribute('normal', new THREE.Int8BufferAttribute(newData, 3, true));
+				// Use the new array with an itemSize of 3
+				geometry.setAttribute('normal', new THREE.Int8BufferAttribute(newData, 3, true));
 
 				// console.log("normal buffer:", buffer);
-				geometry.setAttribute('normal', new THREE.Int8BufferAttribute(data, buffer.stride, true));
+				// geometry.setAttribute('normal', new THREE.Int8BufferAttribute(data, buffer.stride, true));
 				break;
 			}
 			case FFLAttributeBufferType.TANGENT: {
