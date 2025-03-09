@@ -9,6 +9,7 @@ import {
 } from "./FFLStoreData";
 import {
   ToVer3EyeColorTable,
+  ToVer3FacelineColorTable,
   ToVer3GlassColorTable,
   ToVer3GlassTypeTable,
   ToVer3HairColorTable,
@@ -316,7 +317,7 @@ export function MiiCreatorV4DataToFFSD(
     eyebrow_type: input.eyebrowType,
     eyebrow_x: input.eyebrowX,
     eyebrow_y: input.eyebrowY,
-    face_color: input.facelineColor,
+    face_color: ToVer3FacelineColorTable[input.facelineColor],
     face_make: input.facelineMake,
     face_tex: input.facelineWrinkle,
     face_type: input.facelineType,

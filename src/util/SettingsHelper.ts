@@ -122,7 +122,7 @@ export const settingsInfo: Record<string, any> = {
       { label: __("Wii U"), value: BodyType.WiiU },
       { label: __("Switch"), value: BodyType.Switch, disabled: true },
       { label: __("Miitomo"), value: BodyType.Miitomo },
-      { label: __("Streetpass"), value: BodyType.Streetpass }
+      { label: __("StreetPass"), value: BodyType.StreetPass }
     ]
   },
   bodyModelHands: {

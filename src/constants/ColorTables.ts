@@ -522,4 +522,15 @@ export const Ver3MouthColorTable = [19, 20, 21, 22, 23];
 export const Ver3GlassColorTable = [8, 14, 15, 16, 17, 18, 0];
 
 // do not mess with this, these aren't allowed
-export const ForbiddenShirtPantColors = [1, 7, 22, 78, 79, 84, 91, 92, 93, 94];
+export const ForbiddenShirtPantColors = [
+  ,
+  /*1*/ 7,
+  22,
+  78,
+  79,
+  84,
+  91,
+  92,
+  93,
+  94
+];

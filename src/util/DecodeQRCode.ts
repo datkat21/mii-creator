@@ -469,8 +469,8 @@ function handleQrCode(result: { bytes: any; noQrCode: any }) {
           error
         );
         console.log("Attempting to load QR extra data anyways:");
-        const extDataBuf = Buffer.from(qrData.slice(112));
-        console.log(extDataBuf.toString("base64"));
+        const extDataBuf = new Uint8Array(qrData.slice(112));
+        console.log(dataToBase64(extDataBuf));
         if (extDataBuf.length === 10 || extDataBuf.length === 12) {
           console.log("This is probably miic data");
           // put together the data

@@ -40,7 +40,7 @@ export async function loadBodyModels() {
   }
   bodyType = (await localforage.getItem("settings_bodyModel")) || "wiiu";
 
-  if (bodyType === BodyType.Streetpass) {
+  if (bodyType === BodyType.StreetPass) {
     isStreetpassBody = true;
   }
 

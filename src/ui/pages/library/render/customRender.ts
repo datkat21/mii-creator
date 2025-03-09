@@ -113,7 +113,8 @@ export async function customRender(miiData: Mii) {
     width: "100%",
     height: "100%",
     maxWidth: "100%",
-    maxHeight: "100%"
+    maxHeight: "100%",
+    backgroundColor: "var(--container-solid)"
   });
   let parent = new Html("div")
     .style({
