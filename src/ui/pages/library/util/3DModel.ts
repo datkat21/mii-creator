@@ -13,13 +13,13 @@ import { sRGB } from "../../../../util/Color";
 import { cMaterialName } from "../../../../class/3d/shader/fflShaderConst";
 import * as THREE from "three";
 import { ShaderType } from "../../../../constants/BodyShaderTypes";
-import type { FFLShaderMaterial } from "../../../../external/ffl.js/FFLShaderMaterial";
-import { renderTargetToDataTexture } from "../../../../external/ffl.js/ffl";
 import { colorMixTexture } from "../../../../class/3d/shader/ColorMix";
 import {
   SwitchMiiColorTable,
   SwitchMiiColorTableSRGB
 } from "../../../../constants/ColorTables";
+import FFLShaderMaterial from "../../../../external/ffl.js/FFLShaderMaterial";
+import { renderTargetToDataTexture } from "../../../../util/rendertarget";
 
 export async function traverse3DMaterialFix(
   scene: Mii3DScene
@@ -74,14 +74,14 @@ export async function traverse3DMaterialFix(
                 scene.getRenderer()
               );
 
-              (m.material as FFLShaderMaterial).map = texture;
-              const map2 = (m.material as FFLShaderMaterial).map as Texture;
+              (m.material as MeshBasicMaterial).map = texture;
+              const map2 = (m.material as MeshBasicMaterial).map as Texture;
               if (map2) {
                 map2.wrapS = THREE.MirroredRepeatWrapping;
                 map2.wrapT = THREE.MirroredRepeatWrapping;
               }
 
-              map = (m.material as FFLShaderMaterial).map;
+              map = (m.material as MeshBasicMaterial).map;
               mapFixed = true;
             }
             break;
@@ -93,9 +93,9 @@ export async function traverse3DMaterialFix(
                 scene.getRenderer()
               );
 
-              (m.material as FFLShaderMaterial).map = texture;
+              (m.material as MeshBasicMaterial).map = texture;
 
-              map = (m.material as FFLShaderMaterial).map;
+              map = (m.material as MeshBasicMaterial).map;
               mapFixed = true;
             }
             break;
@@ -296,7 +296,7 @@ export async function traverse3DMaterialFix(
         case cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSELINE: {
           mat.side = THREE.FrontSide;
           mat.transparent = true;
-          const tex = (m.material as FFLShaderMaterial).map!;
+          const tex = (m.material as MeshBasicMaterial).map!;
           mat.map = tex;
 
           const newTexture = await colorMixTexture(tex, {
@@ -314,7 +314,7 @@ export async function traverse3DMaterialFix(
         case cMaterialName.FFL_MODULATE_TYPE_SHAPE_GLASS: {
           mat.side = THREE.DoubleSide;
           mat.transparent = true;
-          const tex = (m.material as FFLShaderMaterial).map!;
+          const tex = (m.material as MeshBasicMaterial).map!;
 
           // Fix the texture
           const newTexture = await colorMixTexture(

@@ -6,18 +6,16 @@ import {
   FFLExpression,
   FFLModelFlag,
   FFLResourceType,
-  getCameraForViewType,
+  // getCameraForViewType,
   initCharModelTextures,
   makeExpressionFlag,
-  parseHexOrB64ToUint8Array,
-  renderTargetToDataURL,
-  ViewType
+  parseHexOrB64ToUint8Array
 } from "../external/ffl.js/ffl";
 import {
   getMaterialOverridesFromShaderType,
   getShaderMaterialFromShaderType
 } from "../class/3d/shader/ShaderUtils";
-import type { MiiCreatorAdditionalData } from "../external/ffl.js/MiiCreatorTypes";
+import type { MiiCreatorAdditionalData } from "../util/MiiCreatorTypes";
 import { getBodyModels, getHatModels, isStreetpass } from "./ModelLoader";
 import {
   cMaterialName,
@@ -34,6 +32,8 @@ import {
   SwitchMiiColorTableSRGB
 } from "../constants/ColorTables";
 import { streetpassHandScaling } from "./scaling";
+import { ViewType, getCameraForViewType } from "./camera";
+import { renderTargetToDataURL } from "./rendertarget";
 
 export const defaultParams: Partial<RenderRequest> = {
   type: ViewType.Face,
@@ -119,10 +119,9 @@ export function createMiiRender(
         ]),
         modelFlag
       },
-      shaderMaterial,
+      shaderMaterial as any,
       localModule,
-      false,
-      shaderOverrides
+      false
     );
 
     initCharModelTextures(charModel, request.renderer);
@@ -159,17 +158,18 @@ export function createMiiRender(
         if ((m as THREE.Mesh).isMesh) {
           const oldMat = ((m as THREE.Mesh).material as THREE.MeshBasicMaterial)
             .map;
-          (m as THREE.Mesh).material = new shaderMaterial(
+          (m as THREE.Mesh as any).material = new shaderMaterial(
             {
               modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_CAP,
               modulateMode: 2,
               ...shaderOverrides,
-              modulateColor: [...hatColor, 1],
+              color: new THREE.Color(...hatColor),
+              opacity: 1,
               map: oldMat!
             }!
           );
         }
-      });
+      }) as any;
 
       iconScene.add(model);
 
@@ -184,7 +184,7 @@ export function createMiiRender(
     }
 
     // Add meshes from the CharModel.
-    const headMesh = charModel.meshes.clone();
+    const headMesh = charModel.meshes!.clone();
     iconScene.add(headMesh);
 
     // Get camera based on viewType parameter.
@@ -244,13 +244,14 @@ export function createMiiRender(
       }
 
       bodyModelBody.material = new charModel._materialClass({
-        ...charModel._materialParams,
+        // ...charModel._materialParams,
         modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY,
         modulateMode: 0,
-        modulateColor: [...shirtColor, 1]
+        color: new THREE.Color(...shirtColor),
+        opacity: 1
       });
 
-      bodyModelHands.material = bodyModelBody.material;
+      if (bodyModelHands) bodyModelHands.material = bodyModelBody.material;
 
       var pantsColor = cPantsColorGray;
 
@@ -274,10 +275,11 @@ export function createMiiRender(
       }
 
       bodyModelLegs.material = new charModel._materialClass({
-        ...charModel._materialParams,
+        // ...charModel._materialParams,
         modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS,
         modulateMode: 0,
-        modulateColor: [...pantsColor, 1]
+        color: new THREE.Color(...pantsColor),
+        opacity: 1
       });
 
       headMesh.position.set(0, bodyScale.y * 75, 0);

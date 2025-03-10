@@ -8,10 +8,10 @@ import {
 
 import Modal from "../../../components/Modal";
 import type { MiiLocalforage } from "../../Library";
-import { ViewType } from "../../../../external/ffl.js/ffl";
 import { getFFL } from "../../../../util/FFLLoader";
 
 import { _ } from "../../../../util/Lang";
+import { ViewType } from "../../../../util/camera";
 const __ = _();
 
 export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {

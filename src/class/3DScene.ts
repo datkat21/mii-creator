@@ -568,21 +568,23 @@ export class Mii3DScene {
       const gHandsMesh = glb.scene.getObjectByName(
         `hands_${type}`
       )! as THREE.Mesh;
-      gHandsMesh.geometry.userData = {
-        cullMode: 1,
-        modulateColor: MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor],
-        modulateMode: 0,
-        modulateType: 9
-      };
-      if (this.shaderOverride)
-        gHandsMesh.material = new THREE.MeshStandardMaterial({
-          roughness: 1,
-          metalness: 1,
-          color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
-        });
-      // adds shader material
-      else {
-        traverseMesh(gHandsMesh, this.mii);
+      if (gHandsMesh) {
+        gHandsMesh.geometry.userData = {
+          cullMode: 1,
+          modulateColor: MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor],
+          modulateMode: 0,
+          modulateType: 9
+        };
+        if (this.shaderOverride)
+          gHandsMesh.material = new THREE.MeshStandardMaterial({
+            roughness: 1,
+            metalness: 1,
+            color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
+          });
+        // adds shader material
+        else {
+          traverseMesh(gHandsMesh, this.mii);
+        }
       }
 
       const gLegsMesh = glb.scene.getObjectByName(
@@ -889,30 +891,32 @@ export class Mii3DScene {
         .getObjectByName(type)!
         .getObjectByName("hands_" + type)! as THREE.Mesh;
 
-      if (colorHands === true) {
-        let desiredColor: [number, number, number] = [1, 0, 0];
+      if (nHands) {
+        if (colorHands === true) {
+          let desiredColor: [number, number, number] = [1, 0, 0];
 
-        // TODO: REMOVE ALL REFERENCES TO SIMPLE SHADER
-        if (this.mii.facePaintColor !== -1) {
-          desiredColor = SwitchMiiColorTableSRGB[this.mii.facePaintColor];
+          // TODO: REMOVE ALL REFERENCES TO SIMPLE SHADER
+          if (this.mii.facePaintColor !== -1) {
+            desiredColor = SwitchMiiColorTableSRGB[this.mii.facePaintColor];
+          } else {
+            desiredColor = MiiSwitchSkinColorSRGB[this.mii.facelineColor];
+          }
+
+          if (isWiiUShader) {
+            (nHands.material as THREE.ShaderMaterial).uniforms.u_const1.value =
+              new THREE.Vector4(...desiredColor, 1);
+          } else if (this.shaderOverride) {
+            (nHands.material as THREE.MeshBasicMaterial).color.set(
+              desiredColor[0],
+              desiredColor[1],
+              desiredColor[2]
+            );
+          }
+
+          this.handColor = desiredColor;
         } else {
-          desiredColor = MiiSwitchSkinColorSRGB[this.mii.facelineColor];
+          nHands.material = nBody.material;
         }
-
-        if (isWiiUShader) {
-          (nHands.material as THREE.ShaderMaterial).uniforms.u_const1.value =
-            new THREE.Vector4(...desiredColor, 1);
-        } else if (this.shaderOverride) {
-          (nHands.material as THREE.MeshBasicMaterial).color.set(
-            desiredColor[0],
-            desiredColor[1],
-            desiredColor[2]
-          );
-        }
-
-        this.handColor = desiredColor;
-      } else {
-        nHands.material = nBody.material;
       }
     };
 
@@ -1336,17 +1340,21 @@ export class Mii3DScene {
                   // Initialize the texture on the GPU to prevent lag frames
                   this.#renderer.initTexture(tex);
 
-                  child.material = new THREE.MeshStandardMaterial({
-                    map: tex,
-                    emissiveIntensity: 1,
-                    transparent: true,
-                    metalness: 1,
-                    toneMapped: true,
-                    alphaTest: 0.5
-                  });
+                  (child.material as THREE.MeshBasicMaterial)!.map = tex;
+                  (child.material as THREE.MeshBasicMaterial)!.transparent =
+                    true;
+
+                  // child.material = new THREE.MeshBasicMaterial({
+                  //   map: tex,
+                  //   // emissiveIntensity: 1,
+                  //   transparent: true,
+                  //   // metalness: 1,
+                  //   // toneMapped: true,
+                  //   alphaTest: 0.5
+                  // });
 
                   // Now... Replace it with shader material
-                  traverseMesh(child, this.mii);
+                  // traverseMesh(child, this.mii);
 
                   oldMat.dispose();
                 }

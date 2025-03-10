@@ -1,5 +1,5 @@
-import _ from "../../external/ffl.js/struct-fu-full";
-import type { Struct } from "../../external/ffl.js/struct-fu";
+import _ from "../../external/ffl.js/struct-fu";
+import type { StructInstance } from "../../external/ffl.js/struct-fu";
 import { FFLiAuthorID, FFLiCreateID, Ver3StoreData } from "./FFLStoreData";
 import {
   EmptyMiiCreatorV4Data,
@@ -30,7 +30,7 @@ export const MiiCreatorV3Data = _.struct([
   _.uint8("ext_hat_color"),
   _.uint8("ext_face_paint_color"),
   _.uint8("ext_shirt_color")
-]) as Struct;
+]) as StructInstance<MiiCreatorV3Data>;
 
 export interface MiiCreatorV3Data extends Ver3StoreData {
   ext_faceline_color: number;

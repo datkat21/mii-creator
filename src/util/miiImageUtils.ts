@@ -7,10 +7,11 @@ import { Vector3 } from "three";
 import { AddButtonSounds } from "./AddButtonSounds";
 import { Config } from "../config";
 import { getMiiIcon } from "../ui/pages/Library";
-import { parseHexOrB64ToUint8Array, ViewType } from "../external/ffl.js/ffl";
+import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
 import EditorIcons from "../constants/EditorIcons";
 import { MiiCreatorV4AppendData } from "../class/struct/MiiCreatorV4Data";
 import { getFFLWorkerMakeIcon } from "./FFLLoader";
+import { ViewType } from "./camera.js";
 
 const makeQrCodeImage = async (mii: Mii): Promise<HTMLImageElement> => {
   let convertedVer3Data: Uint8Array, ver3QRData: Uint8Array | any[];

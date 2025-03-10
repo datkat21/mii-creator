@@ -1,5 +1,5 @@
-import _ from "../../external/ffl.js/struct-fu-full";
-import type { Struct } from "../../external/ffl.js/struct-fu";
+import _ from "../../external/ffl.js/struct-fu";
+import type { StructInstance } from "../../external/ffl.js/struct-fu";
 import { RFLStoreData } from "./RFLStoreData";
 import {
   calculateCRC16,
@@ -86,7 +86,7 @@ export const MiiCreatorV4Data = _.struct([
   _.uint8("shirtColor"),
   _.uint8("special"),
   _.uint8("temporary")
-]) as Struct;
+]) as StructInstance<MiiCreatorV4Data>;
 
 export const MiiCreatorV4AppendData = _.struct([
   _.uint8("miicVersion"),
@@ -111,7 +111,7 @@ export const MiiCreatorV4AppendData = _.struct([
   _.uint8("birthYear"),
   _.uint8("hideNose"), // unused
   _.uint8("originPlatform") // unused
-]) as Struct;
+]) as StructInstance<any>;
 
 export type MiiCreatorV4Data = {
   miicVersion: number;
@@ -360,11 +360,11 @@ export function MiiCreatorV4DataToFFSD(
   // Set special flag based on if special or not.
   output.create_id!.flag_normal = Number(!input.special);
 
-  output.checksum = calculateCRC16(Ver3StoreData.pack(output));
+  output.checksum = calculateCRC16(Ver3StoreData.pack(output as Ver3StoreData));
 
   if (pack) {
     if (appendBytes) {
-      const ffsdOutput = Ver3StoreData.pack(output);
+      const ffsdOutput = Ver3StoreData.pack(output as Ver3StoreData);
       const appendedBytes = MiiCreatorV4AppendData.pack(input);
 
       const finalArray = new Uint8Array(
@@ -374,7 +374,7 @@ export function MiiCreatorV4DataToFFSD(
       finalArray.set(appendedBytes, ffsdOutput.length);
       return finalArray;
     }
-    return Ver3StoreData.pack(output);
+    return Ver3StoreData.pack(output as Ver3StoreData);
   } else return output as Ver3StoreData;
 }
 

@@ -1,5 +1,5 @@
-import type { Struct } from "../../external/ffl.js/struct-fu";
-import _ from "../../external/ffl.js/struct-fu-full";
+import type { StructInstance } from "../../external/ffl.js/struct-fu";
+import _ from "../../external/ffl.js/struct-fu";
 
 export const StudioData = _.struct([
   _.uint8("beardColor"),
@@ -48,7 +48,7 @@ export const StudioData = _.struct([
   _.uint8("noseScale"),
   _.uint8("noseType"),
   _.uint8("noseY")
-]) as Struct;
+]) as StructInstance<StudioData>;
 
 export type StudioData = {
   beardColor: number;

@@ -25,13 +25,15 @@ import {
 // import type Mii from "../../../external/mii-js/mii";
 import type Mii from "../../../class/MiiData";
 import { ShaderType } from "../../../constants/BodyShaderTypes";
-import {
-  FFLShaderMaterial,
-  type FFLMaterial,
-  type FFLShaderOptions
-} from "../../../external/ffl.js/FFLShaderMaterial";
-import { LUTShaderMaterial } from "../../../external/ffl.js/LUTShaderMaterial";
+import FFLShaderMaterial from "../../../external/ffl.js/FFLShaderMaterial";
+import LUTShaderMaterial from "../../../external/ffl.js/LUTShaderMaterial";
 import localforage from "localforage";
+import {
+  FFLShaderBlinnMaterial,
+  FFLShaderBrightMaterial,
+  FFLShaderLightDisabledMaterial,
+  FFLShaderToonMaterial
+} from "./FFLShaderAlternateMaterial";
 
 // Worker-friendly copy of getSetting
 const getSetting = async (key: string) => {
@@ -77,7 +79,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
   // those that does not happen in FFL-Testing)
   const lightEnable = modulateType > 5 ? false : true;
   // Select material parameter based on the modulate type, default to faceline
-  let materialParam: FFLMaterial =
+  let materialParam: any =
     modulateType !== undefined
       ? modulateType && modulateType < 9
         ? FFLShaderMaterial.materialParams[modulateType]
@@ -405,23 +407,23 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         */
     console.log("Modulate type:", modulateType);
     finalMat = new FFLShaderMaterial({
-      modulateColor: modulateColor.toArray(),
+      color: new THREE.Color(...modulateColor),
       modulateMode,
       modulateType: modulateType,
       map: originalMaterial.map || undefined,
       side,
       lightEnable: shaderSetting.startsWith("wiiu") ? true : false,
       ...overrides
-    });
+    }) as any;
   } else if (shaderSetting === ShaderType.Miitomo) {
     finalMat = new LUTShaderMaterial({
-      modulateColor: modulateColor.toArray(),
+      color: new THREE.Color(...modulateColor),
       modulateMode,
       modulateType: modulateType,
       map: originalMaterial.map || undefined,
       side,
       ...overrides
-    });
+    }) as any;
   } else {
     throw new Error("This shader doesn't exist");
   }
@@ -430,8 +432,10 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
   node.material = finalMat;
 }
 
-export async function getMaterialOverridesFromShaderType(): Promise<Partial<FFLShaderOptions> | null> {
-  const shaderType = (await getSetting("shaderType")) as ShaderType;
+export async function getMaterialOverridesFromShaderType(
+  shader: string | undefined = undefined
+): Promise<Partial<any> | null> {
+  let shaderType = (shader || (await getSetting("shaderType"))) as ShaderType;
   switch (shaderType) {
     case ShaderType.WiiU:
       return null;
@@ -458,10 +462,15 @@ export async function getShaderMaterialFromShaderType() {
   const shaderType = (await getSetting("shaderType")) as ShaderType;
   switch (shaderType) {
     case ShaderType.WiiU:
+      return FFLShaderMaterial;
     case ShaderType.LightDisabled:
+      return FFLShaderLightDisabledMaterial;
     case ShaderType.WiiUBlinn:
+      return FFLShaderBlinnMaterial;
     case ShaderType.WiiUFFLIconWithBody:
+      return FFLShaderBrightMaterial;
     case ShaderType.WiiUToon:
+      return FFLShaderToonMaterial;
     case ShaderType.Switch:
       // todo: switch should have its own material class?
       return FFLShaderMaterial;

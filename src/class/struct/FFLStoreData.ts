@@ -1,5 +1,5 @@
-import _ from "../../external/ffl.js/struct-fu-full";
-import type { Struct } from "../../external/ffl.js/struct-fu";
+import _ from "../../external/ffl.js/struct-fu";
+import type { StructInstance } from "../../external/ffl.js/struct-fu";
 
 export const FFLiCreateID = _.struct([
   _.ubit("flag_normal", 1),
@@ -9,13 +9,15 @@ export const FFLiCreateID = _.struct([
   _.ubit("create_date1", 14), // 28-bit field
   _.ubit("create_date2", 14), // 28-bit field
   _.byte("base", 6)
-]) as Struct;
+]) as StructInstance<FFLiCreateID>;
 export const date_timestamp = function (createID: any) {
   var val28 = (createID.create_date1 << 14) | createID.create_date2;
   var timestamp = val28 * 2 + 1262304000;
   return new Date(timestamp * 1000);
 };
-export const FFLiAuthorID = _.struct([_.byte("data", 8)]) as Struct;
+export const FFLiAuthorID = _.struct([
+  _.byte("data", 8)
+]) as StructInstance<FFLiAuthorID>;
 
 // based on arian's FFLiMiiDataCore implementation
 export const Ver3StoreData = _.struct([
@@ -136,7 +138,7 @@ export const Ver3StoreData = _.struct([
   _.char16le("creator", 20),
   _.uint16le("padding_9"),
   _.uint16("checksum")
-]) as Struct;
+]) as StructInstance<Ver3StoreData>;
 
 // Generate type data with this snippet
 /*

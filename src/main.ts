@@ -5,8 +5,8 @@ import LazyLoad, { type ILazyLoadInstance } from "vanilla-lazyload";
 import * as Sentry from "@sentry/browser";
 import { Config } from "./config";
 import { parseHexOrB64ToUint8Array } from "./external/ffl.js/ffl.js";
-import type { FFLShaderMaterial } from "./external/ffl.js/FFLShaderMaterial";
-import type { LUTShaderMaterial } from "./external/ffl.js/LUTShaderMaterial";
+// import type { FFLShaderMaterial } from "./external/ffl.js/FFLShaderMaterial";
+// import type { LUTShaderMaterial } from "./external/ffl.js/LUTShaderMaterial";
 import {
   EmptyMiiCreatorV4Data,
   MiiCreatorV4Data,
@@ -33,8 +33,8 @@ declare global {
     sentryOnLoad: any;
 
     // New stuff
-    FFLShaderMaterial: FFLShaderMaterial;
-    LUTShaderMaterial: LUTShaderMaterial;
+    // FFLShaderMaterial: FFLShaderMaterial;
+    // LUTShaderMaterial: LUTShaderMaterial;
   }
 }
 

@@ -1,5 +1,5 @@
-import _ from "../../external/ffl.js/struct-fu-full";
-import type { Struct } from "../../external/ffl.js/struct-fu";
+import _ from "../../external/ffl.js/struct-fu";
+import type { StructInstance } from "../../external/ffl.js/struct-fu";
 import {
   EmptyMiiCreatorV4Data,
   type MiiCreatorV4Data
@@ -12,7 +12,9 @@ import {
   Ver3MouthColorTable
 } from "../../constants/ColorTables";
 
-export const RFLCreateID = _.struct([_.uint8("data", 8)]) as Struct;
+export const RFLCreateID = _.struct([_.uint8("data", 8)]) as StructInstance<{
+  data: Uint8Array;
+}>;
 
 // example RCD
 // 2A8A0062000000000000000000000000000000000000005AC00053D9A611223320047900694008C3486D8C58007298AB008A008A25040061000000000000000000000000000000000000
@@ -89,12 +91,12 @@ export const RFLCharData = _.struct([
   _.ubit("padding_8", 1),
 
   _.char16be("creatorName", 0x14)
-]);
+]) as StructInstance<RFLCharData>;
 
 export const RFLStoreData = _.struct([
   _.struct([RFLCharData]),
   _.uint16("checksum")
-]) as Struct;
+]) as StructInstance<RFLStoreData>;
 
 export interface RFLStoreData extends RFLCharData {
   checksum: number;
@@ -109,7 +111,7 @@ export type RFLCharData = {
   name: string;
   height: number;
   build: number;
-  create_id: object;
+  create_id: any;
   faceType: number;
   faceColor: number;
   faceTex: number;

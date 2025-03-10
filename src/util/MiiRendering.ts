@@ -18,6 +18,7 @@ import {
   getShaderMaterialFromShaderType
 } from "../class/3d/shader/ShaderUtils";
 import { getFFL } from "./FFLLoader";
+import { renderTargetToDataTexture } from "./rendertarget";
 
 export type GLTFLike = {
   animations: any[];
@@ -99,10 +100,10 @@ export async function getHeadModel(
     currentCharModel = createCharModel(
       dataU8,
       modelDesc,
-      await getShaderMaterialFromShaderType(),
+      (await getShaderMaterialFromShaderType()) as any,
       getFFL(),
-      false,
-      await getMaterialOverridesFromShaderType()
+      false
+      // await getMaterialOverridesFromShaderType()
     );
 
     // Initialize textures for the new CharModel.
@@ -124,7 +125,7 @@ export async function getHeadModel(
 
   let scene = new THREE.Group();
 
-  scene.add(currentCharModel.meshes);
+  scene.add(currentCharModel.meshes!);
 
   // GLTF-like object so that the code can still handle it sort of like one
   return {
@@ -159,15 +160,16 @@ export async function getMaskTex(
 
   var img: THREE.DataTexture;
 
+  const shaderMaterial = await getShaderMaterialFromShaderType();
+
   try {
     currentCharModel = createCharModel(
       dataU8,
       modelDesc,
       // shader doesn't matter here for our purpose
-      window.LUTShaderMaterial,
+      shaderMaterial as any,
       getFFL(),
-      false,
-      {}
+      false
     );
 
     // weird workaround to promisify the texture outcome?
@@ -175,12 +177,19 @@ export async function getMaskTex(
       // Initialize textures for the new CharModel.
       initCharModelTextures(
         currentCharModel!,
-        rendererRef,
-        null,
-        (dataTexture) => {
-          resolve(dataTexture);
-        }
+        rendererRef
+        // null,
+        // (dataTexture) => {
+        //   resolve(dataTexture);
+        // }
       );
+
+      const target =
+        currentCharModel!._maskTargets[currentCharModel!.expression]!;
+
+      renderTargetToDataTexture(target, rendererRef).then((r) => {
+        resolve(r);
+      });
     });
   } catch (err) {
     currentCharModel = null;

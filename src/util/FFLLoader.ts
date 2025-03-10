@@ -14,8 +14,8 @@ import { getSetting } from "./SettingsHelper.js";
 
 const __ = _();
 
-let FFL: any, FFLWorker: Worker | undefined;
-export const getFFL = () => FFL;
+let FFLModule: any, FFLWorker: Worker | undefined;
+export const getFFL = () => FFLModule;
 export const getFFLWorker = () => FFLWorker;
 export const getFFLWorkerExists = () => FFLWorker !== undefined;
 export const getFFLWorkerMakeIcon = (
@@ -50,19 +50,25 @@ export async function prepareFFL() {
       __("Mii Creator is loading assets, please wait...")
     );
 
-    FFL = (await import("../external/ffl.js/ffl-emscripten.js")).default
-      .Module as any;
+    FFLModule = (await import("../external/ffl.js/ffl-emscripten.js")).default;
 
-    console.log(FFL);
+    FFLModule = await FFLModule({
+      locateFile: (path: string) => {
+        return "/dist/" + path;
+      }
+    });
+
+    console.log(FFLModule);
     console.log("We've got FFL!");
 
-    // Import FFL.JS (c) 2025 Arian K. pro max Edition
+    // Import FFL.JS (c) 2025 Arian K. macOS Edition
     await loadBodyModels();
     await loadHatModels();
-    await initializeFFLWithResource(
-      Config.renderer.fflResourcePath[await getSetting("resourceType")],
-      FFL
+    let { module } = await initializeFFLWithResource(
+      FFLModule,
+      Config.renderer.fflResourcePath[await getSetting("resourceType")]
     );
+    FFLModule = module;
 
     // TODO: CLEAN THIS UP so all the wasm/worker loading logic isn't in main.ts??? this was just a temp spot since its before everything else loads
     // Detect and use Web Workers/OffscreenCanvas if available, to optimize icon generation

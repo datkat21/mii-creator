@@ -1,13 +1,13 @@
 import { WebGLRenderer } from "three";
-import * as FFL from "./external/ffl.js/ffl";
+import * as FFL_JS from "./external/ffl.js/ffl";
 import {
   getMaterialOverridesFromShaderType,
   getShaderMaterialFromShaderType
-} from "./class/3d/shader/ShaderUtils.js";
-import type { MiiExpression } from "./external/ffl/FFLTypes.js";
-import type { MiiCreatorAdditionalData } from "./external/ffl.js/MiiCreatorTypes.js";
-import { loadBodyModels, loadHatModels } from "./util/ModelLoader.js";
-import { createMiiRender, type RenderRequest } from "./util/IconRendering.js";
+} from "./class/3d/shader/ShaderUtils";
+import type { MiiExpression } from "./external/ffl/FFLTypes";
+import type { MiiCreatorAdditionalData } from "./util/MiiCreatorTypes";
+import { loadBodyModels, loadHatModels } from "./util/ModelLoader";
+import { createMiiRender, type RenderRequest } from "./util/IconRendering";
 
 export type FFLWorkerMessage =
   | FFLWorkerInitializeMessage
@@ -64,13 +64,24 @@ self.onmessage = async (e) => {
       // The only solution I could find is just to load the ffl wasm module again but in the web worker.
       // Hopefully it and the resource are cached by the browser so it should load instantly?
       log("Loading FFL Module");
-      FFLModule = (await import("./external/ffl.js/ffl-emscripten.js")).default
-        .Module as any;
+      FFLModule = (await import("./external/ffl.js/ffl-emscripten.js"))
+        .default as any;
+
+      FFLModule = await FFLModule({
+        locateFile: (path: string) => {
+          return "/dist/" + path;
+        }
+      });
+
       log("Initialized Module!", FFLModule);
       log("Loading FFL Resource...");
       await loadBodyModels();
       await loadHatModels();
-      await FFL.initializeFFLWithResource(input.resourcePath, FFLModule);
+      let { module } = await FFL_JS.initializeFFLWithResource(
+        FFLModule,
+        input.resourcePath
+      );
+      FFLModule = module;
       log("Loaded FFL Resource!");
       offscreenCanvas = input.offscreenCanvas;
       devicePixelRatio = input.devicePixelRatio;
@@ -90,7 +101,7 @@ self.onmessage = async (e) => {
       try {
         log(
           "making icon for view",
-          Object.keys(FFL.ViewType)[input.request.type]
+          Object.keys(FFL_JS.ViewType)[input.request.type]
         );
         const size = input.request.size * devicePixelRatio;
 

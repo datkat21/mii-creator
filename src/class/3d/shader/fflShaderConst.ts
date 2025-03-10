@@ -1,6 +1,6 @@
 // https://jsfiddle.net/arian_/8gvynrdu/7/
 import * as THREE from "three";
-import type { FFLMaterial } from "../../../external/ffl.js/FFLShaderMaterial";
+// import type { FFLMaterial } from "../../../external/ffl.js/FFLShaderMaterial";
 // Material table for FFLDefaultShader mapping to FFLModulateType
 // Reference: https://github.com/aboood40091/FFL-Testing/blob/master/src/Shader.cpp
 export enum cMaterialName {
@@ -17,10 +17,10 @@ export enum cMaterialName {
   FFL_MODULATE_TYPE_SHAPE_PANTS
 }
 
-export const FFLBlinnMaterial: Partial<FFLMaterial> = {
+export const FFLBlinnMaterial = {
   specularMode: 0
 };
-export const FFLToonMaterial: Partial<FFLMaterial> = {
+export const FFLToonMaterial = {
   ambient: new THREE.Color(0.8, 0.8, 0.8),
   diffuse: new THREE.Color(0.8, 0.8, 0.8),
   specular: new THREE.Color(0.1, 0.1, 0.1),

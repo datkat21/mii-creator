@@ -1,5 +1,5 @@
-import _ from "../../external/ffl.js/struct-fu-full";
-import type { Struct } from "../../external/ffl.js/struct-fu";
+import _ from "../../external/ffl.js/struct-fu";
+import type { StructInstance } from "../../external/ffl.js/struct-fu";
 
 export const NnMiiCharInfo = _.struct([
   _.byte("createId", 16),
@@ -57,7 +57,7 @@ export const NnMiiCharInfo = _.struct([
   _.uint8("moleY"),
   /* always zero */
   _.uint8("reserved")
-]) as Struct;
+]) as StructInstance<NnMiiCharInfo>;
 export type NnMiiCharInfo = {
   createId: Uint8Array;
   nickname: string;

@@ -31,8 +31,7 @@ import {
   createCharModelIcon,
   FFLExpression,
   initCharModelTextures,
-  parseHexOrB64ToUint8Array,
-  ViewType
+  parseHexOrB64ToUint8Array
 } from "../../external/ffl.js/ffl";
 import { WebGLRenderer } from "three";
 import { MiiExpression } from "../../external/ffl/FFLTypes";
@@ -43,6 +42,8 @@ import {
   getFFLWorkerExists,
   getFFLWorkerMakeIcon
 } from "../../util/FFLLoader";
+import { ViewType } from "../../util/camera";
+import LUTShaderMaterial from "../../external/ffl.js/LUTShaderMaterial";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -136,13 +137,14 @@ export const getMiiIcon = async (
     }
 
     try {
-      model = createCharModel(
-        data,
-        undefined,
-        window.LUTShaderMaterial,
-        getFFL(),
-        false
-      );
+      alert("this doesn't work at the moment sorry try again later");
+      // model = createCharModel(
+      //   data,
+      //   null,
+      //   FFLShaderMaterial,
+      //   getFFL(),
+      //   false
+      // );
       initCharModelTextures(model, tmpRenderer);
       let realView = ViewType.IconFovy45;
       dataURL = await createCharModelIcon(
@@ -150,8 +152,8 @@ export const getMiiIcon = async (
         tmpRenderer,
         realView,
         512,
-        512,
-        drawBody
+        512
+        // drawBody
       );
       // console.log(`charModel for ${mii.miiName}:`, model);
     } catch (e) {
@@ -711,7 +713,7 @@ export async function Library(highlightMiiId?: string) {
         ),
       new Html("strong").text(__("This site is not affiliated with Nintendo.")),
       new Html("small")
-        .text(`${Config.version.string} (${Config.version.name})`)
+        .html(`${Config.version.string} (<b>${Config.version.name}</b>)`)
         .style({ cursor: "pointer" })
         .on("click", () => {
           replayUpdateNotice();
