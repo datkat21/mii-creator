@@ -21,6 +21,7 @@ const __ = _();
 let resourceRefreshFlag = false;
 
 export const updateSettings = async (force: boolean = false) => {
+  await checkPrevSettings();
   function askRefreshNotice() {
     if (needsToNotify && force === false) {
       Notify.show(
@@ -78,6 +79,13 @@ export const updateSettings = async (force: boolean = false) => {
     prevSetting["resourceType"] !==
     (await localforage.getItem("settings_resourceType"))
   ) {
+    console.log(
+      "comparing",
+      prevSetting["resourceType"],
+      "to",
+      await localforage.getItem("settings_resourceType"),
+      "FAILED"
+    );
     resourceRefreshFlag = true;
   }
   if (
@@ -141,16 +149,32 @@ export const updateSettings = async (force: boolean = false) => {
         }
       });
   }
+
+  await updatePrevSettings();
 };
 
 let prevSetting: Record<string, any> = {};
 
 const prefix = "settings_";
 
-for (const key in settingsInfo) {
-  let prefixedKey = prefix + key;
-  prevSetting[key] = await localforage.getItem(prefixedKey);
+async function checkPrevSettings() {
+  for (const key in settingsInfo) {
+    let prefixedKey = prefix + key;
+    if (prevSetting[key] === undefined) {
+      prevSetting[key] = await localforage.getItem(prefixedKey);
+      // console.log("[checkPrevSettings] setting", key, "to", prevSetting[key]);
+    }
+  }
 }
+async function updatePrevSettings() {
+  for (const key in settingsInfo) {
+    let prefixedKey = prefix + key;
+    prevSetting[key] = await localforage.getItem(prefixedKey);
+    // console.log("[updatePrevSettings] setting", key, "to", prevSetting[key]);
+  }
+}
+
+await updatePrevSettings();
 
 export async function Settings() {
   const modal = Modal.modal(__("Settings"), "", "body", {

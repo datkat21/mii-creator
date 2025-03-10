@@ -34,6 +34,7 @@ import { ShaderType } from "../constants/BodyShaderTypes";
 import { getHeadModel, getMaskTex, type ModelFlag } from "../util/MiiRendering";
 import { makeExpressionFlag, type CharModel } from "../external/ffl.js/ffl";
 import JSZip from "jszip";
+import { streetpassHandScaling } from "../util/scaling";
 // import Stats from "three/examples/jsm/libs/stats.module.js";
 
 export enum CameraPosition {
@@ -383,14 +384,31 @@ export class Mii3DScene {
     this.swapAnimation("Finish");
     getSoundManager().playSound("finish");
   }
-  resize(width?: number, height?: number) {
-    this.resizeRendererToDisplaySize(width, height);
-  }
-  // copied from three.js manual code lol
-  resizeRendererToDisplaySize(
+  resize(
     width: number = this.#parent.offsetWidth,
     height: number = this.#parent.offsetHeight
   ) {
+    this.resizeRendererToDisplaySize(width, height);
+
+    // adjust ui depending on screen size
+    let zoomValue = 1,
+      widescreen = window.innerWidth > 960,
+      is2DMode = !this.cameraPan;
+    switch (this.currentPosition) {
+      case CameraPosition.MiiHead:
+        if (is2DMode) zoomValue = widescreen ? 2.5 : 3.25;
+        else zoomValue = widescreen ? 1 : 1.25;
+        break;
+      case CameraPosition.MiiFullBody:
+        if (is2DMode) zoomValue = widescreen ? 2.5 : 3.25;
+        else zoomValue = 1;
+        break;
+    }
+
+    this.#controls.zoomTo(zoomValue, true);
+  }
+  // copied from three.js manual code lol
+  resizeRendererToDisplaySize(width: number, height: number) {
     this.#camera.aspect = width / height;
     this.#camera.updateProjectionMatrix();
     const canvas = this.#renderer.domElement;
@@ -698,42 +716,7 @@ export class Mii3DScene {
       object.scale.set(scaleFactors.x, scaleFactors.y, scaleFactors.z);
 
       if (this.bodyModel === "streetpass") {
-        // Tuning constant: adjust this to get the smooth effect you like.
-        const k = 0.4; // 20% adjustment
-
-        var scaleVec = new THREE.Vector3();
-        body.getWorldScale(scaleVec);
-
-        // Compute the base compensation factors
-        const baseHandScaleX = 1 / scaleVec.x;
-        const baseHandScaleY = 1 / scaleVec.y;
-
-        // Create an adjustment factor that is 1 when scaleVec.y is 1.
-        // If scaleVec.y < 1, (scaleVec.y - 1) is negative so the factor is less than 1.
-        // If scaleVec.y > 1, the factor becomes greater than 1.
-        const adjustmentY = 1 + k * (scaleVec.y - 1);
-        const adjustmentX = 1 + k * (scaleVec.x - 1);
-
-        // Apply the adjusted compensation factor for the y-axis.
-        // Here we use the original inverse for x and z, but you can also adjust those if needed.
-        const adjustedHandScaleX = baseHandScaleX * adjustmentX;
-        const adjustedHandScaleY = baseHandScaleY * adjustmentY;
-
-        console.log(baseHandScaleX, baseHandScaleY);
-
-        const handL = body.getObjectByName("handLPs")!;
-        const handR = body.getObjectByName("handRPs")!;
-
-        handL.scale.set(
-          adjustedHandScaleX,
-          adjustedHandScaleY,
-          adjustedHandScaleX
-        );
-        handR.scale.set(
-          adjustedHandScaleX,
-          adjustedHandScaleY,
-          adjustedHandScaleX
-        );
+        streetpassHandScaling(body);
       }
 
       // this.#scene

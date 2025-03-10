@@ -12,16 +12,19 @@ import { downloadLink } from "../../../util/downloadLink";
 import Html from "@datkat21/html";
 import { dataToBase64 } from "../../../util/dataConvert";
 
+import { _ } from "../../../util/Lang";
+const __ = _();
+
 export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
   Modal.modal(
-    "Export Mii",
-    "How would you like to save the Mii?",
+    __("Export Mii"),
+    __("How would you like to save the Mii?"),
     "body",
     {
       text: "Cancel"
     },
     {
-      text: "Save MiiCreator data",
+      text: __("Save Mii Creator data"),
       async callback() {
         const blob = new Blob([miiData.export()]);
         const url = URL.createObjectURL(blob);
@@ -44,11 +47,11 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
       }
     },
     {
-      text: "Download other file types...",
+      text: __("Download other file types..."),
       callback(e) {
         Modal.modal(
-          "Other download types",
-          "Choose a file type to download",
+          __("Other download types"),
+          __("Choose a file type to download"),
           "body",
           {
             text: "Cancel",
@@ -57,7 +60,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
             }
           },
           {
-            text: "Download CharInfo (Switch) file",
+            text: __("Download .CharInfo (Switch) file"),
             async callback() {
               //if (!(await miiColorConversionWarning(miiData))) return;
               const blob = new Blob([miiData.export("switchCharInfo")]);
@@ -81,7 +84,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
             }
           },
           {
-            text: "Download .FFSD (3DS/Wii U)",
+            text: __("Download .FFSD (3DS/Wii U)"),
             async callback() {
               if (!(await miiFFSDWarning(miiData))) return;
               const blob = new Blob([miiData.export("ffsd")]);
@@ -105,7 +108,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
             }
           },
           {
-            text: "Download .RSD (Wii)",
+            text: __("Download .RSD (Wii)"),
             async callback() {
               const blob = new Blob([miiData.export("rsd")]);
               const url = URL.createObjectURL(blob);
@@ -131,7 +134,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
       }
     },
     {
-      text: "Save Mii as QR Code",
+      text: __("Save Mii as QR Code"),
       async callback() {
         if (!(await miiQRConversionWarning(miiData))) return;
         // hack: force FFL shader for QR codes by changing the setting
@@ -146,11 +149,11 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
       }
     },
     {
-      text: "Show other raw data formats",
+      text: __("Show other raw data formats"),
       async callback() {
         const modal = Modal.modal(
-          "Miscellaneous Output Formats",
-          "Click inside a code block to select it.",
+          __("Miscellaneous Output Formats"),
+          __("Click inside a code block to select it."),
           "body",
           ...buttonsOkCancel
         );

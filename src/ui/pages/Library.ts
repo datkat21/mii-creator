@@ -264,7 +264,7 @@ export async function Library(highlightMiiId?: string) {
     libraryList.append(
       new Html("div")
         .style({ position: "absolute", top: "2rem", left: "2rem" })
-        .text(__("You have no Miis yet. Create one to get started!"))
+        .text(__("You don't have any Miis. Create one to get started!"))
     );
   }
   let miiErrorCount = 0;
@@ -415,7 +415,10 @@ export async function Library(highlightMiiId?: string) {
       let miiImage = new Html("img").attr({
         src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error)
       });
-      let miiName = new Html("span").text("?");
+      let miiName = new Html("span").text(
+        // missing mii name
+        __("?")
+      );
 
       if (miiData !== null) {
         if (miiData.nickname.trim() !== "") miiName.text(miiData.nickname);
@@ -512,7 +515,7 @@ export async function Library(highlightMiiId?: string) {
         .appendMany(
           AddButtonSounds(
             new Html("button")
-              .text("Credits")
+              .text(__("Credits"))
               .on("click", async () => {
                 var m = Modal.modal(
                   __("Credits"),

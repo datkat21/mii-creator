@@ -19,6 +19,9 @@ import {
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function EyeTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -26,7 +29,7 @@ export function EyeTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         eyeType: {
-          label: "Type",
+          label: __("Type"),
           items: rearrangeArray(
             ArrayNum(60).map((k) => ({
               type: FeatureSetType.Icon,
@@ -39,7 +42,7 @@ export function EyeTab(data: TabRenderInit) {
           )
         },
         eyeColor: {
-          label: data.useAccessibility ? "Color" : EditorIcons.color,
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(6).map((k) => ({
               type: FeatureSetType.Icon,
@@ -61,7 +64,7 @@ export function EyeTab(data: TabRenderInit) {
           ]
         },
         eyePosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
@@ -74,7 +77,7 @@ export function EyeTab(data: TabRenderInit) {
               max: 18,
               part: RenderPart.Face,
               inverse: true,
-              label: data.useAccessibility ? "Position" : undefined
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -86,7 +89,7 @@ export function EyeTab(data: TabRenderInit) {
               min: 0,
               max: 12,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Spacing" : undefined
+              label: data.useAccessibility ? __("Spacing") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -98,7 +101,7 @@ export function EyeTab(data: TabRenderInit) {
               min: 0,
               max: 7,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Rotation" : undefined
+              label: data.useAccessibility ? __("Rotation") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -110,7 +113,7 @@ export function EyeTab(data: TabRenderInit) {
               min: 0,
               max: 7,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Scale" : undefined
+              label: data.useAccessibility ? __("Scale") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -122,7 +125,7 @@ export function EyeTab(data: TabRenderInit) {
               min: 0,
               max: 6,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Stretch" : undefined
+              label: data.useAccessibility ? __("Stretch") : undefined
             }
           ]
         }

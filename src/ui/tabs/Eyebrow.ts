@@ -20,6 +20,9 @@ import {
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function EyebrowTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -27,7 +30,7 @@ export function EyebrowTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         eyebrowType: {
-          label: "Type",
+          label: __("Type"),
           items: rearrangeArray(
             ArrayNum(24).map((k) => ({
               type: FeatureSetType.Icon,
@@ -40,7 +43,7 @@ export function EyebrowTab(data: TabRenderInit) {
           )
         },
         eyebrowColor: {
-          label: data.useAccessibility ? "Color" : EditorIcons.color,
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,
@@ -62,7 +65,7 @@ export function EyebrowTab(data: TabRenderInit) {
           ]
         },
         eyebrowPosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
@@ -75,7 +78,7 @@ export function EyebrowTab(data: TabRenderInit) {
               max: 18,
               part: RenderPart.Face,
               inverse: true,
-              label: data.useAccessibility ? "Position" : undefined
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -87,7 +90,7 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 12,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Spacing" : undefined
+              label: data.useAccessibility ? __("Spacing") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -99,7 +102,7 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 11,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Rotation" : undefined
+              label: data.useAccessibility ? __("Rotation") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -111,7 +114,7 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 8,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Scale" : undefined
+              label: data.useAccessibility ? __("Scale") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -123,7 +126,7 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 6,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Stretch" : undefined
+              label: data.useAccessibility ? __("Stretch") : undefined
             }
           ]
         }

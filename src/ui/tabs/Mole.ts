@@ -6,6 +6,9 @@ import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function MoleTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -13,12 +16,12 @@ export function MoleTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         mole: {
-          label: "Mole",
+          label: __("Mole"),
           items: [
             {
               type: FeatureSetType.Switch,
-              iconOff: "Disable",
-              iconOn: "Enable",
+              iconOff: __("Disable"),
+              iconOn: __("Enable"),
               property: "moleType",
               part: RenderPart.Face,
               isNumber: true
@@ -34,7 +37,7 @@ export function MoleTab(data: TabRenderInit) {
               max: 30,
               part: RenderPart.Face,
               inverse: true,
-              label: data.useAccessibility ? "Position" : undefined
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -47,7 +50,7 @@ export function MoleTab(data: TabRenderInit) {
               max: 16,
               part: RenderPart.Face,
 
-              label: data.useAccessibility ? "Spacing" : undefined
+              label: data.useAccessibility ? __("Spacing") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -59,7 +62,7 @@ export function MoleTab(data: TabRenderInit) {
               min: 0,
               max: 7,
               part: RenderPart.Face,
-              label: data.useAccessibility ? "Scale" : undefined
+              label: data.useAccessibility ? __("Scale") : undefined
             }
           ]
         }

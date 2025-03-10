@@ -7,6 +7,9 @@ import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
 import { makeSeparatorGapThinFSI } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function OptionsTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -14,12 +17,16 @@ export function OptionsTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         gender: {
-          label: "Gender",
+          label: __("Gender"),
           items: [
             {
               type: FeatureSetType.Switch,
-              iconOff: EditorIcons.genderMale,
-              iconOn: EditorIcons.genderFemale,
+              iconOff: data.useAccessibility
+                ? __("Male")
+                : EditorIcons.genderMale,
+              iconOn: data.useAccessibility
+                ? __("Female")
+                : EditorIcons.genderFemale,
               property: "gender",
               isNumber: true,
               forceRender: false,
@@ -30,12 +37,12 @@ export function OptionsTab(data: TabRenderInit) {
           ]
         },
         favorite: {
-          label: "Favorite/Special",
+          label: __("Favorite/Special"),
           items: [
             {
               type: FeatureSetType.Switch,
-              iconOff: "Normal",
-              iconOn: "Favorite",
+              iconOff: __("Normal"),
+              iconOn: __("Favorite"),
               property: "favorite",
               isNumber: true,
               forceRender: false,
@@ -46,8 +53,8 @@ export function OptionsTab(data: TabRenderInit) {
             makeSeparatorGapThinFSI(),
             {
               type: FeatureSetType.Switch,
-              iconOff: "Normal",
-              iconOn: "Special",
+              iconOff: __("Normal"),
+              iconOn: __("Special"),
               property: "special",
               isNumber: true,
               forceRender: false,

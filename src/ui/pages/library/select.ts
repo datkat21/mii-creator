@@ -13,6 +13,9 @@ import { miiRender } from "./render/renderMenu";
 import { miiExportData } from "./export";
 import { confirmOrReviseMii } from "./new/lookalike";
 
+import { _ } from "../../../util/Lang";
+const __ = _();
+
 export const miiSelect = (
   mii: MiiLocalforage,
   miiData: Mii,
@@ -21,18 +24,18 @@ export const miiSelect = (
   return async () => {
     const modal = Modal.modal(
       miiData.nickname,
-      "What would you like to do?",
+      __("What would you like to do?"),
       "body",
       {
-        text: "Edit",
+        text: __("Edit"),
         async callback() {
           if (isSpecial) {
             Modal.modal(
-              "Nope",
-              "You can't edit Special Miis obtained through Mii Creator.",
+              __("Notice"),
+              __("You can't edit Mii Creator-specific Special Miis."),
               "body",
               { text: "Cancel" },
-              { text: "OK" }
+              { text: __("OK") }
             );
           } else {
             await _shutdown()();
@@ -48,7 +51,7 @@ export const miiSelect = (
         }
       },
       {
-        text: "Revise",
+        text: __("Revise"),
         async callback() {
           confirmOrReviseMii(miiData, {
             gender: miiData.gender,
@@ -57,7 +60,7 @@ export const miiSelect = (
         }
       },
       {
-        text: "Delete",
+        text: __("Delete"),
         async callback() {
           try {
             let scaredIcon = await getMiiIcon(
@@ -109,8 +112,8 @@ export const miiSelect = (
             }
 
             let tmpDeleteModal = Modal.modal(
-              "Warning",
-              `Are you sure you want to delete ${miiData.nickname}?`,
+              __("Warning"),
+              __("Are you sure you want to delete %1?", miiData.nickname),
               "body"
             );
 
@@ -119,7 +122,7 @@ export const miiSelect = (
               new Html("div").class("flex-group").appendMany(
                 new Html("button")
                   .class("danger")
-                  .text("Yes")
+                  .text(__("Yes"))
                   .on("click", () => {
                     destroy();
                     scaredMiiImage.attr({
@@ -132,7 +135,7 @@ export const miiSelect = (
                       Library();
                     }, 1000);
                   }),
-                new Html("button").text("No").on("click", () => {
+                new Html("button").text(__("No")).on("click", () => {
                   closeModal();
                 })
               )
@@ -170,11 +173,11 @@ export const miiSelect = (
             console.log("FALL BACK");
             // fallback
             Modal.modal(
-              "Warning",
-              `Are you sure you want to delete ${miiData.nickname}?`,
+              __("Warning"),
+              __("Are you sure you want to delete %1?", miiData.nickname),
               "body",
               {
-                text: "Yes",
+                text: __("Yes"),
                 type: "danger",
                 async callback(e) {
                   await localforage.removeItem(mii.id);
@@ -182,19 +185,19 @@ export const miiSelect = (
                   Library();
                 }
               },
-              { text: "No" }
+              { text: __("No") }
             );
           }
         }
       },
       {
-        text: "Export/Download Data",
+        text: __("Export/Download Data"),
         async callback() {
           miiExportData(mii, miiData);
         }
       },
       {
-        text: "Render",
+        text: __("Render"),
         async callback() {
           miiRender(mii, miiData);
         }

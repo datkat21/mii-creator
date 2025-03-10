@@ -21,6 +21,9 @@ import {
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function HeadTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -28,7 +31,7 @@ export function HeadTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         facelineType: {
-          label: data.useAccessibility ? "Shape" : EditorIcons.face,
+          label: data.useAccessibility ? __("Shape") : EditorIcons.face,
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -37,7 +40,7 @@ export function HeadTab(data: TabRenderInit) {
           }))
         },
         facelineMake: {
-          label: data.useAccessibility ? "Makeup" : EditorIcons.face_makeup,
+          label: data.useAccessibility ? __("Makeup") : EditorIcons.face_makeup,
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -46,7 +49,9 @@ export function HeadTab(data: TabRenderInit) {
           }))
         },
         facelineWrinkle: {
-          label: data.useAccessibility ? "Wrinkles" : EditorIcons.face_wrinkles,
+          label: data.useAccessibility
+            ? __("Wrinkles")
+            : EditorIcons.face_wrinkles,
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -55,7 +60,7 @@ export function HeadTab(data: TabRenderInit) {
           }))
         },
         facelineColor: {
-          label: data.useAccessibility ? "Color" : EditorIcons.color,
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(6).map((k) => ({
               type: FeatureSetType.Icon,
@@ -77,15 +82,20 @@ export function HeadTab(data: TabRenderInit) {
           ]
         },
         facePaintColor: {
-          label: data.useAccessibility ? "Face Paint" : EditorIcons.face_paint,
-          header:
-            "Face paint is a CUSTOM property, and will not transfer to any other data formats.",
+          label: data.useAccessibility
+            ? __("Face Paint")
+            : EditorIcons.face_paint,
+          header: __(
+            "%1 is a CUSTOM property, and will not transfer to any other data formats.",
+            // face paint warning label
+            __("Face paint")
+          ),
           items: [
             {
               type: FeatureSetType.Icon,
               forceRender: true,
               value: -1,
-              icon: '<span class="disable-item">Disabled</span>',
+              icon: `<span class="disable-item">${__("Disabled")}</span>`,
               part: RenderPart.Head
             },
             makeSeparatorGapThinFSI(),

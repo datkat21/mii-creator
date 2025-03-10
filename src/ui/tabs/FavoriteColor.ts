@@ -18,6 +18,9 @@ import {
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function FavoriteColorTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -25,7 +28,7 @@ export function FavoriteColorTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         favoriteColor: {
-          label: "Favorite Color",
+          label: __("Favorite Color"),
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
             forceRender: true,
@@ -35,15 +38,18 @@ export function FavoriteColorTab(data: TabRenderInit) {
           }))
         },
         shirtColor: {
-          label: "Shirt Color",
-          header:
-            "Shirt color is a CUSTOM property, and will not transfer to any other data formats.",
+          label: __("Shirt Color"),
+          header: __(
+            "%1 is a CUSTOM property, and will not transfer to any other data formats.",
+            // Shirt color warning label
+            __("Shirt color")
+          ),
           items: [
             {
               type: FeatureSetType.Icon,
               forceRender: false,
               value: -1,
-              icon: '<span class="disable-item">Disabled</span>',
+              icon: `<span class="disable-item">${__("Disabled")}</span>`,
               part: RenderPart.Face,
               property: "shirtColor",
               sound: "select_color"
@@ -64,15 +70,18 @@ export function FavoriteColorTab(data: TabRenderInit) {
           ]
         },
         pantsColor: {
-          label: "Pants Color",
-          header:
-            "Pants color is a CUSTOM property, and will not transfer to any other data formats.",
+          label: __("Pants Color"),
+          header: __(
+            "%1 is a CUSTOM property, and will not transfer to any other data formats.",
+            // Pants color warning label
+            __("Pants color")
+          ),
           items: [
             {
               type: FeatureSetType.Icon,
               forceRender: false,
               value: -1,
-              icon: '<span class="disable-item">Disabled</span>',
+              icon: `<span class="disable-item">${__("Disabled")}</span>`,
               part: RenderPart.Face,
               property: "pantsColor",
               sound: "select_color"

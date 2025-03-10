@@ -11,6 +11,9 @@ import type { MiiLocalforage } from "../../Library";
 import { ViewType } from "../../../../external/ffl.js/ffl";
 import { getFFL } from "../../../../util/FFLLoader";
 
+import { _ } from "../../../../util/Lang";
+const __ = _();
+
 export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
   const renderer = new WebGLRenderer({ alpha: true });
   const miiRenderInfo: Omit<RenderRequest, "type" | "drawBody"> = {
@@ -33,8 +36,9 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
     }
   };
   Modal.modal(
-    `Render options: ${miiData.nickname}`,
-    "Choose a way to render this Mii",
+    // Render options: Mii name
+    __("Render options: %1", miiData.nickname),
+    __("Choose a way to render this Mii"),
     "body",
     {
       text: "Focus on head",
@@ -46,7 +50,8 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
         });
         saveBlob(
           renderImage.result as Blob,
-          `${miiData.nickname}_render_headshot_${Date.now()}.png`
+          // mii render (head) file name - e.g. 'Mii_render_headshot_2025-03-06T14:40:20.310Z.png'
+          __("%1_render_headshot_%2.png", miiData.nickname, new Date().toJSON())
         );
         renderer.dispose();
       }
@@ -61,7 +66,8 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
         });
         saveBlob(
           renderImage.result as Blob,
-          `${miiData.nickname}_render_body_${Date.now()}.png`
+          // mii render (body) file name - e.g. 'Mii_render_body_2025-03-06T14:40:20.310Z.png'
+          __("%1_render_body_%2.png", miiData.nickname, new Date().toJSON())
         );
         renderer.dispose();
       }
@@ -76,7 +82,12 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
         });
         saveBlob(
           renderImage.result as Blob,
-          `${miiData.nickname}_render_head_only_${Date.now()}.png`
+          // mii render (head only) file name - e.g. 'Mii_render_head_only_2025-03-06T14:40:20.310Z.png'
+          __(
+            "%1_render_head_only_%2.png",
+            miiData.nickname,
+            new Date().toJSON()
+          )
         );
         renderer.dispose();
       }

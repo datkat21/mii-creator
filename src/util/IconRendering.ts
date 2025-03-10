@@ -33,6 +33,7 @@ import {
   MiiFavoriteColorVec3Table,
   SwitchMiiColorTableSRGB
 } from "../constants/ColorTables";
+import { streetpassHandScaling } from "./scaling";
 
 export const defaultParams: Partial<RenderRequest> = {
   type: ViewType.Face,
@@ -293,12 +294,19 @@ export function createMiiRender(
 
       if (isStreetpass()) {
         console.log("is streetpass");
+
+        var scaleVec = new THREE.Vector3();
+        bodyModel.getWorldScale(scaleVec);
+        const handScaleX = (1 / scaleVec.x) * 5;
+        const handScaleY = (1 / scaleVec.y) * 5;
+        console.log(handScaleX, handScaleY);
         bodyModel
           .getObjectByName("handLPs")!
-          .scale.set(bodyScale.y / 1, bodyScale.x / 1, bodyScale.y / 1);
+          .scale.set(handScaleX, handScaleY, handScaleX);
         bodyModel
           .getObjectByName("handRPs")!
-          .scale.set(bodyScale.y / 1, bodyScale.x / 1, bodyScale.y / 1);
+          .scale.set(handScaleX, handScaleY, handScaleX);
+        // streetpassHandScaling(bodyModel, );
       } else {
         console.log("not streetpass");
       }

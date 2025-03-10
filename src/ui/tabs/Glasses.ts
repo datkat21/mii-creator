@@ -18,6 +18,9 @@ import {
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function GlassesTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -28,7 +31,7 @@ export function GlassesTab(data: TabRenderInit) {
       },
       entries: {
         glassType: {
-          label: "Type",
+          label: __("Type"),
           items: ArrayNum(20).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
@@ -37,7 +40,7 @@ export function GlassesTab(data: TabRenderInit) {
           }))
         },
         glassesColor: {
-          label: data.useAccessibility ? "Color" : EditorIcons.color,
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(6).map((k) => ({
               type: FeatureSetType.Icon,
@@ -61,7 +64,7 @@ export function GlassesTab(data: TabRenderInit) {
           ]
         },
         glassesPosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
@@ -74,7 +77,7 @@ export function GlassesTab(data: TabRenderInit) {
               max: 20,
               part: RenderPart.Head,
               inverse: true,
-              label: data.useAccessibility ? "Position" : undefined
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -86,7 +89,7 @@ export function GlassesTab(data: TabRenderInit) {
               min: 0,
               max: 7,
               part: RenderPart.Head,
-              label: data.useAccessibility ? "Scale" : undefined
+              label: data.useAccessibility ? __("Scale") : undefined
             }
           ]
         }

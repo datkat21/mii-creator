@@ -12,6 +12,9 @@ import {
   rearrangeArray
 } from "../../constants/MiiFeatureTable";
 
+import { _ } from "../../util/Lang";
+const __ = _();
+
 export function NoseTab(data: TabRenderInit) {
   data.container.append(
     MiiPagedFeatureSet({
@@ -19,7 +22,7 @@ export function NoseTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         noseType: {
-          label: "Type",
+          label: __("Type"),
           items: rearrangeArray(
             ArrayNum(18).map((k) => ({
               type: FeatureSetType.Icon,
@@ -32,7 +35,7 @@ export function NoseTab(data: TabRenderInit) {
           )
         },
         nosePosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
@@ -45,7 +48,7 @@ export function NoseTab(data: TabRenderInit) {
               max: 18,
               part: RenderPart.Head,
               inverse: true,
-              label: data.useAccessibility ? "Position" : undefined
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -57,7 +60,7 @@ export function NoseTab(data: TabRenderInit) {
               min: 0,
               max: 8,
               part: RenderPart.Head,
-              label: data.useAccessibility ? "Scale" : undefined
+              label: data.useAccessibility ? __("Scale") : undefined
             }
           ]
         }

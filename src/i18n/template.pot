@@ -2,7 +2,12 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/ui/pages/Settings.ts:264
+#. missing mii name
+#: src/ui/pages/Library.ts:422
+msgid "?"
+msgstr ""
+
+#: src/ui/pages/Settings.ts:311
 msgid "(Default)"
 msgstr ""
 
@@ -21,19 +26,26 @@ msgstr ""
 
 #: src/ui/tabs/ExtHat.ts:35
 #: src/ui/tabs/ExtHat.ts:63
+#: src/ui/tabs/FavoriteColor.ts:42
+#: src/ui/tabs/FavoriteColor.ts:74
+#: src/ui/tabs/Head.ts:84
 msgid "%1 is a CUSTOM property, and will not transfer to any other data formats."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:59
+#: src/util/SettingsHelper.ts:67
 msgid "2D"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:60
+#: src/util/SettingsHelper.ts:68
 msgid "3D"
 msgstr ""
 
 #: src/ui/pages/library/new/qrCode.ts:107
 msgid "3DS/Wii U QR Code"
+msgstr ""
+
+#: src/ui/pages/Settings.ts:186
+msgid "A refresh is required to apply resource changes."
 msgstr ""
 
 #: src/ui/pages/library/new/lookalike.ts:214
@@ -50,12 +62,12 @@ msgstr ""
 msgid "All of the options here are what Nintendo originally programmed in. Please let me know if you want more options added."
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:626
-#: src/ui/pages/library/render/customRender.ts:656
+#: src/ui/pages/library/render/customRender.ts:615
+#: src/ui/pages/library/render/customRender.ts:645
 msgid "all_body"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:46
+#: src/util/SettingsHelper.ts:55
 msgid "Allow using camera in QR scanner"
 msgstr ""
 
@@ -65,16 +77,16 @@ msgid ""
 "Please check the console for more information."
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:343
+#: src/ui/pages/library/render/customRender.ts:334
 msgid "Animation"
 msgstr ""
 
-#: src/ui/pages/Library.ts:456
+#: src/ui/pages/Library.ts:464
 msgid "Are you sure you want to delete this Mii?"
 msgstr ""
 
 #. Arian's name
-#: src/ui/pages/Library.ts:581
+#: src/ui/pages/Library.ts:589
 msgid "Arian"
 msgstr ""
 
@@ -89,20 +101,24 @@ msgid "Auburn"
 msgstr ""
 
 #. Kat21's name
-#: src/ui/pages/Library.ts:571
+#: src/ui/pages/Library.ts:579
 msgid "Austin☆²¹ / Kat21"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:30
+#: src/util/SettingsHelper.ts:39
 msgid "Auto-close custom render menu"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:38
+#: src/util/SettingsHelper.ts:47
 msgid "Auto-close QR scan menu"
 msgstr ""
 
 #: src/ui/pages/library/new/qrCode.ts:45
 msgid "Back Camera (default)"
+msgstr ""
+
+#: src/ui/tabs/FacialHair.ts:70
+msgid "Beard"
 msgstr ""
 
 #. skin tone black
@@ -111,17 +127,17 @@ msgstr ""
 #: src/ui/pages/library/new/lookalike.ts:127
 #: src/ui/pages/library/new/lookalike.ts:186
 #: src/ui/pages/library/new/lookalike.ts:197
-#: src/util/SettingsHelper.ts:120
+#: src/util/SettingsHelper.ts:141
 msgid "Black"
 msgstr ""
 
 #: src/ui/pages/library/new/lookalike.ts:180
 #: src/ui/pages/library/new/lookalike.ts:201
-#: src/util/SettingsHelper.ts:119
+#: src/util/SettingsHelper.ts:140
 msgid "Blue"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:94
+#: src/util/SettingsHelper.ts:114
 msgid "Body Model"
 msgstr ""
 
@@ -130,6 +146,10 @@ msgstr ""
 #: src/ui/pages/library/new/lookalike.ts:184
 #: src/ui/pages/library/new/lookalike.ts:199
 msgid "Brown"
+msgstr ""
+
+#: src/ui/tabs/Scale.ts:45
+msgid "Build"
 msgstr ""
 
 #: src/ui/pages/library/render/customRender.ts:172
@@ -143,27 +163,35 @@ msgid ""
 "Upload an image:"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:192
-msgid "Center horizontally"
+#: src/ui/pages/library/render/customRender.ts:215
+msgid "Center to body"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:206
-msgid "Center vertically"
+#: src/ui/pages/library/render/customRender.ts:218
+msgid "Center to head"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:299
+#: src/ui/pages/library/render/customRender.ts:191
+msgid "Center X"
+msgstr ""
+
+#: src/ui/pages/library/render/customRender.ts:203
+msgid "Center Y"
+msgstr ""
+
+#: src/ui/pages/library/render/customRender.ts:290
 msgid "Change the Body Model option in Settings to get many different options of poses!"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:78
+#: src/util/SettingsHelper.ts:98
 msgid "Change the lighting used in icons, renders and the editor."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:56
+#: src/util/SettingsHelper.ts:64
 msgid "Changes the default edit mode option."
 msgstr ""
 
-#: src/ui/pages/Library.ts:530
+#: src/ui/pages/Library.ts:538
 msgid "Check out the people behind Mii Creator!"
 msgstr ""
 
@@ -171,7 +199,11 @@ msgstr ""
 msgid "Child"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:145
+#: src/ui/pages/library/export.ts:54
+msgid "Choose a file type to download"
+msgstr ""
+
+#: src/ui/pages/library/new/_dialog.ts:173
 #: src/ui/pages/library/new/lookalike.ts:27
 msgid "Choose a look-alike"
 msgstr ""
@@ -181,20 +213,34 @@ msgstr ""
 msgid "Click any to reroll"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:308
+#: src/ui/pages/library/render/customRender.ts:299
 msgid "Click here"
+msgstr ""
+
+#: src/ui/pages/library/export.ts:156
+msgid "Click inside a code block to select it."
 msgstr ""
 
 #: src/ui/pages/library/new/lookalike.ts:270
 msgid "Close"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:107
+#: src/ui/tabs/Eye.ts:45
+#: src/ui/tabs/Eyebrow.ts:46
+#: src/ui/tabs/FacialHair.ts:79
+#: src/ui/tabs/Glasses.ts:43
+#: src/ui/tabs/Hair.ts:48
+#: src/ui/tabs/Head.ts:61
+#: src/ui/tabs/Mouth.ts:49
+msgid "Color"
+msgstr ""
+
+#: src/util/SettingsHelper.ts:128
 msgid "Color hands to skin tone"
 msgstr ""
 
 #. obj (objecty)'s attribution
-#: src/ui/pages/Library.ts:597
+#: src/ui/pages/Library.ts:605
 msgid "Composed the music for Mii Creator"
 msgstr ""
 
@@ -202,7 +248,7 @@ msgstr ""
 msgid "Confirm"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:344
+#: src/ui/pages/library/render/customRender.ts:335
 msgid "Control the animation speed."
 msgstr ""
 
@@ -211,22 +257,36 @@ msgstr ""
 msgid "Couldn't get Mii: $1"
 msgstr ""
 
-#: src/ui/pages/Library.ts:495
-#: src/ui/pages/library/new/_dialog.ts:18
+#: src/ui/pages/Library.ts:503
+#: src/ui/pages/library/new/_dialog.ts:19
 #: src/ui/pages/library/new/fromScratch.ts:24
 msgid "Create Mii"
 msgstr ""
 
+#. mii's creator name
+#: src/ui/tabs/Misc.ts:53
+msgid "Creator"
+msgstr ""
+
+#: src/ui/tabs/Misc.ts:64
+msgid "Creator name is empty"
+msgstr ""
+
+#: src/ui/tabs/Misc.ts:67
+msgid "Creator name is too long"
+msgstr ""
+
 #. Arian's attribution
-#: src/ui/pages/Library.ts:585
+#: src/ui/pages/Library.ts:593
 msgid "Creator of <a target=\"_blank\" href=\"https://mii-unsecure.ariankordi.net\">Mii Renderer (REAL)</a>, made FFL.js and ported Miitomo shader, and was a big help with debugging many issues"
 msgstr ""
 
-#: src/ui/pages/Library.ts:515
+#: src/ui/pages/Library.ts:520
+#: src/ui/pages/Library.ts:523
 msgid "Credits"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:122
+#: src/util/SettingsHelper.ts:143
 msgid "Custom"
 msgstr ""
 
@@ -235,26 +295,33 @@ msgid "Cyan"
 msgstr ""
 
 #. David J.'s name
-#: src/ui/pages/Library.ts:615
+#: src/ui/pages/Library.ts:623
 msgid "David J."
 msgstr ""
 
-#: src/ui/pages/Library.ts:452
-#: src/util/SettingsHelper.ts:198
+#: src/ui/pages/Library.ts:460
+#: src/util/SettingsHelper.ts:219
 msgid "Delete"
+msgstr ""
+
+#: src/ui/tabs/Mole.ts:23
+msgid "Disable"
 msgstr ""
 
 #: src/ui/tabs/ExtHat.ts:45
 #: src/ui/tabs/ExtHat.ts:73
-#: src/util/SettingsHelper.ts:117
+#: src/ui/tabs/FavoriteColor.ts:52
+#: src/ui/tabs/FavoriteColor.ts:84
+#: src/ui/tabs/Head.ts:94
+#: src/util/SettingsHelper.ts:138
 msgid "Disabled"
 msgstr ""
 
-#: src/ui/pages/Library.ts:690
+#: src/ui/pages/Library.ts:698
 msgid "Discord"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:303
+#: src/ui/pages/library/render/customRender.ts:294
 msgid "Do you like the Mii that does the poses? His name is \"dummy\"."
 msgstr ""
 
@@ -263,31 +330,47 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:241
+#: src/ui/pages/library/render/customRender.ts:232
 msgid "Down"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:432
+#: src/ui/pages/library/export.ts:63
+msgid "Download .CharInfo (Switch) file"
+msgstr ""
+
+#: src/ui/pages/library/export.ts:87
+msgid "Download .FFSD (3DS/Wii U)"
+msgstr ""
+
+#: src/ui/pages/library/export.ts:111
+msgid "Download .RSD (Wii)"
+msgstr ""
+
+#: src/ui/pages/library/render/customRender.ts:430
 msgid "Download 3D model"
 msgstr ""
 
-#: src/ui/pages/Library.ts:432
+#: src/ui/pages/Library.ts:440
 msgid "Download a copy"
 msgstr ""
 
-#: src/ui/pages/Library.ts:442
+#: src/ui/pages/Library.ts:450
 msgid "Download a copy (Base64 encoded)"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:427
+#: src/ui/pages/library/export.ts:50
+msgid "Download other file types..."
+msgstr ""
+
+#: src/ui/pages/library/render/customRender.ts:425
 msgid "Download PNG"
 msgstr ""
 
-#: src/ui/pages/Library.ts:683
+#: src/ui/pages/Library.ts:691
 msgid "E-mail (Preferred)"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:55
+#: src/util/SettingsHelper.ts:63
 msgid "Editing Mode"
 msgstr ""
 
@@ -295,19 +378,23 @@ msgstr ""
 msgid "Elder"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:24
+#: src/ui/tabs/Mole.ts:24
+msgid "Enable"
+msgstr ""
+
+#: src/util/SettingsHelper.ts:33
 msgid "Enable accessibility features"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:12
+#: src/util/SettingsHelper.ts:21
 msgid "Enable background music"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:18
+#: src/util/SettingsHelper.ts:27
 msgid "Enable sound effects"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:130
+#: src/ui/pages/library/new/_dialog.ts:158
 msgid "Enter Nintendo Network ID"
 msgstr ""
 
@@ -315,8 +402,8 @@ msgstr ""
 msgid "Enter NNID of user.."
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:120
-#: src/ui/pages/library/new/_dialog.ts:123
+#: src/ui/pages/library/new/_dialog.ts:148
+#: src/ui/pages/library/new/_dialog.ts:151
 msgid "Enter NNID/PNID"
 msgstr ""
 
@@ -324,22 +411,26 @@ msgstr ""
 msgid "Enter PNID of user.."
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:136
+#: src/ui/pages/library/new/_dialog.ts:164
 msgid "Enter Pretendo Network ID"
 msgstr ""
 
-#: src/ui/pages/Library.ts:480
-#: src/ui/pages/library/new/_dialog.ts:104
+#: src/ui/pages/Library.ts:488
+#: src/ui/pages/library/new/_dialog.ts:107
 #: src/ui/pages/library/new/nnidPnid.ts:32
 #: src/ui/pages/library/new/nnidPnid.ts:66
 msgid "Error"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:172
+#: src/util/SettingsHelper.ts:193
 msgid "Export"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:339
+#: src/ui/pages/library/export.ts:20
+msgid "Export Mii"
+msgstr ""
+
+#: src/ui/pages/library/render/customRender.ts:330
 msgid "Expression"
 msgstr ""
 
@@ -348,8 +439,21 @@ msgstr ""
 msgid "Eye color"
 msgstr ""
 
-#: src/ui/pages/Library.ts:346
+#. face paint warning label
+#: src/ui/tabs/Head.ts:87
+msgid "Face paint"
+msgstr ""
+
+#: src/ui/tabs/Head.ts:83
+msgid "Face Paint"
+msgstr ""
+
+#: src/ui/pages/Library.ts:351
 msgid "Failed to load %1's icon"
+msgstr ""
+
+#: src/ui/tabs/Options.ts:45
+msgid "Favorite"
 msgstr ""
 
 #. lookalike favorite color dropdown
@@ -357,20 +461,34 @@ msgstr ""
 msgid "Favorite color"
 msgstr ""
 
+#: src/ui/tabs/FavoriteColor.ts:31
+msgid "Favorite Color"
+msgstr ""
+
+#: src/ui/tabs/Options.ts:40
+msgid "Favorite/Special"
+msgstr ""
+
 #: src/ui/pages/library/new/fromScratch.ts:32
 #: src/ui/pages/library/new/lookalike.ts:120
+#: src/ui/tabs/Options.ts:28
 msgid "Female"
 msgstr ""
 
-#: src/ui/pages/Library.ts:697
+#: src/ui/pages/Library.ts:705
 msgid "File an issue on GitHub"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:22
+#: src/ui/tabs/Hair.ts:78
+msgid "Flipped"
+msgstr ""
+
+#: src/ui/pages/library/new/_dialog.ts:23
 msgid "From Scratch"
 msgstr ""
 
 #: src/ui/pages/library/new/lookalike.ts:117
+#: src/ui/tabs/Options.ts:20
 msgid "Gender"
 msgstr ""
 
@@ -382,12 +500,16 @@ msgstr ""
 
 #: src/ui/pages/library/new/lookalike.ts:179
 #: src/ui/pages/library/new/lookalike.ts:202
-#: src/util/SettingsHelper.ts:118
+#: src/util/SettingsHelper.ts:139
 msgid "Green"
 msgstr ""
 
 #: src/ui/pages/library/new/lookalike.ts:123
 msgid "Hair color"
+msgstr ""
+
+#: src/ui/tabs/Hair.ts:70
+msgid "Hair Flip"
 msgstr ""
 
 #. hat tab name
@@ -415,32 +537,49 @@ msgstr ""
 msgid "Hazel"
 msgstr ""
 
+#: src/ui/tabs/Scale.ts:32
+msgid "Height"
+msgstr ""
+
 #. David J.'s attribution
-#: src/ui/pages/Library.ts:619
+#: src/ui/pages/Library.ts:627
 msgid "Helped with design, localization, and created the Wii U theme"
 msgstr ""
 
-#: src/ui/pages/Library.ts:650
+#: src/ui/pages/Library.ts:658
 msgid "Here's where you can contact the author, Kat21"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:19
+#: src/ui/pages/library/new/_dialog.ts:128
+msgid "Hex/Base64 data"
+msgstr ""
+
+#. High resource file
+#: src/util/SettingsHelper.ts:16
+msgid "High"
+msgstr ""
+
+#: src/ui/pages/library/new/_dialog.ts:20
 msgid "How would you like to create the Mii?"
 msgstr ""
 
-#: src/ui/pages/Settings.ts:26
+#: src/ui/pages/library/export.ts:21
+msgid "How would you like to save the Mii?"
+msgstr ""
+
+#: src/ui/pages/Settings.ts:29
 msgid "Icons won't be affected until you reload."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:131
+#: src/util/SettingsHelper.ts:152
 msgid "Import"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:61
+#: src/ui/pages/library/new/_dialog.ts:62
 msgid "Import Mii data file(s) here. Supported formats: .ffsd/.cfsd, .miic, .charinfo, .rsd"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:104
+#: src/ui/pages/library/new/_dialog.ts:107
 msgid "Invalid Mii data: $1"
 msgstr ""
 
@@ -449,7 +588,7 @@ msgstr ""
 msgid "Is this OK?"
 msgstr ""
 
-#: src/ui/pages/Library.ts:481
+#: src/ui/pages/Library.ts:489
 msgid ""
 "It appears that %1 of your Miis have failed to load. Their data may be corrupted.\n"
 "\n"
@@ -457,11 +596,11 @@ msgid ""
 msgstr ""
 
 #. Kat21's attribution
-#: src/ui/pages/Library.ts:575
+#: src/ui/pages/Library.ts:583
 msgid "Lead developer of Mii Creator"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:249
+#: src/ui/pages/library/render/customRender.ts:240
 msgid "Left"
 msgstr ""
 
@@ -474,13 +613,24 @@ msgstr ""
 msgid "Lime"
 msgstr ""
 
+#. Unused but here for translation purposes
+#. Low resource file
+#: src/util/SettingsHelper.ts:12
+msgid "Low"
+msgstr ""
+
 #. Current version string name ("Patch Update", "Minor Update", "Major Update")
-#: src/config.ts:64
+#: src/config.ts:70
 msgid "Major Update"
+msgstr ""
+
+#: src/ui/tabs/Head.ts:43
+msgid "Makeup"
 msgstr ""
 
 #: src/ui/pages/library/new/fromScratch.ts:28
 #: src/ui/pages/library/new/lookalike.ts:119
+#: src/ui/tabs/Options.ts:25
 msgid "Male"
 msgstr ""
 
@@ -489,20 +639,25 @@ msgstr ""
 msgid "Medium-blonde"
 msgstr ""
 
-#: src/ui/pages/Library.ts:244
+#. Middle resource file
+#: src/util/SettingsHelper.ts:14
+msgid "Middle"
+msgstr ""
+
+#: src/ui/pages/Library.ts:249
 msgid "Mii Creator"
 msgstr ""
 
 #. Label under secret Mii's name
-#: src/ui/pages/Library.ts:563
-#: src/ui/pages/Library.ts:677
-#: src/ui/pages/library/render/customRender.ts:320
+#: src/ui/pages/Library.ts:571
+#: src/ui/pages/Library.ts:685
+#: src/ui/pages/library/render/customRender.ts:311
 msgid "Mii Creator (Special Mii)"
 msgstr ""
 
 #. TODO: Make a better message? 😅
 #. Displayed in a modal while loading resource files.
-#: src/main.ts:94
+#: src/util/FFLLoader.ts:50
 msgid "Mii Creator is loading assets, please wait..."
 msgstr ""
 
@@ -510,16 +665,16 @@ msgstr ""
 msgid "Mii Creator QR Code"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:35
+#: src/ui/pages/library/new/_dialog.ts:36
 msgid "Mii data file"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:39
+#: src/ui/pages/library/new/_dialog.ts:40
 msgid "Mii data files import"
 msgstr ""
 
-#: src/class/MiiData.ts:185
-msgid "Mii data type not supported ($1 bytes)"
+#: src/class/MiiData.ts:192
+msgid "Mii data type not supported (%1 bytes)"
 msgstr ""
 
 #: src/ui/pages/library/new/qrCode.ts:97
@@ -530,46 +685,83 @@ msgstr ""
 msgid "Mii Renderer (REAL)"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:89
+#: src/util/SettingsHelper.ts:109
+#: src/util/SettingsHelper.ts:122
 msgid "Miitomo"
 msgstr ""
 
+#: src/ui/pages/library/export.ts:155
+msgid "Miscellaneous Output Formats"
+msgstr ""
+
 #. Timothy's attribution
-#: src/ui/pages/Library.ts:607
+#: src/ui/pages/Library.ts:615
 msgid "Modeled many of the custom hats and helped with debugging"
+msgstr ""
+
+#: src/ui/tabs/Mole.ts:19
+msgid "Mole"
+msgstr ""
+
+#: src/ui/tabs/FacialHair.ts:31
+msgid "Mustache"
+msgstr ""
+
+#. mii's name
+#: src/ui/tabs/Misc.ts:29
+msgid "Name"
+msgstr ""
+
+#: src/ui/tabs/Misc.ts:39
+msgid "Name is empty"
+msgstr ""
+
+#: src/ui/tabs/Misc.ts:43
+msgid "Name is too long"
+msgstr ""
+
+#: src/ui/tabs/Misc.ts:45
+msgid "Name is too short"
 msgstr ""
 
 #: src/ui/pages/library/new/nnidPnid.ts:14
 msgid "Nintendo Network ID"
 msgstr ""
 
-#: src/ui/pages/Library.ts:468
+#: src/ui/pages/Library.ts:476
 msgid "No"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:83
+#: src/util/SettingsHelper.ts:103
 msgid "No Lighting"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:71
+#: src/ui/tabs/Options.ts:44
+#: src/ui/tabs/Options.ts:56
+#: src/util/SettingsHelper.ts:79
 msgid "Normal"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:128
+#: src/util/SettingsHelper.ts:149
 msgid "Not implemented yet."
 msgstr ""
 
-#: src/main.ts:157
-#: src/main.ts:165
-#: src/main.ts:91
-#: src/ui/pages/Library.ts:345
+#: src/ui/pages/Library.ts:350
 #: src/ui/pages/library/new/qrCode.ts:111
+#: src/ui/pages/Settings.ts:185
+#: src/util/FFLLoader.ts:117
+#: src/util/FFLLoader.ts:127
+#: src/util/FFLLoader.ts:47
 msgid "Notice"
 msgstr ""
 
 #. obj (objecty)'s name
-#: src/ui/pages/Library.ts:593
+#: src/ui/pages/Library.ts:601
 msgid "obj"
+msgstr ""
+
+#: src/ui/pages/Settings.ts:189
+msgid "OK"
 msgstr ""
 
 #. hair color olive
@@ -585,9 +777,26 @@ msgstr ""
 msgid "Orange"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:406
-#: src/ui/pages/library/render/customRender.ts:416
-#: src/ui/pages/library/render/customRender.ts:601
+#: src/ui/pages/library/export.ts:53
+msgid "Other download types"
+msgstr ""
+
+#. Pants color warning label
+#: src/ui/tabs/FavoriteColor.ts:77
+msgid "Pants color"
+msgstr ""
+
+#: src/ui/tabs/FavoriteColor.ts:73
+msgid "Pants Color"
+msgstr ""
+
+#: src/ui/pages/library/new/_dialog.ts:127
+msgid "Paste raw Mii data here."
+msgstr ""
+
+#: src/ui/pages/library/render/customRender.ts:404
+#: src/ui/pages/library/render/customRender.ts:414
+#: src/ui/pages/library/render/customRender.ts:590
 msgid "Pause Animation"
 msgstr ""
 
@@ -595,20 +804,32 @@ msgstr ""
 msgid "Pink"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:419
-#: src/ui/pages/library/render/customRender.ts:604
+#: src/ui/pages/library/render/customRender.ts:417
+#: src/ui/pages/library/render/customRender.ts:593
 msgid "Play Animation"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:296
+#: src/ui/pages/library/render/customRender.ts:287
 msgid "Pose"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:95
+#: src/util/SettingsHelper.ts:115
 msgid "Pose selections are different depending on the body model you use."
 msgstr ""
 
 #: src/ui/pages/library/render/customRender.ts:189
+#: src/ui/tabs/Eye.ts:67
+#: src/ui/tabs/Eye.ts:80
+#: src/ui/tabs/Eyebrow.ts:68
+#: src/ui/tabs/Eyebrow.ts:81
+#: src/ui/tabs/FacialHair.ts:40
+#: src/ui/tabs/Glasses.ts:67
+#: src/ui/tabs/Glasses.ts:80
+#: src/ui/tabs/Mole.ts:40
+#: src/ui/tabs/Mouth.ts:73
+#: src/ui/tabs/Mouth.ts:86
+#: src/ui/tabs/Nose.ts:38
+#: src/ui/tabs/Nose.ts:51
 msgid "Position"
 msgstr ""
 
@@ -620,29 +841,40 @@ msgstr ""
 msgid "Purple"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:29
+#: src/ui/pages/library/new/_dialog.ts:30
 msgid "QR Code"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:151
+#: src/ui/pages/library/new/_dialog.ts:179
 msgid "Random NNID"
+msgstr ""
+
+#: src/ui/pages/library/new/_dialog.ts:123
+msgid "Raw Mii data"
+msgstr ""
+
+#: src/ui/pages/library/new/_dialog.ts:126
+msgid "Raw Mii data import"
 msgstr ""
 
 #: src/ui/pages/library/new/lookalike.ts:175
 msgid "Red"
 msgstr ""
 
-#: src/ui/pages/Settings.ts:25
+#: src/ui/pages/Settings.ts:28
 msgid "Refresh to apply changes"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:219
-#: src/ui/pages/library/render/customRender.ts:265
+#: src/ui/pages/library/render/customRender.ts:256
 msgid "Reset"
 msgstr ""
 
+#: src/util/SettingsHelper.ts:85
+msgid "Resource Type"
+msgstr ""
+
 #. Action
-#: src/util/SettingsHelper.ts:213
+#: src/util/SettingsHelper.ts:234
 msgid "Review update notice"
 msgstr ""
 
@@ -650,16 +882,39 @@ msgstr ""
 msgid "Revise"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:257
+#: src/ui/pages/library/render/customRender.ts:248
 msgid "Right"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:231
+#: src/ui/pages/library/render/customRender.ts:222
 msgid "Rotate"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:127
+#: src/ui/tabs/Eye.ts:104
+#: src/ui/tabs/Eyebrow.ts:105
+msgid "Rotation"
+msgstr ""
+
+#: src/util/SettingsHelper.ts:148
 msgid "Save Data"
+msgstr ""
+
+#: src/ui/pages/library/export.ts:137
+msgid "Save Mii as QR Code"
+msgstr ""
+
+#: src/ui/pages/library/export.ts:27
+msgid "Save Mii Creator data"
+msgstr ""
+
+#: src/ui/tabs/Eye.ts:116
+#: src/ui/tabs/Eyebrow.ts:117
+#: src/ui/tabs/Glasses.ts:92
+#: src/ui/tabs/Mole.ts:65
+#: src/ui/tabs/Mouth.ts:98
+#: src/ui/tabs/Nose.ts:63
+#: src/ui/tabs/Scale.ts:19
+msgid "Scale"
 msgstr ""
 
 #: src/ui/pages/library/new/qrCode.ts:20
@@ -667,12 +922,12 @@ msgid "Scan QR Code"
 msgstr ""
 
 #. Text for when finding a Secret Mii
-#: src/ui/pages/Library.ts:542
-#: src/ui/pages/Library.ts:660
+#: src/ui/pages/Library.ts:550
+#: src/ui/pages/Library.ts:668
 msgid "secret?"
 msgstr ""
 
-#: src/ui/pages/library/new/_dialog.ts:124
+#: src/ui/pages/library/new/_dialog.ts:152
 msgid "Select a service to look up"
 msgstr ""
 
@@ -684,18 +939,35 @@ msgstr ""
 msgid "Select the Mii's gender"
 msgstr ""
 
-#: src/ui/setup.ts:159
-#: src/ui/setup.ts:160
+#: src/ui/setup.ts:162
+#: src/ui/setup.ts:163
 msgid "Selection library is currently not implemented yet"
 msgstr ""
 
-#: src/ui/pages/Library.ts:500
-#: src/ui/pages/Settings.ts:148
+#: src/ui/pages/Library.ts:508
+#: src/ui/pages/Settings.ts:180
 msgid "Settings"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:77
+#: src/util/SettingsHelper.ts:97
 msgid "Shader Type"
+msgstr ""
+
+#: src/ui/tabs/Head.ts:34
+msgid "Shape"
+msgstr ""
+
+#. Shirt color warning label
+#: src/ui/tabs/FavoriteColor.ts:45
+msgid "Shirt color"
+msgstr ""
+
+#: src/ui/tabs/FavoriteColor.ts:41
+msgid "Shirt Color"
+msgstr ""
+
+#: src/ui/pages/library/export.ts:152
+msgid "Show other raw data formats"
 msgstr ""
 
 #. lookalike skin tone dropdown
@@ -708,6 +980,16 @@ msgstr ""
 msgid "Sorry, but you can't use this feature because 3D mode is disabled at the moment."
 msgstr ""
 
+#: src/ui/tabs/Eye.ts:92
+#: src/ui/tabs/Eyebrow.ts:93
+#: src/ui/tabs/Mole.ts:53
+msgid "Spacing"
+msgstr ""
+
+#: src/ui/tabs/Options.ts:57
+msgid "Special"
+msgstr ""
+
 #: src/ui/pages/library/new/qrCode.ts:56
 msgid "Start camera"
 msgstr ""
@@ -716,67 +998,87 @@ msgstr ""
 msgid "Stop camera"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:88
+#: src/util/SettingsHelper.ts:123
+msgid "StreetPass"
+msgstr ""
+
+#: src/ui/tabs/Eye.ts:128
+#: src/ui/tabs/Eyebrow.ts:129
+#: src/ui/tabs/Mouth.ts:110
+msgid "Stretch"
+msgstr ""
+
+#: src/util/SettingsHelper.ts:121
+msgid "Switch"
+msgstr ""
+
+#: src/util/SettingsHelper.ts:108
 msgid "Switch (WIP)"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:32
+#: src/util/SettingsHelper.ts:41
 msgid "The custom render menu will automatically close when pressing save."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:115
+#: src/util/SettingsHelper.ts:136
 msgid "The custom render will have a solid color background."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:26
+#: src/util/SettingsHelper.ts:35
 msgid "The editor UI will be tweaked to be more accessible."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:109
+#: src/util/SettingsHelper.ts:130
 msgid "The hands of the body will match the Mii's skin tone."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:40
+#: src/util/SettingsHelper.ts:49
 msgid "The QR code scanner will disappear after a successful scan."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:65
+#: src/util/SettingsHelper.ts:73
 msgid "Theme"
 msgstr ""
 
-#: src/ui/pages/Library.ts:742
+#: src/util/SettingsHelper.ts:87
+msgid ""
+"This changes model/texture quality.\n"
+"* Low resource cannot use some shader features."
+msgstr ""
+
+#: src/ui/pages/Library.ts:750
 msgid ""
 "This Mii is using extended Switch colors and/or Mii Creator features, but those features will be lost when converting to FFSD.\n"
 "Use \"Save Mii Creator data\" if you want to keep the data.\n"
 "Is this OK?"
 msgstr ""
 
-#: src/ui/pages/Library.ts:727
+#: src/ui/pages/Library.ts:735
 msgid "This Mii is using extended Switch colors, but those colors will never show up if you scan this QR Code anywhere outside of this app. Is this OK?"
 msgstr ""
 
-#: src/ui/pages/Library.ts:426
+#: src/ui/pages/Library.ts:434
 msgid "This Mii might be corrupted. Choose an option below."
 msgstr ""
 
-#: src/ui/pages/Library.ts:706
+#: src/ui/pages/Library.ts:714
 msgid "This site is not affiliated with Nintendo."
 msgstr ""
 
 #. Timothy's name
-#: src/ui/pages/Library.ts:603
+#: src/ui/pages/Library.ts:611
 msgid "Timothy"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:322
+#: src/ui/pages/library/render/customRender.ts:313
 msgid "to obtain him in your library :)"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:14
+#: src/util/SettingsHelper.ts:23
 msgid "Toggle background music depending on the theme."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:20
+#: src/util/SettingsHelper.ts:29
 msgid "Toggle sound effects for buttons and inputs."
 msgstr ""
 
@@ -784,19 +1086,32 @@ msgstr ""
 msgid "Tomodachi Life QR codes aren't supported yet. Use <a href=\"https://mii-unsecure.ariankordi.net\" target=\"_blank\">$1</a> to scan it."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:84
+#: src/util/SettingsHelper.ts:104
 msgid "Toon"
 msgstr ""
 
-#: src/ui/pages/library/render/customRender.ts:233
+#: src/ui/tabs/Eye.ts:32
+#: src/ui/tabs/Eyebrow.ts:33
+#: src/ui/tabs/Glasses.ts:34
+#: src/ui/tabs/Hair.ts:35
+#: src/ui/tabs/Mouth.ts:36
+#: src/ui/tabs/Nose.ts:25
+msgid "Type"
+msgstr ""
+
+#: src/ui/tabs/Hair.ts:75
+msgid "Unflipped"
+msgstr ""
+
+#: src/ui/pages/library/render/customRender.ts:224
 msgid "Up"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:207
+#: src/util/SettingsHelper.ts:228
 msgid "Update Notices"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:113
+#: src/util/SettingsHelper.ts:134
 msgid "Use background in custom render"
 msgstr ""
 
@@ -816,51 +1131,56 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:208
+#: src/util/SettingsHelper.ts:229
 msgid "View the last update notice if you missed it."
 msgstr ""
 
-#: src/ui/pages/Library.ts:425
-#: src/ui/pages/Library.ts:455
-#: src/ui/pages/Library.ts:726
-#: src/ui/pages/Library.ts:741
-#: src/ui/setup.ts:32
+#: src/ui/pages/Library.ts:433
+#: src/ui/pages/Library.ts:463
+#: src/ui/pages/Library.ts:734
+#: src/ui/pages/Library.ts:749
+#: src/ui/setup.ts:35
 msgid "Warning"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:48
+#: src/util/SettingsHelper.ts:57
 msgid "When this is disabled, the camera won't be used and some errors may not appear."
 msgstr ""
 
-#: src/util/SettingsHelper.ts:67
+#: src/util/SettingsHelper.ts:75
 msgid "When this is set to Normal, your device's color theme preferences will be used."
 msgstr ""
 
 #. skin tone white
 #: src/ui/pages/library/new/lookalike.ts:107
 #: src/ui/pages/library/new/lookalike.ts:185
-#: src/util/SettingsHelper.ts:121
+#: src/util/SettingsHelper.ts:142
 msgid "White"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:72
-#: src/util/SettingsHelper.ts:85
+#: src/util/SettingsHelper.ts:105
+#: src/util/SettingsHelper.ts:120
+#: src/util/SettingsHelper.ts:80
 msgid "Wii U"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:86
+#: src/util/SettingsHelper.ts:106
 msgid "Wii U (Blinn)"
 msgstr ""
 
-#: src/util/SettingsHelper.ts:87
+#: src/util/SettingsHelper.ts:107
 msgid "Wii U (Bright)"
+msgstr ""
+
+#: src/ui/tabs/Head.ts:52
+msgid "Wrinkles"
 msgstr ""
 
 #: src/ui/pages/library/new/lookalike.ts:177
 msgid "Yellow"
 msgstr ""
 
-#: src/ui/pages/Library.ts:464
+#: src/ui/pages/Library.ts:472
 msgid "Yes"
 msgstr ""
 
@@ -869,18 +1189,18 @@ msgstr ""
 msgid "You can't use this feature"
 msgstr ""
 
-#: src/ui/pages/Library.ts:264
-msgid "You have no Miis yet. Create one to get started!"
+#: src/ui/pages/Library.ts:269
+msgid "You don't have any Miis. Create one to get started!"
 msgstr ""
 
-#: src/ui/setup.ts:33
+#: src/ui/setup.ts:36
 msgid "You're using Mii Creator under Firefox. Using the Firefox browser WILL experience slowdowns and lag."
 msgstr ""
 
-#: src/main.ts:158
+#: src/util/FFLLoader.ts:118
 msgid "Your browser doesn't support OffscreenCanvas, so Mii Creator may experience lag."
 msgstr ""
 
-#: src/main.ts:166
+#: src/util/FFLLoader.ts:128
 msgid "Your browser doesn't support Web Workers, so Mii Creator may experience lag."
 msgstr ""

@@ -612,7 +612,8 @@ export async function customRender(miiData: Mii) {
       image.onload = () => {
         downloadLink(
           image.src,
-          `${miiData.nickname}_${__("all_body")}_${new Date().toJSON()}.png`
+          // mii custom render file name - e.g. 'Mii_custom_render_2025-03-06T14:40:20.310Z.png'
+          __("%1_custom_render_%2.png", miiData.nickname, new Date().toJSON())
         );
         if (shouldClose) {
           scene.shutdown();
