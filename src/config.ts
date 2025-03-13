@@ -67,11 +67,13 @@ export const Config = {
     string: "v1.0.0",
     name:
       // Current version string name ("Patch Update", "Minor Update", "Major Update")
-      __("Major Update"),
+      // __("Major Update"),
+      __("BETA"),
 
     // ignore that I'm just writing HTML here
     changelog: `
     <p style="text-align:center;margin-top:20px;margin-bottom:200px;font-size:32px;color:var(--error-color)">The update changelog hasn't been written yet, so just ignore this for now</p>
+    ` /*
     <h1 style="font-size: 20px;text-align: center;">v0.9.2 - QR Code and MiiC v3 Support</h1>
 
 
@@ -202,6 +204,6 @@ export const Config = {
     </div>
 
     <p style="margin-bottom:0;text-align:center"><strong>You can view this message again in Settings.</strong></p>
-    `
+    `*/
   }
 };

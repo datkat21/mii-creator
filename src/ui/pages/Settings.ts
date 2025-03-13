@@ -310,8 +310,18 @@ export async function Settings() {
                 settingsInfo[key].default === c.value
                   ? `${c.label} ${__("(Default)")}`
                   : c.label
-              )
-              .on("click", async (e) => {
+              );
+
+            if (colorSpan !== undefined) {
+              colorSpan.prependTo(multiButton);
+            }
+
+            const button = AddButtonSounds(multiButton, "hover", "select_misc");
+
+            if (c.disabled) {
+              button.attr({ disabled: true });
+            } else {
+              multiButton.on("click", async (e) => {
                 prevSetting[key] = String(
                   await localforage.getItem(prefixedKey)
                 );
@@ -355,15 +365,6 @@ export async function Settings() {
                   if (colorSpan) colorSpan.style({ "background-color": color });
                 } else t.classList.add("selected-setting");
               });
-
-            if (colorSpan !== undefined) {
-              colorSpan.prependTo(multiButton);
-            }
-
-            const button = AddButtonSounds(multiButton, "hover", "select_misc");
-
-            if (c.disabled) {
-              button.attr({ disabled: true });
             }
 
             return button;
@@ -421,7 +422,7 @@ export async function Settings() {
 
 export async function replayUpdateNotice() {
   await setSetting(`has-seen-${Config.version.string}`, false);
-  displayUpdateNotice();
+  // displayUpdateNotice();
   // Modal.modal(
   //   "Notice",
   //   "This display the update notice again. Do you want to continue?",
@@ -438,57 +439,57 @@ export async function replayUpdateNotice() {
   // );
 }
 
-export async function displayUpdateNotice() {
-  const seenKey = `has-seen-${Config.version.string}`;
-  const seenValue = await getSetting(seenKey);
-  const notSeenLatest = seenValue === false || seenValue === null;
+// export async function displayUpdateNotice() {
+//   const seenKey = `has-seen-${Config.version.string}`;
+//   const seenValue = await getSetting(seenKey);
+//   const notSeenLatest = seenValue === false || seenValue === null;
 
-  // https://stackoverflow.com/a/326076
-  const isInIframe = window.self !== window.top;
+//   // https://stackoverflow.com/a/326076
+//   const isInIframe = window.self !== window.top;
 
-  // Should the user see the update popup?
-  const shouldSeeNotice =
-    // Do not show to first time users
-    !window.firstVisit && // NOTE: src/l10n/manager.ts
-    // undefined = l10n manager did not run?, false = language key is null (never ran site)
-    !isInIframe && // Do not show to API users
-    // Show if has-seen key doesn't exist
-    notSeenLatest;
+//   // Should the user see the update popup?
+//   const shouldSeeNotice =
+//     // Do not show to first time users
+//     !window.firstVisit && // NOTE: src/l10n/manager.ts
+//     // undefined = l10n manager did not run?, false = language key is null (never ran site)
+//     !isInIframe && // Do not show to API users
+//     // Show if has-seen key doesn't exist
+//     notSeenLatest;
 
-  console.log(
-    `notSeenLatest: ${notSeenLatest}\nfirstVisit: ${window.firstVisit}\nshould see update notice?: ${shouldSeeNotice}`
-  );
+//   console.log(
+//     `notSeenLatest: ${notSeenLatest}\nfirstVisit: ${window.firstVisit}\nshould see update notice?: ${shouldSeeNotice}`
+//   );
 
-  if (window.firstVisit && !isInIframe) {
-    // First time? You have "seen" the current version
-    await setSetting(seenKey, true);
-  } else if (shouldSeeNotice) {
-    let m = Modal.modal(
-      `New Update: ${Config.version.string}`,
-      "Yes new update", // placeholder will be replaced
-      "body",
-      {
-        text: "OK"
-      },
-      {
-        text: "Cancel"
-      }
-    );
+//   if (window.firstVisit && !isInIframe) {
+//     // First time? You have "seen" the current version
+//     await setSetting(seenKey, true);
+//   } else if (shouldSeeNotice) {
+//     let m = Modal.modal(
+//       `New Update: ${Config.version.string}`,
+//       "Yes new update", // placeholder will be replaced
+//       "body",
+//       {
+//         text: "OK"
+//       },
+//       {
+//         text: "Cancel"
+//       }
+//     );
 
-    await setSetting(`has-seen-${Config.version.string}`, true);
+//     await setSetting(`has-seen-${Config.version.string}`, true);
 
-    let changelog = Config.version.changelog;
+//     let changelog = Config.version.changelog;
 
-    m.qs(".modal-body span")!.cleanup();
-    // free vulnerability for you
-    m.qs(".modal-body")!.prepend(
-      new Html("div").style({ "max-width": "720px" }).html(changelog)
-    );
-    // Modify <a> tags in the changelog
-    m.qsa("a")!.forEach((b) => {
-      if (b === null) return;
-      AddButtonSounds(b);
-      b.attr({ target: "_blank" });
-    });
-  }
-}
+//     m.qs(".modal-body span")!.cleanup();
+//     // free vulnerability for you
+//     m.qs(".modal-body")!.prepend(
+//       new Html("div").style({ "max-width": "720px" }).html(changelog)
+//     );
+//     // Modify <a> tags in the changelog
+//     m.qsa("a")!.forEach((b) => {
+//       if (b === null) return;
+//       AddButtonSounds(b);
+//       b.attr({ target: "_blank" });
+//     });
+//   }
+// }

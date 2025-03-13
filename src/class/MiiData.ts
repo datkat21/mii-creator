@@ -161,7 +161,7 @@ export default class Mii {
         tempArray = allocateArray(108, input);
         data = MiiCreatorV3DataToV4(
           MiiCreatorV3Data.unpack(
-            MiiCreatorV3Data.pack(Ver3StoreData.unpack(tempArray))
+            MiiCreatorV3Data.pack(Ver3StoreData.unpack(tempArray) as any)
           )
         );
         break;
@@ -177,7 +177,7 @@ export default class Mii {
         tempArray = allocateArray(123, input);
         data = MiiCreatorV3DataToV4(
           MiiCreatorV3Data.unpack(
-            MiiCreatorV3Data.pack(Ver3StoreData.unpack(tempArray))
+            MiiCreatorV3Data.pack(Ver3StoreData.unpack(tempArray) as any)
           )
         );
         break;
@@ -358,6 +358,7 @@ export default class Mii {
     this.glassY = data.glassY;
     this.hairColor = data.hairColor;
     this.hairFlip = data.hairFlip;
+    console.log(this.nickname, this.hairFlip);
     this.hairType = data.hairType;
     this.hatFavoriteColor = data.hatFavoriteColor;
     this.hatCommonColor = data.hatCommonColor;
@@ -425,7 +426,7 @@ export default class Mii {
           })
         );
       case "switchCharInfo":
-        return NnMiiCharInfo.pack(this.#getObject());
+        return NnMiiCharInfo.pack(this.#getObject() as any);
       case "ffsd":
         return MiiCreatorV4DataToFFSD(this.#getObject(), true);
       case "ffsd_append_miic":

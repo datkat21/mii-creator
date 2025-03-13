@@ -1,334 +1,3 @@
-:root[data-theme=wiiu] {
-  background-image: url(../assets/images/bg_qr_wiiu.png) !important;
-  background-repeat: no-repeat !important;
-  background-size: cover !important;
-  height: 100% !important;
-}
-:root[data-theme=wiiu] html,
-:root[data-theme=wiiu] body {
-  background-color: transparent !important;
-  --root: #ffffff;
-  --text: #000000;
-  --label: #666666;
-  --stroke: #dddddd;
-  --stroke-rgb: 221, 221, 221;
-  --container: #eeeeee;
-  --sub-container: #ececec;
-  --hover: #dddddd;
-  --focus: #e7e7e7;
-  --icon-face-fill: #ffffff;
-  --icon-face-stroke: #6f6f6f;
-  --icon-face-detail: #8d8d8d;
-  --icon-face-makeup: #ffbaba;
-  --icon-face-wrinkles: #996d54;
-  --icon-head-fill: #ffffff;
-  --icon-head-stroke: #999999;
-  --icon-hair-fill: currentColor;
-  --icon-eyebrow-fill: currentColor;
-  --icon-facial-hair-fill: currentColor;
-  --icon-mouth-tooth: #ffffff;
-  --icon-glasses-fill: #000000;
-  --icon-glasses-shade: #606060;
-  --icon-lip-color-top: #712a04;
-  --icon-lip-color-bottom: #be4e26;
-  color: black !important;
-}
-:root[data-theme=wiiu] div::-webkit-scrollbar-thumb {
-  border-radius: 10px !important;
-  background-color: rgb(51, 183, 53) !important;
-}
-:root[data-theme=wiiu] div::-webkit-scrollbar-track {
-  border-radius: 10px !important;
-  background-color: transparent !important;
-}
-:root[data-theme=wiiu] .modal .modal-content {
-  min-width: 300px !important;
-}
-:root[data-theme=wiiu] .modal .modal-content button {
-  font-size: 17px !important;
-}
-:root[data-theme=wiiu] .modal .modal-content .modal-header {
-  background: linear-gradient(0deg, #6b6b6b 3%, #9d9d9d 0%, #b1b1b1 100%) !important;
-  padding-bottom: 10px !important;
-  color: #fff !important;
-  text-shadow: 0px -1px 0px #4e4e4e !important;
-  font-size: 1.15rem !important;
-}
-:root[data-theme=wiiu] .modal .modal-content .modal-header .close-button {
-  background: var(--error-color) !important;
-  box-shadow: #ff2b2b 0px 0px 2px 1px inset, 0px -1px 0px 0px rgb(255, 255, 255) !important;
-  position: absolute !important;
-}
-:root[data-theme=wiiu] .modal .modal-content .modal-body img {
-  box-shadow: 0px 0.5px 4px 1px rgba(0, 0, 0, 0.25);
-  background: linear-gradient(#f6f6f6 0%, #ffffff 15%, #ffffff 45%, #f6f6f6 45%, #fcfcfc 100%) !important;
-  margin: 5px;
-  border-radius: 7px !important;
-}
-:root[data-theme=wiiu] .flex-group {
-  gap: 1rem !important;
-}
-:root[data-theme=wiiu] button {
-  background: linear-gradient(#d1d1d1 5%, #ffffff 100%) !important;
-  border: none !important;
-  text-shadow: 0px 1px #fff !important;
-  box-shadow: #d1d1d1 0px 2px 3px 1px inset, 0px 0.5px 3px 1px rgba(133, 133, 133, 0.71) !important;
-  position: relative;
-  z-index: 1 !important;
-  font-size: 18px !important;
-  transition: 0.1s !important;
-}
-:root[data-theme=wiiu] button:not(.close-button):before {
-  content: "";
-  width: 100%;
-  display: block;
-  top: 0;
-  left: 0;
-  position: absolute;
-  height: 40%;
-  border-radius: 20px;
-  border-bottom-left-radius: 30px;
-  border-bottom-right-radius: 30px;
-  background: linear-gradient(rgb(243, 243, 243), rgb(243, 243, 243));
-  z-index: -1;
-}
-:root[data-theme=wiiu] button:focus {
-  box-shadow: #d1d1d1 0px 2px 3px 1px inset, 0px 0.5px 3px 1px rgba(133, 133, 133, 0.71) !important;
-}
-:root[data-theme=wiiu] input {
-  box-shadow: 0px 2px 3px -1px #d2d2d2 inset;
-  border: 2px solid #bcbcbc;
-}
-:root[data-theme=wiiu] input:hover {
-  background-color: #f5f5f5;
-  outline: 0;
-}
-:root[data-theme=wiiu] input[type=range] {
-  box-shadow: none;
-}
-:root[data-theme=wiiu] .ui-base {
-  background-color: unset !important;
-}
-@media screen and (max-width: 960px) {
-  :root[data-theme=wiiu] .ui-base .tab-list {
-    background: linear-gradient(#a6ff5e 5%, #02f21c 100%) !important;
-  }
-}
-:root[data-theme=wiiu] .ui-base .mii-holder {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(3px) !important;
-  margin-bottom: -1rem;
-}
-:root[data-theme=wiiu] .ui-base .tab-list {
-  grid-area: tabList !important;
-  background: linear-gradient(to right, #a6ff5e 5%, #02f21c 100%) !important;
-  box-shadow: #2bd500 0px 0px 4px 2px inset, 0px 0.5px 3px 1px rgba(133, 133, 133, 0.42) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab:hover {
-  background-color: rgba(0, 0, 0, 0.15) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab.tab-square > svg {
-  color: #ffffff !important;
-  filter: drop-shadow(0px -2px 0px #1e9500) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab.tab-square.active {
-  background-color: #42f839 !important;
-  box-shadow: 0 0 0 0.3rem rgb(51, 183, 53) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab.tab-square.active {
-  box-shadow: 0 0 0 0.3rem rgb(51, 183, 53) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab.tab-save {
-  background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
-  text-shadow: 0 1px #f3ff6a !important;
-  border: none !important;
-  box-shadow: #d1d1d1 0px 2px 3px 1px inset, 0px 0.5px 3px 1px rgba(133, 133, 133, 0.71) !important;
-  position: relative;
-  z-index: 1 !important;
-  font-size: 18px !important;
-  transition: 0.1s !important;
-  color: #000000 !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab.tab-save span {
-  text-shadow: 0 2px 0px rgba(255, 255, 255, 0.3333333333) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab.tab-save svg {
-  color: #000000 !important;
-  filter: drop-shadow(0 2px 0px rgba(255, 255, 255, 0.3333333333)) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab.tab-save::before {
-  content: "";
-  width: 100%;
-  display: block;
-  top: 0;
-  left: 0;
-  position: absolute;
-  height: 40%;
-  border-radius: 20px;
-  border-bottom-left-radius: 30px;
-  border-bottom-right-radius: 30px;
-  background: linear-gradient(rgb(255, 251, 183), rgb(251, 255, 114)) !important;
-  z-index: -1;
-}
-:root[data-theme=wiiu] .ui-base .tab-list .tab.tab-save::after {
-  background-color: rgba(0, 0, 0, 0.45) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-content .feature-set-container .tab-list {
-  position: relative !important;
-  z-index: 2 !important;
-  border-radius: 5px !important;
-  background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
-  box-shadow: #f1da00 0px 1px 3px 4px inset, 0px 0.5px 3px 1px rgba(133, 133, 133, 0.42) !important;
-}
-:root[data-theme=wiiu] .ui-base .tab-content .feature-set-container .tab-list::before {
-  content: "" !important;
-  width: 98.5% !important;
-  display: block !important;
-  top: 4px !important;
-  left: 3px !important;
-  position: absolute !important;
-  height: 40% !important;
-  border-radius: 5px !important;
-  border-bottom-left-radius: 30px !important;
-  border-bottom-right-radius: 30px !important;
-  background: linear-gradient(rgb(255, 251, 183), rgb(251, 255, 114)) !important;
-  z-index: -1 !important;
-}
-:root[data-theme=wiiu] .ui-base .tab::after {
-  background-color: rgba(0, 0, 0, 0.45) !important;
-}
-:root[data-theme=wiiu] .tab-content {
-  background-color: transparent !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group {
-  gap: 18px !important;
-  padding-top: 20px !important;
-  padding-bottom: 40px !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-set-header {
-  background: rgba(225, 225, 225, 0.25) !important;
-  backdrop-filter: blur(8px) !important;
-  border: 1px solid #a2a2a2 !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-left,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-right {
-  padding: 8px 20px !important;
-  border-right-width: unset !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-left.active,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-right.active {
-  background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
-  box-shadow: #f1da00 0px 1px 3px 4px inset, 0px 0.5px 3px 1px rgba(133, 133, 133, 0.42) !important;
-}
-:root[data-theme=wiiu] button.selected,
-:root[data-theme=wiiu] button.selected-setting {
-  background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
-  text-shadow: 0 1px #f3ff6a !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-left:before,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-right:before {
-  content: "" !important;
-  width: 93% !important;
-  display: block !important;
-  top: 4px !important;
-  left: 3px !important;
-  position: absolute !important;
-  height: 40% !important;
-  border-radius: 5px !important;
-  border-bottom-left-radius: 30px !important;
-  border-bottom-right-radius: 30px !important;
-  z-index: -1 !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-left.active:before,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-right.active:before,
-:root[data-theme=wiiu] button.selected::before,
-:root[data-theme=wiiu] button.selected-setting::before {
-  background: linear-gradient(rgb(255, 251, 183), rgb(251, 255, 114)) !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-left svg,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-right svg {
-  width: 60px;
-  height: 60px;
-  filter: drop-shadow(0px -2px 0px #fff) !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-left.active svg,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-switch .feature-switch-right.active svg {
-  filter: drop-shadow(0px -2px 0px rgb(251, 255, 114)) !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-item {
-  min-width: 66px !important;
-  min-height: 66px !important;
-  cursor: unset !important;
-  background: linear-gradient(#dedede 0%, #ffffff 50%) !important;
-  box-shadow: 0px -2px #fff, 0px 2px #aeaeae, 0px 0px 4px #8c8c8c !important;
-  transition: 0.1s !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-item > svg {
-  width: 65px !important;
-  height: 65px !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-item:hover {
-  transform: scale(1.1) !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-item.active {
-  background: linear-gradient(#7cff55 0%, #dbffbf 50%) !important;
-  box-shadow: 0px -2px 0px #d9ffd9, 0px 2px 0px #00bc09, 0px 0px 4px #8c8c8c !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-slider span,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-range span {
-  background: linear-gradient(#dedede 0%, #ffffff 50%) !important;
-  box-shadow: 0px -2px #fff, 0px 2px #aeaeae, 0px 0px 4px #8c8c8c !important;
-  transition: 0.1s !important;
-  border-radius: 5px !important;
-  padding: 3px 6px !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-slider span:active,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-range span:active {
-  transform: scale(1.1) !important;
-}
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-slider span svg,
-:root[data-theme=wiiu] .tab-content .feature-set-group .feature-range span svg {
-  filter: drop-shadow(0px -2px 0px #fff) !important;
-}
-:root[data-theme=wiiu] .mii-library .library-sidebar {
-  background: rgba(255, 255, 255, 0.5) !important;
-  box-shadow: 1px 0px 3px rgba(0, 0, 0, 0.15) !important;
-  backdrop-filter: blur(5px) !important;
-}
-:root[data-theme=wiiu] .mii-library .library-sidebar > h1 {
-  text-shadow: 0px 5px rgba(0, 0, 0, 0.08) !important;
-}
-:root[data-theme=wiiu] .mii-library .library-sidebar .sidebar-credits span {
-  font-size: 1rem !important;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-  margin-bottom: 3px !important;
-  width: 100% !important;
-  border-bottom: 1.5px dashed var(--label) !important;
-}
-:root[data-theme=wiiu] .mii-library .library-list .library-list-mii {
-  position: relative !important;
-  background: linear-gradient(#f6f6f6 0%, #ffffff 15%, #ffffff 45%, #f6f6f6 45%, #fcfcfc 100%) !important;
-  z-index: 10;
-  box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, 0.2);
-}
-:root[data-theme=wiiu] .mii-library .library-list .library-list-mii.highlight {
-  box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, 0.2), 0 0 0 0.3rem var(--selection-color) !important;
-}
-:root[data-theme=wiiu] .mii-library .library-list .library-list-mii span {
-  background: #707070 !important;
-  color: #fff !important;
-  text-shadow: 0px -2px #373737 !important;
-  box-shadow: 0px 0px 5px 0px #2d2d2d inset !important;
-}
-@media screen and (max-width: 960px) {
-  :root[data-theme=wiiu] .mii-library .library-sidebar button:not(.close-button):before {
-    border-radius: 10px !important;
-    border-bottom-left-radius: 30px !important;
-    border-bottom-right-radius: 30px !important;
-  }
-}
-
 @font-face {
   font-family: "NTLG";
   src: url("../assets/fonts/NTLG.woff2");
@@ -543,20 +212,40 @@ h6 {
     opacity: 1;
   }
 }
-@keyframes shortSlideUp {
-  from {
-    transform: translateY(-25%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
 @keyframes fadeOut {
   from {
     opacity: 1;
   }
   to {
     opacity: 0;
+  }
+}
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%);
+    opacity: 0;
+  }
+}
+@keyframes shortSlideUp {
+  from {
+    transform: translateY(-25%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 @keyframes shortSlideDown {
@@ -673,7 +362,8 @@ h6 {
   text-align: center;
 }
 .modal.random-mii-grid .modal-content {
-  max-height: 720px;
+  height: 720px;
+  max-height: 100vh;
   width: 1280px;
 }
 .modal.random-mii-grid .modal-content .modal-body .random-mii-container {
@@ -832,6 +522,16 @@ select[type=checkbox]:checked {
   animation: fadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+.slideIn {
+  pointer-events: none;
+  animation: slideIn 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+
+.slideOut {
+  pointer-events: none;
+  animation: slideOut 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+
 .loader {
   position: absolute;
   top: 50%;
@@ -874,6 +574,30 @@ select[type=checkbox]:checked {
   margin: 0;
 }
 
+.separator-gap-thin-laptop {
+  display: none;
+}
+
+@media screen and (min-width: 1556px) {
+  .separator-gap-thin-laptop {
+    display: block !important;
+    width: 100%;
+    height: 0;
+    margin: 0;
+  }
+}
+.separator-gap-thin-desktop {
+  display: none;
+}
+
+@media screen and (min-width: 1875px) {
+  .separator-gap-thin-desktop {
+    display: block !important;
+    width: 100%;
+    height: 0;
+    margin: 0;
+  }
+}
 .ui-base {
   position: fixed;
   top: 0;
@@ -895,7 +619,7 @@ select[type=checkbox]:checked {
   pointer-events: none;
   animation: fadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 959px) {
   .ui-base {
     grid-template-areas: "mii" "tabList" "tabContent";
     grid-template-columns: auto;
@@ -925,7 +649,7 @@ select[type=checkbox]:checked {
     max-height: 30vmax;
   }
 }
-@media screen and (min-width: 960px) and (max-width: 1280px) {
+@media screen and (min-width: 960px) and (max-width: 1875px) {
   .ui-base {
     grid-template-areas: "tabList tabList" "mii tabContent";
     grid-template-columns: 1fr 1fr;
@@ -978,6 +702,14 @@ select[type=checkbox]:checked {
 .ui-base > .tab-content {
   grid-area: tabContent;
   border: 2px solid var(--stroke-dim);
+}
+
+canvas.scene {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  overflow: hidden;
+  transition: opacity 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
 .tab-save {
@@ -1249,6 +981,9 @@ select[type=checkbox]:checked {
   width: 100%;
   object-fit: contain;
   aspect-ratio: 1/1;
+  --scale: 0.1rem;
+  --blur: 0;
+  --color: rgba(255,255,255);
 }
 .mii-library .library-list .library-list-mii span {
   width: 100%;
@@ -1269,7 +1004,7 @@ select[type=checkbox]:checked {
     background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.4666666667), rgba(255, 255, 255, 0.4666666667));
   }
 }
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 959px) {
   .mii-library {
     grid-template-areas: "miiList miiList" "sidebar sidebar";
     grid-template-rows: 1fr auto;
@@ -1295,4 +1030,43 @@ select[type=checkbox]:checked {
   .responsive-row-lg {
     flex-direction: row !important;
   }
+}
+.notify-box {
+  display: flex;
+  flex-direction: column-reverse;
+  position: fixed;
+  z-index: 9999999999;
+  top: 1.5rem;
+  left: 1.5rem;
+  gap: 1rem;
+}
+.notify-box > .notify {
+  background-color: var(--container);
+  border: 0.125rem solid var(--stroke);
+  border-radius: 0.32rem;
+  padding: 0.9rem 1rem;
+  min-width: 18rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  backdrop-filter: blur(0.5rem) brightness(0.5) contrast(1.05);
+  pointer-events: all;
+  width: max-content;
+}
+.notify-box > .notify .notify-title {
+  font-size: 1.25rem;
+  color: var(--text);
+}
+.notify-box > .notify .notify-description {
+  /* . . . */
+  opacity: 1;
+}
+
+.disable-item {
+  width: 120px;
+  font-size: 20px;
+  min-height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

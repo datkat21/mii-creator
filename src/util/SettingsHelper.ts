@@ -100,10 +100,10 @@ export const settingsInfo: Record<string, any> = {
     description: __(
       "Change the lighting used in icons, renders and the editor."
     ),
-    default: ShaderType.Miitomo,
+    default: ShaderType.WiiU,
     choices: [
       { label: __("No Lighting"), value: ShaderType.LightDisabled },
-      { label: __("Toon"), value: ShaderType.WiiUToon },
+      { label: __("Toon"), value: ShaderType.WiiUToon, disabled: true },
       { label: __("Wii U"), value: ShaderType.WiiU },
       { label: __("Wii U (Blinn)"), value: ShaderType.WiiUBlinn },
       { label: __("Wii U (Bright)"), value: ShaderType.WiiUFFLIconWithBody },
@@ -121,15 +121,16 @@ export const settingsInfo: Record<string, any> = {
     choices: [
       { label: __("Wii U"), value: BodyType.WiiU },
       { label: __("Switch"), value: BodyType.Switch, disabled: true },
-      { label: __("Miitomo"), value: BodyType.Miitomo },
-      { label: __("StreetPass"), value: BodyType.StreetPass }
+      { label: __("Miitomo"), value: BodyType.Miitomo }
+      // { label: __("StreetPass"), value: BodyType.StreetPass, disabled: true },
     ]
   },
   bodyModelHands: {
     type: "checkbox",
     label: __("Color hands to skin tone"),
     default: false,
-    description: __("The hands of the body will match the Mii's skin tone.")
+    description: __("The hands of the body will match the Mii's skin tone."),
+    condition: (settings: any) => settings.bodyModel !== "wiiu"
   },
   customRenderGreenScreen: {
     type: "multi",
@@ -152,69 +153,69 @@ export const settingsInfo: Record<string, any> = {
     choices: [
       {
         label: __("Import"),
-        async select() {
-          if (
-            (await Modal.prompt(
-              "WARNING",
-              "This will overwrite ALL of your currently saved Miis and delete them forever!\nPlease back up your save data before using this option.\n\nAre you certain that you understand the risk?",
-              "body"
-            )) === false
-          )
-            return;
+        // async select() {
+        //   if (
+        //     (await Modal.prompt(
+        //       "WARNING",
+        //       "This will overwrite ALL of your currently saved Miis and delete them forever!\nPlease back up your save data before using this option.\n\nAre you certain that you understand the risk?",
+        //       "body"
+        //     )) === false
+        //   )
+        //     return;
 
-          const input = document.createElement("input");
-          input.type = "file";
-          input.accept = "application/json";
-          document.body.appendChild(input);
-          input.click();
-          requestAnimationFrame(() => {
-            document.body.removeChild(input);
-          });
-          input.addEventListener("change", async (e) => {
-            if (input.files === null) return;
-            if (input.files[0] === undefined) return;
-            console.log(input.files);
+        //   const input = document.createElement("input");
+        //   input.type = "file";
+        //   input.accept = "application/json";
+        //   document.body.appendChild(input);
+        //   input.click();
+        //   requestAnimationFrame(() => {
+        //     document.body.removeChild(input);
+        //   });
+        //   input.addEventListener("change", async (e) => {
+        //     if (input.files === null) return;
+        //     if (input.files[0] === undefined) return;
+        //     console.log(input.files);
 
-            const reader = new FileReader();
+        //     const reader = new FileReader();
 
-            reader.onload = function (event) {
-              const fileContent = event.target!.result;
-              console.log(fileContent);
-            };
+        //     reader.onload = function (event) {
+        //       const fileContent = event.target!.result;
+        //       console.log(fileContent);
+        //     };
 
-            reader.onerror = function (event) {
-              console.error("File reading error:", event);
-            };
+        //     reader.onerror = function (event) {
+        //       console.error("File reading error:", event);
+        //     };
 
-            reader.readAsText(input.files[0]);
-          });
-        },
+        //     reader.readAsText(input.files[0]);
+        //   });
+        // },
         disabled: true
       },
       {
         label: __("Export"),
-        async select() {
-          let data: Record<string, string> = {};
-          for (const key of (await localforage.keys()).filter((k) =>
-            k.startsWith("mii")
-          )) {
-            console.log(key);
-            data[key] = (await localforage.getItem(key)) as string;
-          }
-          console.log(data);
-          const url = URL.createObjectURL(
-            new Blob([JSON.stringify(data)], { type: "application/json" })
-          );
-          const a = document.createElement("a");
-          a.href = url;
-          a.target = "_blank";
-          a.download = "mii-editor-save-data.json";
-          document.body.appendChild(a);
-          a.click();
-          requestAnimationFrame(() => {
-            a.remove();
-          });
-        },
+        // async select() {
+        //   let data: Record<string, string> = {};
+        //   for (const key of (await localforage.keys()).filter((k) =>
+        //     k.startsWith("mii")
+        //   )) {
+        //     console.log(key);
+        //     data[key] = (await localforage.getItem(key)) as string;
+        //   }
+        //   console.log(data);
+        //   const url = URL.createObjectURL(
+        //     new Blob([JSON.stringify(data)], { type: "application/json" })
+        //   );
+        //   const a = document.createElement("a");
+        //   a.href = url;
+        //   a.target = "_blank";
+        //   a.download = "mii-editor-save-data.json";
+        //   document.body.appendChild(a);
+        //   a.click();
+        //   requestAnimationFrame(() => {
+        //     a.remove();
+        //   });
+        // },
         disabled: true
       },
       {

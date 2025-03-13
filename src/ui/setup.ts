@@ -6,7 +6,7 @@ import { Library } from "./pages/Library";
 import Mii from "../class/MiiData";
 import { MiiEditor } from "../class/MiiEditor";
 import {
-  displayUpdateNotice,
+  // displayUpdateNotice,
   Settings,
   updateSettings
 } from "./pages/Settings";
@@ -24,22 +24,44 @@ export async function setupUi() {
 
   await prepareFFL();
 
-  displayUpdateNotice();
+  // displayUpdateNotice();
 
-  if (
-    navigator.userAgent.includes("Firefox") &&
-    sessionStorage.getItem("seen-firefox-notice") === null
-  ) {
-    sessionStorage.setItem("seen-firefox-notice", "yes");
-    Modal.modal(
-      __("Warning"),
-      __(
-        "You're using Mii Creator under Firefox. Using the Firefox browser WILL experience slowdowns and lag."
-      ),
-      "body",
-      ...buttonsOkCancel
-    );
+  function showFirefoxNotice() {
+    if (
+      navigator.userAgent.includes("Firefox") &&
+      sessionStorage.getItem("seen-firefox-notice") === null
+    ) {
+      sessionStorage.setItem("seen-firefox-notice", "yes");
+      Modal.modal(
+        __("Warning"),
+        __(
+          "You're using Mii Creator under Firefox. Using the Firefox browser WILL experience slowdowns and lag."
+        ),
+        "body",
+        ...buttonsOkCancel
+      );
+    }
   }
+
+  Modal.modal(
+    __("Warning"),
+    __(
+      "You're using a BETA version of Mii Creator. Some features in development have been disabled, and bugs/glitches may occur."
+    ),
+    "body",
+    {
+      text: "Cancel",
+      callback(e) {
+        showFirefoxNotice();
+      }
+    },
+    {
+      text: __("OK"),
+      callback() {
+        showFirefoxNotice();
+      }
+    }
+  );
 
   // for U theme
   let state: "main" | "edit" = "main";
@@ -209,8 +231,8 @@ export async function setupUi() {
       //   location.origin
       // );
     } else if (searchParams.has("custom-render-preview")) {
-      const miiData = new Mii(searchParams.get("custom-render-preview")!);
-      customRender(miiData);
+      // const miiData = new Mii(searchParams.get("custom-render-preview")!);
+      // customRender(miiData);
     } else if (searchParams.has("settings")) {
       Settings();
     } else Library();

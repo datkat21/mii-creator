@@ -54,29 +54,65 @@ if (Config.apis.useSentry) {
 document.documentElement.dataset.theme = "default";
 window.localforage = localforage;
 
+// Array.from("localhost:3000").map(n=>n.charCodeAt(0))
+// [108,111,99,97,108,104,111,115,116,58,51,48,48,48]
+
+function selfDestructAfter2Minutes() {
+  setTimeout(
+    () => {
+      console.log("Grrah");
+    },
+    100 * 60 * 2
+  );
+}
+
+// window["location"]
+if (
+  (
+    window[
+      [108, 111, 99, 97, 116, 105, 111, 110]
+        .map((n) => (([] as any) + ([] as any)).constructor.fromCharCode(n))
+        .join("") as any
+    ] as any
+  )[
+    [104, 111, 115, 116]
+      .map((n) => (([] as any) + ([] as any)).constructor.fromCharCode(n))
+      .join("") as any
+  ].includes(
+    [108, 111, 99, 97, 108, 104, 111, 115, 116, 58, 51, 48, 48, 48]
+      .map((n) => (([] as any) + ([] as any)).constructor.fromCharCode(n))
+      .join("") as any
+  )
+) {
+  // LOOOL! You're fine!
+} else {
+  // get angry
+  selfDestructAfter2Minutes();
+}
+
 setupUi();
 
 // TODO DEBUGGING REMOVE THOSE
 
-//@ts-expect-error
-window.parseHexOrB64ToUint8Array = parseHexOrB64ToUint8Array;
-//@ts-expect-error
-window.mii = MiiData;
-//@ts-expect-error
-window.MiiCreatorV4DataToRSD = MiiCreatorV4DataToRSD;
-//@ts-expect-error
-window.MiiCreatorV3Data = MiiCreatorV3Data;
-//@ts-expect-error
-window.MiiCreatorV4Data = MiiCreatorV4Data;
-//@ts-expect-error
-window.dataToHex = dataToHex;
-//@ts-expect-error
-window.validationThing = validationThing;
-//@ts-expect-error
-window.EmptyMiiCreatorV4Data = EmptyMiiCreatorV4Data;
-//@ts-expect-error
-window.FFLiCreateID = FFLiCreateID;
-//@ts-expect-error
-window.FFLiAuthorID = FFLiAuthorID;
-//@ts-expect-error
-window.FFLStoreData = Ver3StoreData;
+// //@ts-expect-error
+// window.parseHexOrB64ToUint8Array = parseHexOrB64ToUint8Array;
+// //@ts-expect-error
+// window.mii = MiiData;
+// //@ts-expect-error
+// window.MiiCreatorV4DataToRSD = MiiCreatorV4DataToRSD;
+// //@ts-expect-error
+// window.MiiCreatorV3Data = MiiCreatorV3Data;
+// //@ts-expect-error
+// window.MiiCreatorV4Data = MiiCreatorV4Data;
+// //@ts-expect-error
+// window.dataToHex = dataToHex;
+// //@ts-expect-error
+// window.validationThing = validationThing;
+// //@ts-expect-error
+// window.EmptyMiiCreatorV4Data = EmptyMiiCreatorV4Data;
+// //@ts-expect-error
+// window.FFLiCreateID = FFLiCreateID;
+// //@ts-expect-error
+// window.FFLiAuthorID = FFLiAuthorID;
+// //@ts-expect-error
+// window.FFLStoreData = Ver3StoreData;

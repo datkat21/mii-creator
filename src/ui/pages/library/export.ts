@@ -161,48 +161,46 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
         modal
           .qs(".modal-content")!
           .style({ "max-height": "100vh", "max-width": "600px" });
-        modal
-          .qs(".modal-body")!
-          .prependMany(
-            new Html("div").appendMany(
-              new Html("span").class("h4").text("CharInfo (Switch) data (Hex)"),
-              new Html("pre")
-                .class("pre-wrap", "mb-0")
-                .text(miiData.exportHex("switchCharInfo"))
-            ),
-            new Html("div").appendMany(
-              new Html("span").class("h4").text("Mii Creator data (Base64)"),
-              new Html("pre")
-                .class("pre-wrap", "mb-0")
-                .text(miiData.exportBase64("miic"))
-            ),
-            new Html("div").appendMany(
-              new Html("span")
-                .class("h4")
-                .text("FFSD + Mii Creator data (Base64)"),
-              new Html("pre")
-                .class("pre-wrap", "mb-0")
-                .text(miiData.exportBase64("ffsd_append_miic"))
-            ),
-            new Html("div").appendMany(
-              new Html("span").class("h4").text("FFSD (Base64)"),
-              new Html("pre")
-                .class("pre-wrap", "mb-0")
-                .text(miiData.exportBase64("ffsd"))
-            ),
-            new Html("div").appendMany(
-              new Html("span").class("h4").text("FFSD (Hex)"),
-              new Html("pre")
-                .class("pre-wrap", "mb-0")
-                .text(miiData.exportHex("ffsd"))
-            ),
-            new Html("div").appendMany(
-              new Html("span").class("h4").text("Mii Studio data"),
-              new Html("pre")
-                .class("pre-wrap", "mb-0")
-                .text(miiData.exportHex("studioData"))
-            )
-          );
+        modal.qs(".modal-body")!.prependMany(
+          new Html("div").appendMany(
+            new Html("span").class("h4").text("CharInfo (Switch) data (Hex)"),
+            new Html("pre")
+              .class("pre-wrap", "mb-0")
+              .text(miiData.exportHex("switchCharInfo"))
+          ),
+          new Html("div").appendMany(
+            new Html("span").class("h4").text("Mii Creator data (Base64)"),
+            new Html("pre")
+              .class("pre-wrap", "mb-0")
+              .text(miiData.exportBase64("miic"))
+          ),
+          // new Html("div").appendMany(
+          //   new Html("span")
+          //     .class("h4")
+          //     .text("FFSD + Mii Creator data (Base64)"),
+          //   new Html("pre")
+          //     .class("pre-wrap", "mb-0")
+          //     .text(miiData.exportBase64("ffsd_append_miic"))
+          // ),
+          new Html("div").appendMany(
+            new Html("span").class("h4").text("FFSD (Base64)"),
+            new Html("pre")
+              .class("pre-wrap", "mb-0")
+              .text(miiData.exportBase64("ffsd"))
+          ),
+          new Html("div").appendMany(
+            new Html("span").class("h4").text("FFSD (Hex)"),
+            new Html("pre")
+              .class("pre-wrap", "mb-0")
+              .text(miiData.exportHex("ffsd"))
+          ),
+          new Html("div").appendMany(
+            new Html("span").class("h4").text("Mii Studio data"),
+            new Html("pre")
+              .class("pre-wrap", "mb-0")
+              .text(miiData.exportHex("studioData"))
+          )
+        );
       }
     }
   );

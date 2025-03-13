@@ -1,3 +1,5 @@
+import { stripDebug } from "@namchee/bun-plugin-strip-debug";
+
 /**
  * Builds a TypeScript file to a directory.
  * @param filePath The file path.
@@ -15,11 +17,13 @@ export async function compile(
     splitting: false,
     emitDCEAnnotations: true,
     sourcemap: "none",
-    minify: {
-      identifiers: true,
-      syntax: true,
-      whitespace: true,
-    },
+    // Only apply when building for prod !!
+    // minify: {
+    //   identifiers: true,
+    //   syntax: true,
+    //   whitespace: true
+    // },
+    // plugins: [stripDebug()]
   }).catch((e) => {
     console.error("Failed to build:", e);
   })) as BuildOutput;

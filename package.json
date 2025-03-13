@@ -7,6 +7,7 @@
     "serve": "bunx serve -l 3000 -C ./public"
   },
   "devDependencies": {
+    "@namchee/bun-plugin-strip-debug": "^1.0.4",
     "@types/bun": "latest",
     "po2json": "^0.4.5"
   },

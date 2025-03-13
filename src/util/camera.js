@@ -26,6 +26,16 @@ export const ViewType = {
 export function getCameraForViewType(viewType, width = 1, height = 1, miiHeight = 1) {
   const aspect = width / height;
   switch (viewType) {
+    case ViewType.Face: {
+      // FFL-Testing equivalent:
+      const fovy = 15; // Math.atan2(43.2 / aspect, 500) / 0.5;
+      const camera = new THREE.PerspectiveCamera(fovy, aspect, 0.1, 1000);
+      camera.position.set(0, 34.5, 380);//411.181793);
+      camera.lookAt(0, 34.3, 0.0);
+      // pCamera->at()  = { 0.0f, 34.3f, 0.0f };
+
+      return camera;
+    }
     case ViewType.MakeIcon: {
       const fovy = 9.8762; // rad2deg(Math.atan2(43.2 / aspect, 500) / 0.5);
       const camera = new THREE.PerspectiveCamera(fovy, aspect, 500, 1000);
