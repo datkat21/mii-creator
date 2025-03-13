@@ -43,7 +43,6 @@ export function getCameraForViewType(viewType, width = 1, height = 1, miiHeight 
       camera.lookAt(0, 34.5, 0.0);
       return camera;
     }
-    case ViewType.Face:
     case ViewType.IconFovy45: {
       const camera = new THREE.PerspectiveCamera(45, aspect, 50, 1000);
       camera.position.set(0, 34, 110);

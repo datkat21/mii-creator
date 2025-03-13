@@ -363,6 +363,7 @@ export function confirmOrReviseMii(
                 "fflmakeicon",
                 108
               ).then((icon) => {
+                playLoadSound();
                 img.attr({ src: icon }).style({ opacity: "1" });
               });
             }

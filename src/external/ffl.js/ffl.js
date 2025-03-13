@@ -125,6 +125,22 @@ const FFLiShapeType = {
 	MAX: 12
 };
 
+export const FFLiShapeTypeName = {
+	0: "OpaBeard",
+	1: "OpaFaceline",
+	2: "OpaHairNormal",
+	3: "OpaForeheadNormal",
+	4: "XluMask",
+	5: "XluNoseline",
+	6: "OpaNose",
+	7: "OpaHatNormal",
+	8: "XluGlass",
+	9: "OpaHairCap",
+	10: "OpaForeheadCap",
+	11: "OpaHatCap",
+	12: "Max"
+}
+
 /**
  * @enum {number}
  */
@@ -1765,6 +1781,9 @@ class CharModel {
 					break;
 			}
 
+			//@ts-expect-error
+			mesh.name = FFLiShapeTypeName[shapeType];
+
 			this.meshes.add(mesh); // Add the mesh or null.
 		}
 	}
@@ -2702,9 +2721,10 @@ function drawParamToMesh(drawParam, materialClass, module, texManager) {
 	// NOTE: Only putting it in geometry because FFL-Testing does the same.
 	if (mesh.geometry.userData) {
 		// Set modulateMode/modulateType (not modulateColor or cullMode).
-		mesh.geometry.userData.modulateColor = materialParam.color;
 		mesh.geometry.userData.modulateMode = drawParam.modulateParam.mode;
 		mesh.geometry.userData.modulateType = drawParam.modulateParam.type;
+		//@ts-expect-error
+		mesh.geometry.userData.modulateColor = materialParam.color;
 	}
 	return mesh;
 }
@@ -3041,6 +3061,7 @@ function _applyAdjustMatrixToMesh(pMtx, mesh, heapf32) {
 	// Set position and scale. FFLiAdjustShape does not set rotation.
 	mesh.scale.setFromMatrixScale(matrix);
 	mesh.position.setFromMatrixPosition(matrix);
+	if (matrix.elements[0] === -1) mesh.scale.x = -1;
 }
 
 // // ---------------------------------------------------------------------

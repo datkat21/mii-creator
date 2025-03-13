@@ -58,6 +58,14 @@ export const settingsInfo: Record<string, any> = {
       "When this is disabled, the camera won't be used and some errors may not appear."
     )
   },
+  // syncLibrary: {
+  //   type: "checkbox",
+  //   label: __("Automatically sync Miis in your library"),
+  //   default: true,
+  //   description: __(
+  //     "When this is disabled, Mii characters will not sync automatically with the server."
+  //   )
+  // },
   editMode: {
     type: "multi",
     label: __("Editing Mode"),
@@ -83,7 +91,7 @@ export const settingsInfo: Record<string, any> = {
   resourceType: {
     type: "multi",
     label: __("Resource Type"),
-    default: Config.renderer.fflResourcePath.length - 1,
+    default: String(Config.renderer.fflResourcePath.length - 1),
     description: __(
       "This changes model/texture quality.\n* Low resource cannot use some shader features."
     ),
@@ -103,11 +111,11 @@ export const settingsInfo: Record<string, any> = {
     default: ShaderType.WiiU,
     choices: [
       { label: __("No Lighting"), value: ShaderType.LightDisabled },
-      { label: __("Toon"), value: ShaderType.WiiUToon, disabled: true },
+      { label: __("Toon"), value: ShaderType.WiiUToon },
       { label: __("Wii U"), value: ShaderType.WiiU },
       { label: __("Wii U (Blinn)"), value: ShaderType.WiiUBlinn },
       { label: __("Wii U (Bright)"), value: ShaderType.WiiUFFLIconWithBody },
-      { label: __("Switch (WIP)"), value: ShaderType.Switch, disabled: true },
+      // { label: __("Switch (WIP)"), value: ShaderType.Switch, disabled: true },
       { label: __("Miitomo"), value: ShaderType.Miitomo }
     ]
   },
@@ -125,6 +133,21 @@ export const settingsInfo: Record<string, any> = {
       // { label: __("StreetPass"), value: BodyType.StreetPass, disabled: true },
     ]
   },
+  // TODO: Implement
+  // iconCameraPosition: {
+  //   type: "multi",
+  //   label: __("Icon Camera Position"),
+  //   description: __(
+  //     "This changes the camera position for all icons."
+  //   ),
+  //   default: BodyType.WiiU,
+  //   choices: [
+  //     { label: __("Wii U"), value: "variableiconbody" },
+  //     { label: __("Switch"), value: "fovy", disabled: true },
+  //     { label: __("Miitomo"), value: BodyType.Miitomo }
+  //     // { label: __("StreetPass"), value: BodyType.StreetPass, disabled: true },
+  //   ]
+  // },
   bodyModelHands: {
     type: "checkbox",
     label: __("Color hands to skin tone"),

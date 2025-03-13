@@ -56,8 +56,10 @@ export const Config = {
     pnidFetchURL: (pnid: string) =>
       `${nnidFetchOrigin}/mii_data/${pnid}?api_id=1`,
     // Configure Sentry here.
-    useSentry: false,
-    sentryURL: "ENTER_SENTRY_URL_HERE"
+    useSentry: true,
+    // sentryURL: "ENTER_SENTRY_URL_HERE",
+    sentryURL:
+      "https://5671de45addd464980ccd49e08d6d108@app.glitchtip.com/10073"
   },
   mii: {
     scalingMode: "scaleApply"

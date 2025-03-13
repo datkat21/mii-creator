@@ -117,9 +117,7 @@ export async function getHeadModel(
 
   const asset = {
     extras: {
-      partsTransform: {
-        hatTranslate: [0, 0, 0]
-      }
+      partsTransform: currentCharModel.partsTransform
     }
   };
 

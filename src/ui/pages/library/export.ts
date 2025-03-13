@@ -137,6 +137,17 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
       text: __("Save Mii as QR Code"),
       async callback() {
         if (!(await miiQRConversionWarning(miiData))) return;
+        if (
+          !(await Modal.prompt(
+            __("Warning"),
+            __(
+              "Mii Creator QR codes won't save all of this Mii's data at the moment. Mii Creator will never be able to scan back these beta version QR codes and retain all the custom colors and other info. Is this OK?"
+            ),
+            "body",
+            true
+          ))
+        )
+          return;
         // hack: force FFL shader for QR codes by changing the setting
         // const setting = await getSetting("shaderType");
         // await localforage.setItem("settings_shaderType", "wiiu");

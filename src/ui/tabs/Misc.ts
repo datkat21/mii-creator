@@ -51,7 +51,7 @@ export function MiscTab(data: TabRenderInit) {
           __("Creator"),
           data.mii.creator,
           // set
-          (creator) => setProp("creatorName", creator.trim()),
+          (creator) => setProp("creator", creator.trim()),
           // validate
           (name) => {
             const nameBuffer = encodeUTF16LE(name);

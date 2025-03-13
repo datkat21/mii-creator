@@ -269,8 +269,13 @@ export async function Library(highlightMiiId?: string) {
         .text(__("You don't have any Miis. Create one to get started!"))
     );
   }
-  let miiErrorCount = 0;
+
+  let miiErrorCount = 0,
+    miiCount = 0;
   for (const mii of miis) {
+    // if localforage item isn't set already
+    localforage.setItem(mii.id, mii.mii);
+
     let miiContainer = new Html("div").class("library-list-mii");
 
     AddButtonSounds(miiContainer);
@@ -288,12 +293,12 @@ export async function Library(highlightMiiId?: string) {
 
       let specialMii = false;
       if (
-        miiData.createId[4] === 47 &&
-        miiData.createId[5] === 249 &&
+        miiData.createId[4] === 42 &&
+        miiData.createId[5] === 241 &&
         miiData.createId[6] === 22 &&
-        miiData.createId[7] === 28 &&
+        miiData.createId[7] === 24 &&
         miiData.createId[8] === 250 &&
-        miiData.createId[9] === 173
+        miiData.createId[9] === 193
       ) {
         miiContainer
           .classOn("highlight")
@@ -335,22 +340,36 @@ export async function Library(highlightMiiId?: string) {
         .style({ opacity: "0", transition: "opacity 0.3s ease" });
 
       // TODO: make lazy loading work again?
-      getMiiIcon(
-        miiData,
-        "library",
-        "variableiconbody",
-        180,
-        MiiExpression.Normal
-      )
-        .then((r) => {
-          miiImage.attr({ src: r }).style({ opacity: "1" });
-        })
-        .catch((e) => {
-          Notify.show(
-            __("Notice"),
-            __("Failed to load %1's icon", miiData!.nickname)
-          );
-        });
+
+      function loadIcon() {
+        getMiiIcon(
+          miiData!,
+          "library",
+          "variableiconbody",
+          180,
+          MiiExpression.Normal
+        )
+          .then((r) => {
+            miiImage.attr({ src: r }).style({ opacity: "1" });
+          })
+          .catch((e) => {
+            Notify.show(
+              __("Notice"),
+              __("Failed to load %1's icon", miiData!.nickname)
+            );
+          });
+      }
+
+      //@ts-expect-error
+      if (window.browserMitigations !== undefined) {
+        // alert("browser mitigations enabled");
+        setTimeout(() => {
+          loadIcon();
+        }, miiCount * 100);
+      } else {
+        // alert("browser mitigations disabled");
+        loadIcon();
+      }
 
       // Special
       if (miiData.special === 1 || miiData.favorite === 1 || specialMii) {
@@ -481,6 +500,7 @@ export async function Library(highlightMiiId?: string) {
         );
       });
     }
+    miiCount++;
   }
 
   if (miiErrorCount > 0) {
@@ -505,20 +525,23 @@ export async function Library(highlightMiiId?: string) {
         })
       ),
       AddButtonSounds(
-        new Html("button").text(__("Settings")).on("click", async () => {
-          Settings();
-        })
-      )
-    ),
-    new Html("div").class("sidebar-credits").appendMany(
-      new Html("div")
-        .class("flex-group")
-        .style({ width: "100%" })
-        .appendMany(
-          AddButtonSounds(
-            new Html("button")
-              .text(__("Credits"))
-              .on("click", async () => {
+        new Html("button").text(__("More Options")).on("click", async () => {
+          Modal.modal(
+            __("More Options"),
+            __("Select an option."),
+            "body",
+            {
+              text: "Cancel"
+            },
+            {
+              text: __("Settings"),
+              callback(e) {
+                Settings();
+              }
+            },
+            {
+              text: __("Credits"),
+              callback(e) {
                 var m = Modal.modal(
                   __("Credits"),
                   "",
@@ -562,7 +585,7 @@ export async function Library(highlightMiiId?: string) {
 
                     const mii = new Mii(
                       parseHexOrB64ToUint8Array(
-                        "A8EAwELycUHCpfBSXhcDbS/5Fhz6rQAAWS1KAGEAcwBtAGkAbgBlAAAAAAAAABw3ExB7ASFuQxwNZMcYAAgegg0AMEGzW4JtcwBvAHMAaQBnAG8AbgBhAGwAAAAAAMwDAAAAAAAAAAAAAAAA"
+                        "BANtKwIiiUS3tZw1sDcq8RYY+sFjAGgAYQByAGwAaQBuAGUAAAAAAGMAaABhAHIAbABpAG4AZQAAAAAACAALAQAAJgMDAQYEAAIKCwQEGwIMAAkBAP8BAAABCAQACgYAZf///0wABAACFAMTARMNBAAKBAEJEP8A/wEA"
                       )
                     );
                     importMiiConfirmation(
@@ -629,13 +652,23 @@ export async function Library(highlightMiiId?: string) {
                   ),
                   "0800450308040402020c0308060406020a0001000006000804000a0800326702010314031304190d04000a040109"
                 );
-              })
-              .style({ flex: "1" })
-          ),
-          AddButtonSounds(
-            new Html("button")
-              .text("Help/Contact")
-              .on("click", async () => {
+                createMiiCard(
+                  container,
+                  // Raymond's name
+                  __("raymond"),
+                  "raymonable",
+                  "https://github.com/raymonable",
+                  // Raymond's attribution
+                  __(
+                    "Helped with initial development for client-side rendering"
+                  ),
+                  "0800400308040402020c0301050400020a0000000000000804000a01004b4004000214031303190d04000a040109"
+                );
+              }
+            },
+            {
+              text: __("Contact"),
+              callback(e) {
                 var m = Modal.modal(
                   "Contact",
                   "",
@@ -679,7 +712,7 @@ export async function Library(highlightMiiId?: string) {
 
                     const mii = new Mii(
                       parseHexOrB64ToUint8Array(
-                        "AwEAwAAAAAAAAAAAAP91dC/5Fhz6rQAAAChiAG8AbwBlAHkAAAAAAAAAAAAAABRvEwBJBBJvQxgNVGUUABoTqAoAACmwUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE8TAGMyCAAANgACC2QA"
+                        "BAWl18qbeYiSbgD/dXQq8RYY+sFrAGEAdAAyADEAAAAAAAAAAAAAAGIAbwBvAGUAeQAAAAAAAAAAAAAACAAAAAAAbwMECAYEDQMLMwMHEgIMAAAJAGMACgAANgMACmMASf83ARQABAACFAYTAxMKBAAKAAANN/8AYwEA"
                       )
                     );
                     importMiiConfirmation(mii, __("Mii Creator (Special Mii)"));
@@ -700,25 +733,52 @@ export async function Library(highlightMiiId?: string) {
                   "kat21",
                   EditorIcons.contact_discord
                 );
-                createIconCard(
-                  container,
-                  __("File an issue on GitHub"),
-                  "https://github.com/datkat21/mii-creator",
-                  "datkat21/mii-creator",
-                  EditorIcons.contact_github
+                // createIconCard(
+                //   container,
+                //   __("File an issue on GitHub"),
+                //   "https://github.com/datkat21/mii-creator",
+                //   "datkat21/mii-creator",
+                //   EditorIcons.contact_github
+                // );
+              }
+            },
+            {
+              text: __("Manual"),
+              callback(e) {
+                Modal.alert(
+                  __("Notice"),
+                  __("The manual isn't finished yet. Please come back later.")
                 );
-              })
-              .style({ flex: "1" })
-          )
-        ),
+              }
+            }
+          );
+        })
+      )
+    ),
+    new Html("div").class("sidebar-credits").appendMany(
       new Html("strong").text(__("This site is not affiliated with Nintendo.")),
       new Html("small")
-        .html(`${Config.version.string} (<b>${Config.version.name}</b>)`)
+        .html(
+          `Mii Creator ${Config.version.string} by kat21 (<b>${Config.version.name}</b>)`
+        )
         .style({ cursor: "pointer" })
         .on("click", () => {
           replayUpdateNotice();
-        })
+        }),
       // new Html("strong").text("Please send any feedback or bug reports either through GitHub issues or to my email: datkat21.yt@gmail.com"),
+      AddButtonSounds(
+        new Html("a")
+          .html(
+            `<img style='height:48px' src="./assets/images/update_notice/update_notice_image_01.png">Subscribe to my YouTube channel!`
+          )
+          .attr({ href: "https://youtube.com/@ngx3", target: "_blank" })
+          .styleJs({
+            gap: "12px",
+            display: "flex",
+            alignItems: "center",
+            cursor: "pointer"
+          })
+      )
     )
   );
 }

@@ -58,12 +58,20 @@ window.localforage = localforage;
 // [108,111,99,97,108,104,111,115,116,58,51,48,48,48]
 
 function selfDestructAfter2Minutes() {
-  setTimeout(
-    () => {
-      console.log("Grrah");
-    },
-    100 * 60 * 2
-  );
+  setTimeout(() => {
+    // document.write
+    (
+      window[
+        [100, 111, 99, 117, 109, 101, 110, 116]
+          .map((n) => (([] as any) + ([] as any)).constructor.fromCharCode(n))
+          .join("") as any
+      ] as any
+    )[
+      [119, 114, 105, 116, 101]
+        .map((n) => (([] as any) + ([] as any)).constructor.fromCharCode(n))
+        .join("") as any
+    ]();
+  }, 1000 * 30);
 }
 
 // window["location"]
@@ -79,7 +87,8 @@ if (
       .map((n) => (([] as any) + ([] as any)).constructor.fromCharCode(n))
       .join("") as any
   ].includes(
-    [108, 111, 99, 97, 108, 104, 111, 115, 116, 58, 51, 48, 48, 48]
+    [109, 105, 105, 46, 110, 120, 119, 46, 112, 119]
+      // [108, 111, 99, 97, 108, 104, 111, 115, 116, 58, 51, 48, 48, 48]
       .map((n) => (([] as any) + ([] as any)).constructor.fromCharCode(n))
       .join("") as any
   )
@@ -87,7 +96,7 @@ if (
   // LOOOL! You're fine!
 } else {
   // get angry
-  selfDestructAfter2Minutes();
+  // selfDestructAfter2Minutes();
 }
 
 setupUi();

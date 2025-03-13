@@ -238,7 +238,7 @@ export function RFLStoreDataToMiiCreatorV4Data(
   output.hatCommonColor = -1;
   output.hatFavoriteColor = -1;
   output.hatType = -1;
-  output.hideNose = 0;
+  output.wigType = -1;
   output.pantsColor = -1;
   output.personality = -1;
   output.shirtColor = -1;

@@ -53,6 +53,15 @@ export const miiSelect = (
       {
         text: __("Revise"),
         async callback() {
+          if (isSpecial) {
+            return Modal.modal(
+              __("Notice"),
+              __("You can't edit Mii Creator-specific Special Miis."),
+              "body",
+              { text: "Cancel" },
+              { text: __("OK") }
+            );
+          }
           confirmOrReviseMii(miiData, {
             gender: miiData.gender,
             isOriginalMii: true

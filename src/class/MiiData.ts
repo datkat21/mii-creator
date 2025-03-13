@@ -84,7 +84,7 @@ export default class Mii {
   hatFavoriteColor!: number;
   hatType!: number;
   height!: number;
-  hideNose!: number;
+  wigType!: number;
   moleScale!: number;
   moleType!: number;
   moleX!: number;
@@ -130,6 +130,8 @@ export default class Mii {
         tempArray = allocateArray(48, input);
         data = { ...EmptyMiiCreatorV4Data(), ...StudioData.unpack(tempArray) };
         data.originPlatform = MiiCreatorOriginPlatform.Mii_Creator_v4;
+        data.nickname = "Mii";
+        data.creator = "";
         break;
       // 74/76 byte RFLStoreData - .rsd
       case 74:
@@ -263,7 +265,7 @@ export default class Mii {
       hatFavoriteColor: this.hatFavoriteColor,
       hatType: this.hatType,
       height: this.height,
-      hideNose: this.hideNose,
+      wigType: this.wigType,
       moleScale: this.moleScale,
       moleType: this.moleType,
       moleX: this.moleX,
@@ -364,7 +366,7 @@ export default class Mii {
     this.hatCommonColor = data.hatCommonColor;
     this.hatType = data.hatType;
     this.height = data.height;
-    this.hideNose = data.hideNose;
+    this.wigType = data.wigType;
     this.moleScale = data.moleScale;
     this.moleType = data.moleType;
     this.moleX = data.moleX;

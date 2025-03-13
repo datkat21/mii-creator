@@ -359,6 +359,7 @@ export class Mii3DScene {
           break;
         case false:
           for (const [_, anim] of this.anim) {
+            anim.reset();
             anim.timeScale = 0;
           }
           break;
@@ -405,7 +406,9 @@ export class Mii3DScene {
         break;
     }
 
-    this.#controls.zoomTo(zoomValue, true);
+    if (this.setupType !== SetupType.Screenshot) {
+      this.#controls.zoomTo(zoomValue, true);
+    } else this.#controls.zoomTo(1);
   }
   // copied from three.js manual code lol
   resizeRendererToDisplaySize(width: number, height: number) {
@@ -845,7 +848,7 @@ export class Mii3DScene {
       bodyN: THREE.Object3D<THREE.Object3DEventMap>,
       type: string
     ) => {
-      const isWiiUShader =
+      const hasShaderApplied =
         // (shaderSetting.startsWith("wiiu") ||
         //   shaderSetting === "lightDisabled") &&
         this.shaderOverride === false;
@@ -854,16 +857,18 @@ export class Mii3DScene {
       const nBody = bodyN
         .getObjectByName(type)!
         .getObjectByName("body_" + type)! as THREE.Mesh;
-      if (isWiiUShader) {
-        (nBody.material as THREE.ShaderMaterial).uniforms.u_const1.value =
-          new THREE.Vector4(...this.getShirtColor());
+      if (hasShaderApplied) {
+        (nBody.material as any).color = new THREE.Color(
+          ...this.getShirtColor()
+        );
       }
       const nLegs = bodyN
         .getObjectByName(type)!
         .getObjectByName("legs_" + type)! as THREE.Mesh;
-      if (isWiiUShader)
-        (nLegs.material as THREE.ShaderMaterial).uniforms.u_const1.value =
-          new THREE.Vector4(...this.getPantsColor());
+      if (hasShaderApplied)
+        (nLegs.material as any).color = new THREE.Color(
+          ...this.getPantsColor()
+        );
 
       if (this.shaderOverride) {
         if (this.simpleShaderLegacyColors === false) {
@@ -902,7 +907,7 @@ export class Mii3DScene {
             desiredColor = MiiSwitchSkinColorSRGB[this.mii.facelineColor];
           }
 
-          if (isWiiUShader) {
+          if (hasShaderApplied) {
             (nHands.material as THREE.ShaderMaterial).uniforms.u_const1.value =
               new THREE.Vector4(...desiredColor, 1);
           } else if (this.shaderOverride) {

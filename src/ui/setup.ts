@@ -26,7 +26,7 @@ export async function setupUi() {
 
   // displayUpdateNotice();
 
-  function showFirefoxNotice() {
+  function showBrowserWarning() {
     if (
       navigator.userAgent.includes("Firefox") &&
       sessionStorage.getItem("seen-firefox-notice") === null
@@ -41,24 +41,50 @@ export async function setupUi() {
         ...buttonsOkCancel
       );
     }
+    if (
+      navigator.userAgent.indexOf("Safari") != -1 &&
+      navigator.userAgent.indexOf("Chrome") == -1 /*&&
+      sessionStorage.getItem("seen-safari-notice") === null*/
+    ) {
+      // sessionStorage.setItem("seen-safari-notice", "yes");
+      Modal.modal(
+        __("Warning"),
+        __(
+          "You're using Mii Creator under Safari. Safari on iOS or iPadOS may experience instability with Mii Creator, causing the page to crash and refresh randomly. Some checks have been enabled to try and prevent the page from crashing right now. You have been warned."
+        ),
+        "body",
+        ...buttonsOkCancel
+      );
+    }
+  }
+
+  if (
+    navigator.userAgent.indexOf("Safari") != -1 &&
+    navigator.userAgent.indexOf("Chrome") == -1
+  ) {
+    //@ts-expect-error
+    window.browserMitigations = true;
+    // alert("safari check PASSED");
+  } else {
+    // alert("safari check FAILED");
   }
 
   Modal.modal(
     __("Warning"),
     __(
-      "You're using a BETA version of Mii Creator. Some features in development have been disabled, and bugs/glitches may occur."
+      "You're using a BETA version of Mii Creator. Some features in development have been disabled, and bugs/glitches can occur.\n\n• Special Miis have been changed.\n• QR codes made from this version of Mii Creator can't be scanned back in.\n• Your Mii library now automatically syncs with the server and across devices."
     ),
     "body",
     {
       text: "Cancel",
       callback(e) {
-        showFirefoxNotice();
+        showBrowserWarning();
       }
     },
     {
       text: __("OK"),
       callback() {
-        showFirefoxNotice();
+        showBrowserWarning();
       }
     }
   );
@@ -290,5 +316,5 @@ export async function setupUi() {
 
   // debugging options
   window.localforage = localforage;
-  window.Mii = Mii;
+  // window.Mii = Mii;
 }

@@ -41,7 +41,7 @@ const getSetting = async (key: string) => {
 
   // hack?
   if (value == null && key === "shaderType") {
-    return "miitomo";
+    return "wiiu";
   }
   return value;
 };

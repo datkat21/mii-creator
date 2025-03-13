@@ -140,7 +140,7 @@ export async function customRender(miiData: Mii) {
   let configuration = {
     fov: 30,
     pose: 0,
-    expression: 0,
+    expression: "0",
     renderWidth: 720,
     renderHeight: 720,
     animSpeed: 100
@@ -170,9 +170,12 @@ export async function customRender(miiData: Mii) {
   const e: Record<string, FeatureSetEntry> = {
     camera: {
       label: __("Camera"),
-      header: __(
-        "Use mouse or touch to move the camera around.\nUsing touch, rotate the camera around with one finger, and drag with two fingers to pan. Pinch with two fingers to zoom.\nIf you like this site, please consider sharing it with others and credit me or the site when you post your renders! 🙂"
+      header: new Html("span").html(
+        __(
+          "Use mouse or touch to move the camera around.\nUsing touch, rotate the camera around with one finger, and drag with two fingers to pan. Pinch with two fingers to zoom.\nIf you like this site, <b>PLEASE</b> consider sharing it with others by <b>crediting the site</b> when you post your renders! 😉"
+        )
       ),
+      headerIsHtml: true,
       items: [
         {
           type: FeatureSetType.Slider,
@@ -305,7 +308,7 @@ export async function customRender(miiData: Mii) {
           // easter egg !!!!!
           const mii = new Mii(
             parseHexOrB64ToUint8Array(
-              "A0EAwAAAAAAAAAAAgP9wmS/5Fhz6rQAAAABkAHUAbQBtAHkAAAAAAAAAAAAAAEBAEgAeARJoYxoHA2YWIRQTZgwAAAEAUkhQTQBpAGkAQwByAGUAYQB0AG8AcgAAAK6gAAAICAAAAAAAAGQA"
+              "BAUajXYYt5uiVoD/cJkq8RYY+sFNAGkAaQBDAHIAZQBhAHQAbwByAGQAdQBtAG0AeQAAAAAAAAAAAAAACAAAAAAAQAMACAYDBwMLCAMEEgMNAAAJAGMAAAAACAQACgEAHv///0AABAACFAMTAxMMBAAAAQEKX/8A/wEA"
             )
           );
           importMiiConfirmation(mii, __("Mii Creator (Special Mii)"));
@@ -486,7 +489,7 @@ export async function customRender(miiData: Mii) {
   let oldConfiguration: any = {
     fov: 30,
     pose: 0,
-    expression: 0,
+    expression: "0",
     renderWidth: 720,
     renderHeight: 720,
     animSpeed: 1
@@ -507,9 +510,13 @@ export async function customRender(miiData: Mii) {
       );
     }
 
-    const expr = expressionTable.find((e) => e.id === configuration.expression);
+    const expr = expressionTable.find(
+      (e) => e.id === parseInt(configuration.expression as any as string)
+    );
+    // console.log(configuration);
 
-    if (expr)
+    if (expr) {
+      // console.log(expr);
       if (typeof expr.modifier !== "undefined") {
         switch (expr.modifier) {
           case ExpressionModifier.HideNose:
@@ -555,6 +562,7 @@ export async function customRender(miiData: Mii) {
           m.visible = true;
         });
       }
+    }
 
     const pose = "Pose." + String(configuration.pose).padStart(2, "0");
 
@@ -625,51 +633,52 @@ export async function customRender(miiData: Mii) {
   }
 
   async function save3DModel() {
-    const shaderSetting = await getSetting("shaderType");
+    alert("This option doesn't work at the moment, please try again later.");
+    // const shaderSetting = await getSetting("shaderType");
 
-    if (shaderSetting === "none") {
-      return;
-    }
+    // if (shaderSetting === "none") {
+    //   return;
+    // }
 
-    // fix up the materials
-    const mats = await traverse3DMaterialFix(scene);
-    let i = 0;
+    // // fix up the materials
+    // const mats = await traverse3DMaterialFix(scene);
+    // let i = 0;
 
-    const exporter = new GLTFExporter();
-    exporter.parse(
-      scene.getScene(),
-      (gltf) => {
-        console.log("gltf", gltf);
-        if (gltf instanceof ArrayBuffer) {
-          saveArrayBuffer(
-            gltf,
-            `${miiData.nickname}_${__("all_body")}_${new Date().toJSON()}.glb`
-          );
-        }
-        if (shouldClose) {
-          scene.shutdown();
-          parent.cleanup();
-          modal.qs("button")?.elm.click();
-        } else {
-          // Revert back all materials.
-          i = 0;
-          scene.getScene().traverse((o) => {
-            if ((o as Mesh).isMesh !== true) return;
+    // const exporter = new GLTFExporter();
+    // exporter.parse(
+    //   scene.getScene(),
+    //   (gltf) => {
+    //     console.log("gltf", gltf);
+    //     if (gltf instanceof ArrayBuffer) {
+    //       saveArrayBuffer(
+    //         gltf,
+    //         `${miiData.nickname}_${__("all_body")}_${new Date().toJSON()}.glb`
+    //       );
+    //     }
+    //     if (shouldClose) {
+    //       scene.shutdown();
+    //       parent.cleanup();
+    //       modal.qs("button")?.elm.click();
+    //     } else {
+    //       // Revert back all materials.
+    //       i = 0;
+    //       scene.getScene().traverse((o) => {
+    //         if ((o as Mesh).isMesh !== true) return;
 
-            const m = o as Mesh;
+    //         const m = o as Mesh;
 
-            m.material = mats.get(i);
+    //         m.material = mats.get(i);
 
-            i++;
-          });
-        }
-      },
-      (error) => {
-        console.error("Oops, something went wrong:", error);
-      },
-      {
-        binary: true
-      }
-    );
+    //         i++;
+    //       });
+    //     }
+    //   },
+    //   (error) => {
+    //     console.error("Oops, something went wrong:", error);
+    //   },
+    //   {
+    //     binary: true
+    //   }
+    // );
   }
 }

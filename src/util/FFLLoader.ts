@@ -42,106 +42,107 @@ let sendMessageToWorker: (data: any) => Promise<any>;
 
 export async function prepareFFL() {
   // Depending on config, load FFL.js
-  if (Config.renderer.useRendererServer === false) {
-    var m = Modal.modal(
-      __("Notice"),
-      // TODO: Make a better message? 😅
-      // Displayed in a modal while loading resource files.
-      __("Mii Creator is loading assets, please wait...")
-    );
+  if (Config.renderer.useRendererServer !== false) {
+    return console.log("why do you");
+  }
 
-    FFLModule = (await import("../external/ffl.js/ffl-emscripten.js")).default;
+  var m = Modal.modal(
+    __("Notice"),
+    // TODO: Make a better message? 😅
+    // Displayed in a modal while loading resource files.
+    __("Mii Creator is loading assets, please wait...")
+  );
 
-    FFLModule = await FFLModule({
-      locateFile: (path: string) => {
-        return "/dist/" + path;
-      }
-    });
+  FFLModule = (await import("../external/ffl.js/ffl-emscripten.js")).default;
 
-    console.log(FFLModule);
-    console.log("We've got FFL!");
+  FFLModule = await FFLModule({
+    locateFile: (path: string) => {
+      return "/dist/" + path;
+    }
+  });
 
-    // Import FFL.JS (c) 2025 Arian K. macOS Edition
-    await loadBodyModels();
-    await loadHatModels();
-    let { module } = await initializeFFLWithResource(
-      FFLModule,
-      Config.renderer.fflResourcePath[await getSetting("resourceType")]
-    );
-    FFLModule = module;
+  console.log(FFLModule);
+  console.log("We've got FFL!");
 
-    // TODO: CLEAN THIS UP so all the wasm/worker loading logic isn't in main.ts??? this was just a temp spot since its before everything else loads
-    // Detect and use Web Workers/OffscreenCanvas if available, to optimize icon generation
-    if (window.Worker) {
-      if (window.OffscreenCanvas) {
-        const tempOffscreenCanvas = document.createElement("canvas");
-        const offscreenCanvas =
-          tempOffscreenCanvas.transferControlToOffscreen();
-        FFLWorker = new Worker("./dist/worker.js", { type: "module" });
+  // Import FFL.JS (c) 2025 Arian K. macOS Edition
+  await loadBodyModels();
+  await loadHatModels();
+  let { module } = await initializeFFLWithResource(
+    FFLModule,
+    Config.renderer.fflResourcePath[await getSetting("resourceType")]
+  );
+  FFLModule = module;
 
-        // chat gpt
-        sendMessageToWorker = (data: any) => {
-          return new Promise((resolve, reject) => {
-            const requestId = Math.random().toString(36).substring(7);
+  // TODO: CLEAN THIS UP so all the wasm/worker loading logic isn't in main.ts??? this was just a temp spot since its before everything else loads
+  // Detect and use Web Workers/OffscreenCanvas if available, to optimize icon generation
+  if (window.Worker) {
+    if (window.OffscreenCanvas) {
+      const tempOffscreenCanvas = document.createElement("canvas");
+      const offscreenCanvas = tempOffscreenCanvas.transferControlToOffscreen();
+      FFLWorker = new Worker("./dist/worker.js", { type: "module" });
 
-            function handleMessage(event: MessageEvent) {
-              const { id, result, error } = event.data;
-              if (id === requestId) {
-                FFLWorker!.removeEventListener("message", handleMessage);
-                if (error) {
-                  Notify.show("Worker error", error);
-                  resolve(null);
-                } else resolve(result);
-              }
+      // chat gpt
+      sendMessageToWorker = (data: any) => {
+        return new Promise((resolve, reject) => {
+          const requestId = Math.random().toString(36).substring(7);
+
+          function handleMessage(event: MessageEvent) {
+            const { id, result, error } = event.data;
+            if (id === requestId) {
+              FFLWorker!.removeEventListener("message", handleMessage);
+              if (error) {
+                Notify.show("Worker error", error);
+                resolve(null);
+              } else resolve(result);
             }
+          }
 
-            FFLWorker!.addEventListener("message", handleMessage);
-            FFLWorker!.postMessage({ id: requestId, ...data });
-          });
-        };
-
-        // unfortunately, the worker has to load ffl wasm on its own
-        FFLWorker.postMessage(
-          {
-            type: "Init",
-            resourcePath:
-              Config.renderer.fflResourcePath[await getSetting("resourceType")],
-            offscreenCanvas,
-            devicePixelRatio: window.devicePixelRatio
-          } as FFLWorkerInitializeMessage,
-          // transfer the offscreen canvas over
-          [offscreenCanvas]
-        );
-        await new Promise<void>((resolve) => {
-          FFLWorker!.onmessage = (e) => {
-            if (e.data.ready) {
-              resolve();
-            }
-          };
+          FFLWorker!.addEventListener("message", handleMessage);
+          FFLWorker!.postMessage({ id: requestId, ...data });
         });
-      } else {
-        Modal.modal(
-          __("Notice"),
-          __(
-            "Your browser doesn't support OffscreenCanvas, so Mii Creator may experience lag."
-          ),
-          "body",
-          ...buttonsOkCancel
-        );
-      }
+      };
+
+      // unfortunately, the worker has to load ffl wasm on its own
+      FFLWorker.postMessage(
+        {
+          type: "Init",
+          resourcePath:
+            Config.renderer.fflResourcePath[await getSetting("resourceType")],
+          offscreenCanvas,
+          devicePixelRatio: window.devicePixelRatio
+        } as FFLWorkerInitializeMessage,
+        // transfer the offscreen canvas over
+        [offscreenCanvas]
+      );
+      await new Promise<void>((resolve) => {
+        FFLWorker!.onmessage = (e) => {
+          if (e.data.ready) {
+            resolve();
+          }
+        };
+      });
     } else {
       Modal.modal(
         __("Notice"),
         __(
-          "Your browser doesn't support Web Workers, so Mii Creator may experience lag."
+          "Your browser doesn't support OffscreenCanvas, so Mii Creator may experience lag."
         ),
         "body",
         ...buttonsOkCancel
       );
     }
-
-    console.log("Ready!");
-
-    closeModal(m);
+  } else {
+    Modal.modal(
+      __("Notice"),
+      __(
+        "Your browser doesn't support Web Workers, so Mii Creator may experience lag."
+      ),
+      "body",
+      ...buttonsOkCancel
+    );
   }
+
+  console.log("Ready!");
+
+  closeModal(m);
 }

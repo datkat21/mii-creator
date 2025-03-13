@@ -55,13 +55,16 @@ class FFLShaderToonMaterial extends FFLShaderMaterial {
     super(options);
     // Adjust material
     (this as any).uniforms.u_light_dir.value = cLightDirGlossy;
-    (this as any).uniforms.u_material_ambient.value = FFLToonMaterial.ambient;
-    (this as any).uniforms.u_material_diffuse.value = FFLToonMaterial.diffuse;
-    (this as any).uniforms.u_material_specular.value = FFLToonMaterial.specular;
-    (this as any).uniforms.u_material_specular_power.value =
-      FFLToonMaterial.specularPower;
-    (this as any).uniforms.u_material_specular_mode.value =
-      FFLToonMaterial.specularMode;
+    if ((this as any).uniforms.u_material_ambient) {
+      (this as any).uniforms.u_material_ambient.value = FFLToonMaterial.ambient;
+      (this as any).uniforms.u_material_diffuse.value = FFLToonMaterial.diffuse;
+      (this as any).uniforms.u_material_specular.value =
+        FFLToonMaterial.specular;
+      (this as any).uniforms.u_material_specular_power.value =
+        FFLToonMaterial.specularPower;
+      (this as any).uniforms.u_material_specular_mode.value =
+        FFLToonMaterial.specularMode;
+    }
   }
 }
 
