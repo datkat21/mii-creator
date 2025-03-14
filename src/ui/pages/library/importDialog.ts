@@ -1,7 +1,13 @@
 import localforage from "localforage";
 import type Mii from "../../../class/MiiData";
 import Modal from "../../components/Modal";
-import { _shutdown, Library, getMiiIcon, newMiiId } from "../Library";
+import {
+  _shutdown,
+  Library,
+  getMiiIcon,
+  newMiiId,
+  pushToServer
+} from "../Library";
 import Html from "@datkat21/html";
 import { dataToBase64 } from "../../../util/dataConvert";
 
@@ -25,6 +31,7 @@ export async function importMiiConfirmation(
       async callback(e) {
         const id = await newMiiId();
         await localforage.setItem(id, dataToBase64(mii.export()));
+        await pushToServer();
         _shutdown()();
         Library(id);
       }

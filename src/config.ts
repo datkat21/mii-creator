@@ -66,7 +66,7 @@ export const Config = {
     // ^^ scaleLimit, scaleLimitClampY, scaleApply
   },
   version: {
-    string: "v1.0.0",
+    string: "v1.0.0 r1",
     name:
       // Current version string name ("Patch Update", "Minor Update", "Major Update")
       // __("Major Update"),

@@ -230,6 +230,34 @@ let shutdown: () => any = () => {
   console.log("Shutdown was called but was not set yet!");
 };
 export const _shutdown = () => shutdown;
+export async function pushToServer() {
+  const miis = await Promise.all(
+    (await localforage.keys())
+      .filter((k) => k.startsWith("mii-"))
+      .sort((a, b) => Number(a.split("-")[1]!) - Number(b.split("-")[1]!))
+      .map(async (k) => ({
+        id: k,
+        mii: (await localforage.getItem(k)) as string
+      }))
+  );
+
+  // Push
+  await fetch("/api/sync_library", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ miis })
+  })
+    .then((e) => {
+      if (!e.ok) {
+        alert("Failed to sync library data: " + e);
+        console.error("Failed to sync library data: " + e);
+      }
+    })
+    .catch((e) => {
+      alert("Failed to sync library data: " + e);
+      console.error("Failed to sync library data: " + e);
+    });
+}
 export async function Library(highlightMiiId?: string) {
   currentShader = await getSetting("shaderType");
   currentBodyModel = await getSetting("bodyModel");
@@ -252,15 +280,31 @@ export async function Library(highlightMiiId?: string) {
 
   const libraryList = new Html("div").class("library-list").appendTo(container);
 
-  const miis = await Promise.all(
-    (await localforage.keys())
-      .filter((k) => k.startsWith("mii-"))
-      .sort((a, b) => Number(a.split("-")[1]!) - Number(b.split("-")[1]!))
-      .map(async (k) => ({
-        id: k,
-        mii: (await localforage.getItem(k)) as string
-      }))
-  );
+  // Pull
+  let miisJson = await fetch("/api/sync_library", {
+    headers: { accept: "application/json" }
+  }).then((j) => j.json());
+
+  let miis: any = [];
+
+  if (miisJson === null) {
+    miisJson = [];
+
+    // Fallback to checking your local storage data
+    miis = await Promise.all(
+      (await localforage.keys())
+        .filter((k) => k.startsWith("mii-"))
+        .sort((a, b) => Number(a.split("-")[1]!) - Number(b.split("-")[1]!))
+        .map(async (k) => ({
+          id: k,
+          mii: (await localforage.getItem(k)) as string
+        }))
+    );
+  } else {
+    miis = miisJson;
+  }
+
+  console.log(miisJson);
 
   if (miis.length === 0) {
     libraryList.append(
@@ -485,6 +529,7 @@ export async function Library(highlightMiiId?: string) {
                 {
                   async callback(e) {
                     await localforage.removeItem(mii.id);
+                    await pushToServer();
                     await shutdown();
                     Library();
                   },

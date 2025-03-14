@@ -6,7 +6,8 @@ import {
   _shutdown,
   Library,
   getMiiIcon,
-  type MiiLocalforage
+  type MiiLocalforage,
+  pushToServer
 } from "../Library";
 import Html from "@datkat21/html";
 import { miiRender } from "./render/renderMenu";
@@ -43,6 +44,7 @@ export const miiSelect = (
               0,
               async (m, shouldSave) => {
                 if (shouldSave === true) await localforage.setItem(mii.id, m);
+                await pushToServer();
                 Library();
               },
               mii.mii
@@ -140,6 +142,7 @@ export const miiSelect = (
                     setTimeout(async () => {
                       closeModal();
                       await localforage.removeItem(mii.id);
+                      await pushToServer();
                       await _shutdown()();
                       Library();
                     }, 1000);
@@ -190,6 +193,7 @@ export const miiSelect = (
                 type: "danger",
                 async callback(e) {
                   await localforage.removeItem(mii.id);
+                  await pushToServer();
                   await _shutdown()();
                   Library();
                 }

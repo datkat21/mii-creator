@@ -13,7 +13,8 @@ import {
   Library,
   getMiiIcon,
   newMiiId,
-  playLoadSound
+  playLoadSound,
+  pushToServer
 } from "../../Library";
 import { miiCreateDialog } from "./_dialog";
 import { dataToBase64 } from "../../../../util/dataConvert";
@@ -386,6 +387,7 @@ export function confirmOrReviseMii(
           async (m, shouldSave) => {
             if (shouldSave === true)
               await localforage.setItem(await newMiiId(), m);
+            await pushToServer();
             Library();
           },
           randomMiiB64

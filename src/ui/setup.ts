@@ -20,6 +20,39 @@ export async function setupUi() {
   let mm = getMusicManager();
   getSoundManager();
 
+  let shownSessionModal = false;
+  // Check session every 60s
+  setInterval(() => {
+    console.log("checking session..");
+    fetch("/api/session")
+      .then((e) => {
+        if (!e.ok) {
+          // not ok
+          showSessionModal();
+        }
+      })
+      .catch((e) => {
+        // also not ok
+        showSessionModal();
+      });
+  }, 45_000);
+
+  function showSessionModal() {
+    if (shownSessionModal) return;
+    shownSessionModal = true;
+    Modal.modal(
+      __("Warning"),
+      __("Mii Creator has lost connection to the server. Click OK to reload."),
+      "body",
+      {
+        text: "OK",
+        callback(e) {
+          location.reload();
+        }
+      }
+    );
+  }
+
   updateSettings(true);
 
   await prepareFFL();

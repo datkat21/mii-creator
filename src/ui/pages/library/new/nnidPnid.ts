@@ -3,7 +3,7 @@ import { MiiEditor } from "../../../../class/MiiEditor";
 import { Config } from "../../../../config";
 import Loader from "../../../components/Loader";
 import Modal from "../../../components/Modal";
-import { _shutdown, Library, newMiiId } from "../../Library";
+import { _shutdown, Library, newMiiId, pushToServer } from "../../Library";
 import { miiCreateDialog } from "./_dialog";
 
 import { _ } from "../../../../util/Lang";
@@ -38,6 +38,7 @@ export const newFromNNID = async () => {
     0,
     async (m, shouldSave) => {
       if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
+      await pushToServer();
       Library();
     },
     result.data
@@ -74,6 +75,7 @@ export const newFromPNID = async () => {
     0,
     async (m, shouldSave) => {
       if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
+      await pushToServer();
       Library();
     },
     (await pnid.json()).data

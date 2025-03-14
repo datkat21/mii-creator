@@ -1,6 +1,6 @@
 import Html from "@datkat21/html";
 import Modal from "../../../components/Modal";
-import { _shutdown, Library, newMiiId } from "../../Library";
+import { _shutdown, Library, newMiiId, pushToServer } from "../../Library";
 import Mii from "../../../../class/MiiData";
 import localforage from "localforage";
 import { newFromScratch } from "./fromScratch";
@@ -94,6 +94,7 @@ export const miiCreateDialog = () => {
                     id = await newMiiId();
 
                     await localforage.setItem(id, miiDataToSave);
+                    await pushToServer();
                     processed++;
                     resolve();
                   };
@@ -141,6 +142,7 @@ export const miiCreateDialog = () => {
         let id = await newMiiId();
 
         await localforage.setItem(id, miiDataToSave);
+        await pushToServer();
         _shutdown()();
         Library(id);
       }

@@ -1,7 +1,7 @@
 import localforage from "localforage";
 import { MiiEditor, MiiGender } from "../../../../class/MiiEditor";
 import Modal from "../../../components/Modal";
-import { _shutdown, Library, newMiiId } from "../../Library";
+import { _shutdown, Library, newMiiId, pushToServer } from "../../Library";
 import { miiCreateDialog } from "./_dialog";
 import EditorIcons from "../../../../constants/EditorIcons";
 import Html from "@datkat21/html";
@@ -15,6 +15,7 @@ export const newFromScratch = () => {
       _shutdown()();
       new MiiEditor(gender, async (m, shouldSave) => {
         if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
+        await pushToServer();
         Library();
       });
     };
