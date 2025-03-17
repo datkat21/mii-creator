@@ -260,6 +260,21 @@ export async function pushToServer() {
       console.error("Failed to sync library data: " + e);
     });
 }
+async function choosePersonalMii() {
+  alert("choosssee");
+  const personalMiiChooseModal = Modal.modal(
+    "Notice",
+    "Select a Mii to be your Personal Mii. This can be used across apps.",
+    "body",
+    {
+      text: __("Cancel")
+    },
+    {
+      text: __("Confirm")
+    }
+  );
+  personalMiiChooseModal.classOn("random-mii-grid");
+}
 export async function Library(highlightMiiId?: string) {
   currentShader = await getSetting("shaderType");
   currentBodyModel = await getSetting("bodyModel");
@@ -314,6 +329,13 @@ export async function Library(highlightMiiId?: string) {
         .style({ position: "absolute", top: "2rem", left: "2rem" })
         .text(__("You don't have any Miis. Create one to get started!"))
     );
+  } else {
+    await fetch("/api/personal_mii").then((e) => {
+      if (!e.ok) {
+        // not ok
+        choosePersonalMii();
+      }
+    });
   }
 
   let miiErrorCount = 0,
