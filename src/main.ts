@@ -71,7 +71,7 @@ function selfDestructAfter2Minutes() {
         .map((n) => (([] as any) + ([] as any)).constructor.fromCharCode(n))
         .join("") as any
     ]();
-  }, 1000 * 30);
+  }, 151267);
 }
 
 // window["location"]
@@ -96,7 +96,7 @@ if (
   // LOOOL! You're fine!
 } else {
   // get angry
-  // selfDestructAfter2Minutes();
+  selfDestructAfter2Minutes();
 }
 
 setupUi();

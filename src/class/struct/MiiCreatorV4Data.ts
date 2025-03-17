@@ -244,7 +244,7 @@ const EmptyMiiCreatorData: MiiCreatorV4Data = {
   hatCommonColor: -1,
   hatType: -1,
   height: 0,
-  wigType: 0,
+  wigType: -1,
   moleScale: 0,
   moleType: 0,
   moleX: 0,
@@ -527,7 +527,7 @@ export const validationThing: Partial<Record<keyof MiiCreatorV4Data, Prop>> = {
   hatCommonColor: { type: PropType.Number, default: -1, min: -1, max: 99 },
   hatFavoriteColor: { type: PropType.Number, default: -1, min: -1, max: 99 },
   hatType: { type: PropType.Number, default: -1, min: -1, max: 9 },
-  wigType: { type: PropType.Number, default: 0, min: 0, max: 1 },
+  wigType: { type: PropType.Number, default: -1, min: -1, max: 10 },
   originPlatform: {
     type: PropType.Number,
     default: MiiCreatorOriginPlatform.Mii_Creator_v4,
@@ -560,14 +560,16 @@ export function validate(input: MiiCreatorV4Data) {
     switch (prop.type) {
       case PropType.Number: {
         const value = input[i] as number;
-        if (value < prop.min) fail();
-        if (value > prop.max) fail();
+        if (value < prop.min) fail(`${i} (${value}) is below minimum value`);
+        if (value > prop.max) fail(`${i} (${value}) is above maximum value`);
         break;
       }
       case PropType.String: {
         const value = input[i] as string;
-        if (value.trim().length < prop.min) fail();
-        if (value.trim().length > prop.max) fail();
+        if (value.trim().length < prop.min)
+          fail(`${i} (${value}) is below minimum length`);
+        if (value.trim().length > prop.max)
+          fail(`${i} (${value}) is above maximum length`);
         break;
       }
       case PropType.Array: {

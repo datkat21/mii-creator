@@ -204,6 +204,7 @@ export default class Mii {
     if (data.pantsColor === 255) data.pantsColor = -1;
     if (data.personality === 255) data.personality = -1;
     if (data.shirtColor === 255) data.shirtColor = -1;
+    if (data.wigType === 255) data.wigType = -1;
 
     // console.log("new data:", data);
 
@@ -309,6 +310,7 @@ export default class Mii {
         `${this.#getNicknameSafe()} has invalid data:`,
         verify.reasons.join(", ")
       );
+      console.warn(this.export());
       throw new Error(
         `Mii data for ${this.nickname} is not valid: ${verify.reasons.join(
           ", "
@@ -398,10 +400,12 @@ export default class Mii {
 
       if (!createId.flag_normal) {
         this.special = 1;
+        // console.warn("Special flag is being overridden due to CreateID.");
       }
       if (createId.flag_temporary) {
         this.special = 0;
         this.temporary = 1;
+        // console.warn("Temporary flag is being set due to CreateID.");
       }
     }
 
@@ -411,6 +415,7 @@ export default class Mii {
   /** outputs in specific format */
   export(outputFormat: MiiDataExportType = "miic"): Uint8Array {
     this.validate();
+    this.fixInternalIDs();
     switch (outputFormat) {
       case "rsd":
         throw new Error("RSD format is not yet supported.");
@@ -467,6 +472,21 @@ export default class Mii {
     // If empty, randomize AuthorID value
     if (Array.from(authorId).every((e) => e === 0)) {
       this.authorId = randomizeUint8Array(authorId);
+    }
+
+    // Correctly set special flag depending on special data
+    if (createId.flag_normal === 0 && this.special === 0) {
+      createId.flag_normal = 1;
+    }
+    if (createId.flag_normal === 1 && this.special === 1) {
+      createId.flag_normal = 0;
+    }
+    // this code sucks
+    if (createId.flag_temporary === 0 && this.temporary === 1) {
+      createId.flag_temporary = 1;
+    }
+    if (createId.flag_temporary === 1 && this.temporary === 0) {
+      createId.flag_temporary = 0;
     }
 
     // Re-pack CreateID value

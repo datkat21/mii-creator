@@ -107,6 +107,7 @@ export class Mii3DScene {
         antialias: true,
         preserveDrawingBuffer: true
       });
+      this.texResolution = 1024;
     } else {
       this.#renderer = new THREE.WebGLRenderer({ antialias: true });
     }
@@ -908,8 +909,8 @@ export class Mii3DScene {
           }
 
           if (hasShaderApplied) {
-            (nHands.material as THREE.ShaderMaterial).uniforms.u_const1.value =
-              new THREE.Vector4(...desiredColor, 1);
+            (nHands.material as THREE.MeshBasicMaterial).color =
+              new THREE.Color(...desiredColor);
           } else if (this.shaderOverride) {
             (nHands.material as THREE.MeshBasicMaterial).color.set(
               desiredColor[0],
@@ -982,21 +983,6 @@ export class Mii3DScene {
 
     switch (renderPart) {
       case RenderPart.Head:
-        if (head.length > 0) {
-          head.forEach((h) => {
-            // Dispose of old head materials
-            h.traverse((c) => {
-              let child = c as THREE.Mesh;
-              if (child.isMesh) {
-                child.geometry.dispose();
-                const mat = child.material as THREE.MeshBasicMaterial;
-                if (mat.map) mat.map.dispose();
-                mat.dispose();
-              }
-            });
-          });
-        }
-
         try {
           // CUSTOM APP-SPECIFIC DATA
           const tmpMii = new Mii(this.mii.export("miic"));
@@ -1066,11 +1052,19 @@ export class Mii3DScene {
           GLB.scene.scale.set(headScale, headScale, headScale);
 
           // enable shader on head
-          this.#scene.remove(...head);
-          // hack to force remove head anyways
-          this.#scene.getObjectsByProperty("name", "MiiHead").forEach((obj) => {
-            obj.parent!.remove(obj);
-          });
+          if (head) {
+            this.#scene.remove(...head);
+            // hack to force remove head anyways
+            this.#scene
+              .getObjectsByProperty("name", "MiiHead")
+              .forEach((obj) => {
+                obj.parent!.remove(obj);
+              });
+          }
+          console.debug("Adding head to scene");
+          this.resize();
+
+          this.#scene.add(GLB.scene);
 
           if (Config.renderer.useRendererServer)
             traverseAddShader(GLB.scene, this.mii);
@@ -1115,10 +1109,6 @@ export class Mii3DScene {
             }
             this.charModel = (GLB as any).CharModel;
           }
-
-          this.#scene.add(GLB.scene);
-          console.debug("Adding head to scene");
-          this.resize();
 
           // Hacky fix for head being snapped in the wrong direction for 1 frame
           if (bodyModelType === "miitomo") {

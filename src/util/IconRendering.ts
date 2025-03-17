@@ -88,6 +88,7 @@ export function createMiiRender(
           break;
         case HatType.BALD:
           mii.hairType = 30;
+          dataInput = mii.export("studioData");
           break;
       }
     }

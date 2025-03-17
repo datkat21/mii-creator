@@ -580,7 +580,8 @@ export class MiiEditor {
           nickname: this.mii.nickname,
           creator: this.mii.creator,
           ffsd: this.mii.exportBase64("ffsd"),
-          data: this.mii.exportBase64("miic")
+          data: this.mii.exportBase64("miic"),
+          studio: this.mii.exportBase64("studioData")
         }),
         method: "POST",
         headers: { "content-type": "application/json" }

@@ -151,7 +151,7 @@ export async function getMaskTex(
   const dataU8 = mii.export("studioData");
 
   const modelDesc = FFLCharModelDescDefault;
-  modelDesc.resolution = 512;
+  modelDesc.resolution = 1024;
   modelDesc.allExpressionFlag = expressionFlag;
 
   let currentCharModel: CharModel | null;
