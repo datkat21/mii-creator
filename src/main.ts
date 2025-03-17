@@ -31,6 +31,7 @@ declare global {
     Mii: any;
     mii: MiiData;
     sentryOnLoad: any;
+    eyeScleraHack: boolean;
 
     // New stuff
     // FFLShaderMaterial: FFLShaderMaterial;

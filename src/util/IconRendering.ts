@@ -45,7 +45,7 @@ export const defaultParams: Partial<RenderRequest> = {
 
 export interface RenderRequest {
   type: ViewType;
-  expression: number;
+  expression: number | number[];
   data: Uint8Array | string;
   size: number;
   characterYRotate: number;
@@ -54,6 +54,7 @@ export interface RenderRequest {
   drawBody: boolean;
   module: any;
   additionalInfo?: MiiCreatorAdditionalData;
+  texResolution?: number;
 }
 
 export const isWorker = () => typeof window === "undefined";
@@ -109,15 +110,23 @@ export function createMiiRender(
       texResolution = 2048;
     }
 
+    let expressions = [];
+
+    if (Array.isArray(request.expression)) {
+      expressions.push(...request.expression);
+    } else {
+      expressions.push(
+        isNaN(request.expression) ? FFLExpression.NORMAL : request.expression
+      );
+    }
+
     // Set up a temporary CharModel.
     const charModel = createCharModel(
       dataInput,
       {
         resolution: texResolution,
         resourceType: FFLResourceType.HIGH,
-        allExpressionFlag: makeExpressionFlag([
-          isNaN(request.expression) ? FFLExpression.NORMAL : request.expression
-        ]),
+        allExpressionFlag: makeExpressionFlag(expressions),
         modelFlag
       },
       shaderMaterial as any,
@@ -125,7 +134,15 @@ export function createMiiRender(
       false
     );
 
+    if (request.additionalInfo!.eyeSclera === 1 && mii.eyeColor !== 8) {
+      self.eyeScleraHack = true;
+    }
+
     initCharModelTextures(charModel, request.renderer);
+
+    if (request.additionalInfo!.eyeSclera === 1 && mii.eyeColor !== 8) {
+      self.eyeScleraHack = false;
+    }
 
     // Create an offscreen scene for the icon.
     const iconScene = new THREE.Scene();
@@ -143,7 +160,10 @@ export function createMiiRender(
       // --- Calculate hat color
 
       // default = current favorite color
-      hatColor = MiiFavoriteColorVec3Table[mii.favoriteColor];
+      hatColor =
+        MiiFavoriteColorVec3Table[
+          mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length
+        ];
 
       // lazy overwrite
       if (request.additionalInfo!.hatFavoriteColor !== -1) {
@@ -234,7 +254,10 @@ export function createMiiRender(
 
       iconScene.add(bodyModel);
 
-      var shirtColor = MiiFavoriteColorVec3Table[mii.favoriteColor];
+      var shirtColor =
+        MiiFavoriteColorVec3Table[
+          mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length
+        ];
 
       if (
         request.additionalInfo!.shirtColor !== -1 &&

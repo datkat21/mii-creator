@@ -9,10 +9,10 @@
   "devDependencies": {
     "@namchee/bun-plugin-strip-debug": "^1.0.4",
     "@types/bun": "latest",
-    "po2json": "^0.4.5"
+    "po2json": "^0.3.0"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.8.2"
   },
   "dependencies": {
     "@datkat21/html": "^1.2.0",

@@ -8,5 +8,6 @@ export type MiiCreatorAdditionalData =
       favorite: number;
       special: number;
       temporary: number;
+      eyeSclera: number;
     }
   | undefined;

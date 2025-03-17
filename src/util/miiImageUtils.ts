@@ -12,6 +12,19 @@ import EditorIcons from "../constants/EditorIcons";
 import { MiiCreatorV4AppendData } from "../class/struct/MiiCreatorV4Data";
 import { getFFLWorkerMakeIcon } from "./FFLLoader";
 import { ViewType } from "./camera.js";
+import {
+  ToVer3EyeColorTable,
+  ToVer3FacelineColorTable,
+  ToVer3GlassColorTable,
+  ToVer3GlassTypeTable,
+  ToVer3HairColorTable,
+  ToVer3MouthColorTable,
+  Ver3EyeColorTable,
+  Ver3FacelineColorTable,
+  Ver3GlassColorTable,
+  Ver3HairColorTable,
+  Ver3MouthColorTable
+} from "../constants/ColorTables.js";
 
 const makeQrCodeImage = async (mii: Mii): Promise<HTMLImageElement> => {
   let convertedVer3Data: Uint8Array, ver3QRData: Uint8Array | any[];
@@ -89,17 +102,36 @@ export const QRCodeCanvas = async (
   } else {
     // TODO
     // render
+    let mii2 = new Mii(mii.export("studioData"));
+
+    mii2.beardColor = Ver3HairColorTable[ToVer3HairColorTable[mii2.beardColor]];
+    mii2.eyeColor = Ver3EyeColorTable[ToVer3EyeColorTable[mii2.eyeColor]];
+    mii2.eyebrowColor =
+      Ver3HairColorTable[ToVer3HairColorTable[mii2.eyebrowColor]];
+    mii2.facelineColor =
+      Ver3FacelineColorTable[ToVer3FacelineColorTable[mii2.facelineColor]];
+    mii2.glassColor =
+      Ver3GlassColorTable[ToVer3GlassColorTable[mii2.glassColor]];
+    mii2.glassType = ToVer3GlassTypeTable[mii2.glassType];
+    mii2.hairColor = Ver3HairColorTable[ToVer3HairColorTable[mii2.hairColor]];
+    mii2.mouthColor =
+      Ver3MouthColorTable[ToVer3MouthColorTable[mii2.mouthColor]];
+    mii2.facePaintColor = -1;
+    mii2.hatType = -1;
+    mii2.eyeSclera = 0;
+
     const renderResult = await getFFLWorkerMakeIcon({
-      data: mii.export("studioData"),
+      data: mii2.export("studioData"),
       additionalInfo: {
-        favorite: mii.favorite,
-        hatCommonColor: mii.hatCommonColor,
-        hatFavoriteColor: mii.hatFavoriteColor,
-        hatType: mii.hatType,
-        pantsColor: mii.pantsColor,
-        shirtColor: mii.shirtColor,
-        special: mii.special,
-        temporary: mii.temporary
+        favorite: mii2.favorite,
+        hatCommonColor: mii2.hatCommonColor,
+        hatFavoriteColor: mii2.hatFavoriteColor,
+        hatType: mii2.hatType,
+        pantsColor: mii2.pantsColor,
+        shirtColor: mii2.shirtColor,
+        special: mii2.special,
+        temporary: mii2.temporary,
+        eyeSclera: mii2.eyeSclera
       },
       size: 720,
       expression: 0,

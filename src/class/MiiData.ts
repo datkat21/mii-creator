@@ -61,6 +61,7 @@ export default class Mii {
   eyeColor!: number;
   eyeRotate!: number;
   eyeScale!: number;
+  eyeSclera!: number;
   eyeType!: number;
   eyeX!: number;
   eyeY!: number;
@@ -186,7 +187,8 @@ export default class Mii {
       // mii creator v4 data
       case 122:
       case 123:
-        tempArray = allocateArray(123, input);
+      case 124:
+        tempArray = allocateArray(124, input);
         data = MiiCreatorV4Data.unpack(tempArray);
         break;
       default:
@@ -243,6 +245,7 @@ export default class Mii {
       eyeColor: this.eyeColor,
       eyeRotate: this.eyeRotate,
       eyeScale: this.eyeScale,
+      eyeSclera: this.eyeSclera,
       eyeType: this.eyeType,
       eyeX: this.eyeX,
       eyeY: this.eyeY,
@@ -344,6 +347,7 @@ export default class Mii {
     this.eyeColor = data.eyeColor;
     this.eyeRotate = data.eyeRotate;
     this.eyeScale = data.eyeScale;
+    this.eyeSclera = data.eyeSclera;
     this.eyeType = data.eyeType;
     this.eyeX = data.eyeX;
     this.eyeY = data.eyeY;
@@ -414,7 +418,7 @@ export default class Mii {
 
   /** outputs in specific format */
   export(outputFormat: MiiDataExportType = "miic"): Uint8Array {
-    this.validate();
+    // this.validate();
     this.fixInternalIDs();
     switch (outputFormat) {
       case "rsd":

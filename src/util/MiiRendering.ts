@@ -107,7 +107,16 @@ export async function getHeadModel(
     );
 
     // Initialize textures for the new CharModel.
+
+    if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+      window.eyeScleraHack = true;
+    }
+
     initCharModelTextures(currentCharModel, rendererRef);
+
+    if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+      window.eyeScleraHack = false;
+    }
   } catch (err) {
     currentCharModel = null;
     alert(`Error creating/updating CharModel: ${err}`);
@@ -173,6 +182,10 @@ export async function getMaskTex(
     // weird workaround to promisify the texture outcome?
     img = await new Promise((resolve) => {
       // Initialize textures for the new CharModel.
+      if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+        window.eyeScleraHack = true;
+      }
+
       initCharModelTextures(
         currentCharModel!,
         rendererRef
@@ -181,6 +194,10 @@ export async function getMaskTex(
         //   resolve(dataTexture);
         // }
       );
+
+      if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+        window.eyeScleraHack = false;
+      }
 
       const target =
         currentCharModel!._maskTargets[currentCharModel!.expression]!;

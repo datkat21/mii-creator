@@ -126,7 +126,8 @@ export const getMiiIcon = async (
             shirtColor: miiData.shirtColor,
             favorite: miiData.favorite,
             special: miiData.special,
-            temporary: miiData.temporary
+            temporary: miiData.temporary,
+            eyeSclera: miiData.eyeSclera
           },
           drawBody,
           size
@@ -247,14 +248,15 @@ export async function pushToServer() {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ miis })
   })
-    .then((e) => {
+    .then(async (e) => {
       if (!e.ok) {
-        alert("Failed to sync library data: " + e);
+        const text = await e.text();
+        alert("REQ FAILED - Unable to sync library data: " + text);
         console.error("Failed to sync library data: " + e);
       }
     })
     .catch((e) => {
-      alert("Failed to sync library data: " + e);
+      alert("ERROR - Unable to sync library data: " + e);
       console.error("Failed to sync library data: " + e);
     });
 }
@@ -357,7 +359,11 @@ export async function Library(highlightMiiId?: string) {
       //   );
 
       miiContainer.style({
-        "--color": MiiFavoriteColorIconTable[miiData.favoriteColor].top
+        "--color":
+          MiiFavoriteColorIconTable[
+            miiData.favoriteColor %
+              Object.keys(MiiFavoriteColorIconTable).length
+          ].top
       });
 
       let extraData = "";

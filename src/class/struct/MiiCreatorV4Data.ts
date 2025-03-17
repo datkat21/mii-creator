@@ -85,7 +85,8 @@ export const MiiCreatorV4Data = _.struct([
   _.uint8("regionMove"),
   _.uint8("shirtColor"),
   _.uint8("special"),
-  _.uint8("temporary")
+  _.uint8("temporary"),
+  _.uint8("eyeSclera")
 ]) as StructInstance<MiiCreatorV4Data>;
 
 export const MiiCreatorV4AppendData = _.struct([
@@ -182,6 +183,7 @@ export type MiiCreatorV4Data = {
   shirtColor: number;
   special: number;
   temporary: number;
+  eyeSclera: number;
 };
 
 export enum MiiCreatorOriginPlatform {
@@ -265,7 +267,8 @@ const EmptyMiiCreatorData: MiiCreatorV4Data = {
   regionMove: 0,
   shirtColor: -1,
   special: 0,
-  temporary: 0
+  temporary: 0,
+  eyeSclera: 0
 };
 export const EmptyMiiCreatorV4Data = () => ({ ...EmptyMiiCreatorData });
 
@@ -459,6 +462,7 @@ export const validationThing: Partial<Record<keyof MiiCreatorV4Data, Prop>> = {
   eyeColor: { type: PropType.Number, default: 8, min: 0, max: 99 },
   eyeRotate: { type: PropType.Number, default: 4, min: 0, max: 7 },
   eyeScale: { type: PropType.Number, default: 4, min: 0, max: 7 },
+  eyeSclera: { type: PropType.Number, default: 0, min: 0, max: 1 },
   eyeType: { type: PropType.Number, default: 2, min: 0, max: 59 },
   eyeX: { type: PropType.Number, default: 2, min: 0, max: 12 },
   eyeY: { type: PropType.Number, default: 12, min: 0, max: 18 },

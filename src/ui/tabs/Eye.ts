@@ -1,6 +1,7 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet
+  MiiPagedFeatureSet,
+  type FeatureSetIconItem
 } from "../components/MiiPagedFeatureSet";
 import {
   SwitchMiiColorTable,
@@ -44,12 +45,15 @@ export function EyeTab(data: TabRenderInit) {
         eyeColor: {
           label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
-            ...ArrayNum(6).map((k) => ({
-              type: FeatureSetType.Icon,
-              value: Ver3EyeColorTable[k],
-              color: SwitchMiiColorTable[Ver3EyeColorTable[k]],
-              part: RenderPart.Face
-            })),
+            ...ArrayNum(6).map(
+              (k) =>
+                ({
+                  type: FeatureSetType.Icon,
+                  value: Ver3EyeColorTable[k],
+                  color: SwitchMiiColorTable[Ver3EyeColorTable[k]],
+                  part: RenderPart.Face
+                }) as FeatureSetIconItem
+            ),
             makeSeparatorFSI(),
             ...rearrangeArray(
               ArrayNum(100).map((k) => ({
@@ -62,6 +66,24 @@ export function EyeTab(data: TabRenderInit) {
               makeSeparatorGapThinLaptop
             )
           ]
+        },
+        eyeSclera: {
+          label: __("Sclera"),
+          items: [
+            {
+              type: FeatureSetType.Switch,
+              part: RenderPart.Face,
+              iconOff: __("Disabled"),
+              iconOn: __("Enabled"),
+              property: "eyeSclera",
+              isNumber: true
+            }
+          ],
+          header: __(
+            "%1 is a CUSTOM property, and will not transfer to any other data formats.",
+            // Hat type warning label
+            __("Sclera fill")
+          )
         },
         eyePosition: {
           label: __("Position"),

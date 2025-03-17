@@ -314,7 +314,7 @@ void main()
         vPunctualLightHalfVecWorldOrTangent.xyz = normalize(vPunctualLightDirWorldOrTangent.xyz + vEyeVecWorldOrTangent.xyz);
 
         // Diffuse計算
-        diffuseColor += (uDirLightColor0.rgb * clamp(dot(lightDir, normal), 0.0, 1.0));
+        diffuseColor += (uDirLightColor0.rgb * clamp(dot(lightDir, normal_), 0.0, 1.0));
     }
     if (uDirLightCount > 1)
     {
@@ -1292,6 +1292,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
 	 * @returns {THREE['Texture']} The texture map.
 	 */
 	get map() {
+		//@ts-ignore
 		return this.uniforms.uAlbedoTexture ? this.uniforms.uAlbedoTexture.value : null;
 	}
 

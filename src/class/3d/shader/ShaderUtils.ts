@@ -458,8 +458,8 @@ export async function getMaterialOverridesFromShaderType(
       return null;
   }
 }
-export async function getShaderMaterialFromShaderType() {
-  const shaderType = (await getSetting("shaderType")) as ShaderType;
+export async function getShaderMaterialFromShaderType(type?: string) {
+  const shaderType = (type || (await getSetting("shaderType"))) as ShaderType;
   switch (shaderType) {
     case ShaderType.WiiU:
       return FFLShaderMaterial;

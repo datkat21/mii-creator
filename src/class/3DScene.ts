@@ -105,7 +105,8 @@ export class Mii3DScene {
     if (setupType === SetupType.Screenshot) {
       this.#renderer = new THREE.WebGLRenderer({
         antialias: true,
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: true,
+        logarithmicDepthBuffer: true
       });
       this.texResolution = 1024;
     } else {
@@ -133,7 +134,8 @@ export class Mii3DScene {
         type.startsWith("wiiu") ||
         type === "switch"
       ) {
-        this.#gltfLoader = new GLTFLoader() as TrueGLTFLoader;
+        // this.#gltfLoader = new GLTFLoader() as TrueGLTFLoader;
+        this.#gltfLoader = new TrueGLTFLoader();
       } else {
         this.#gltfLoader = new TrueGLTFLoader();
       }
@@ -1250,8 +1252,10 @@ export class Mii3DScene {
     this.#textureLoader.load("./assets/images/star.png", (texture) => {
       const pos = new THREE.Vector3();
       const box = new THREE.Box3();
-      this.#scene.getObjectByName("MiiHead")!.getWorldPosition(pos);
-      box.setFromObject(this.#scene.getObjectByName("MiiHead")!);
+      if (this.#scene.getObjectByName("MiiHead") !== undefined) {
+        this.#scene.getObjectByName("MiiHead")!.getWorldPosition(pos);
+        box.setFromObject(this.#scene.getObjectByName("MiiHead")!);
+      }
       let particle = new SparkleParticle(
         this.#scene,
         new THREE.Vector3(0, pos.y + box.min.y / 2, 2),

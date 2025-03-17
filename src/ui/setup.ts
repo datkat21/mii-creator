@@ -23,7 +23,7 @@ export async function setupUi() {
   let shownSessionModal = false;
   // Check session every 60s
   setInterval(() => {
-    console.log("checking session..");
+    // console.log("checking session..");
     fetch("/api/session")
       .then((e) => {
         if (!e.ok) {

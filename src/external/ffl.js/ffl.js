@@ -2960,11 +2960,24 @@ function _applyModulateParam(modulateParam, module) {
 	const f32 = module.HEAPF32;
 	// If both pColorG and pColorB are provided, combine them into an array.
 	if (modulateParam.pColorG !== 0 && modulateParam.pColorB !== 0) {
+
+
 		color = [
 			_getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
 			_getFFLColor3(_getFFLColor(modulateParam.pColorG, f32)),
+			// new THREE.Color(1, 0, 1)
 			_getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
 		];
+		
+		if (
+			self.eyeScleraHack 
+			&& modulateParam.type === 12) {
+			color = [
+				_getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
+				_getFFLColor3(_getFFLColor(modulateParam.pColorB, f32)),
+				_getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
+			];
+		}
 	} else if (modulateParam.pColorR !== 0) {
 		// Otherwise, set it as a single color.
 		color4 = _getFFLColor(modulateParam.pColorR, f32);
@@ -3125,9 +3138,9 @@ function _drawFacelineTexture(charModel, textureTempObject, renderer, module, ma
 	module._FFLiInvalidateTempObjectFacelineTexture(facelineTempObjectPtr);
 	// Gather the drawParams that make up the faceline texture.
 	const drawParams = [
+		textureTempObject.facelineTexture.drawParamFaceMake,
 		textureTempObject.facelineTexture.drawParamFaceLine,
 		textureTempObject.facelineTexture.drawParamFaceBeard,
-		textureTempObject.facelineTexture.drawParamFaceMake
 	].filter(dp => dp && dp.modulateParam.pTexture2D !== 0);
 	// Note that for faceline DrawParams to not be empty,
 	// it must have a texture. For other DrawParams to not

@@ -5,9 +5,13 @@ import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import { BodyType } from "../constants/BodyShaderTypes";
 
 //! NOTE: THIS ASSUMES THE ROOT IS THE PUBLIC FOLDER
+let root = "/";
+export const setRoot = (newRoot: string) => {
+  root = newRoot;
+};
 var gltfLoader = new GLTFLoader();
 function makeModelPath(gender: string, modelName: string) {
-  return `/assets/models/miiBody${gender}_${modelName}.glb`;
+  return `${root}assets/models/miiBody${gender}_${modelName}.glb`;
 }
 async function loadBodyModel(modelPath: string) {
   const model = await gltfLoader.loadAsync(modelPath);
@@ -33,12 +37,13 @@ async function loadBodyModel(modelPath: string) {
 }
 
 let bodyType = "wiiu";
-export async function loadBodyModels() {
+export async function loadBodyModels(input?: string) {
   if (Object.keys(bodyModels).length > 0) {
     // todo: dispose them? idk
     bodyModels = {};
   }
-  bodyType = (await localforage.getItem("settings_bodyModel")) || "wiiu";
+  bodyType =
+    input || (await localforage.getItem("settings_bodyModel")) || "wiiu";
 
   if (bodyType === BodyType.StreetPass) {
     isStreetpassBody = true;
@@ -67,8 +72,8 @@ export async function loadHatModels() {
   // Load hat models bundle
   // todo: dispose them? idk
   hatModels = [];
-  const data = await fetch("/assets/models/hat_models_bundle.zip").then((j) =>
-    j.blob()
+  const data = await fetch(root + "assets/models/hat_models_bundle.zip").then(
+    (j) => j.blob()
   );
   const zip = await JSZip.loadAsync(data);
   let promises = [];
