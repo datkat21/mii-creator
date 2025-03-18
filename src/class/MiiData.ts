@@ -366,7 +366,6 @@ export default class Mii {
     this.glassY = data.glassY;
     this.hairColor = data.hairColor;
     this.hairFlip = data.hairFlip;
-    console.log(this.nickname, this.hairFlip);
     this.hairType = data.hairType;
     this.hatFavoriteColor = data.hatFavoriteColor;
     this.hatCommonColor = data.hatCommonColor;

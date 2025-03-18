@@ -38,12 +38,23 @@ import {
   getShaderMaterialFromShaderType
 } from "./class/3d/shader/ShaderUtils";
 import { BodyType, ShaderType } from "./constants/BodyShaderTypes";
+import Html from "@datkat21/html";
+import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 
-let FFLModule: any, FFLWorker: Worker | undefined;
+let FFLModule: any, FFLWorker: Worker | undefined, userData: any;
 
 // function log(...content: string[]) {
 //   console.debug("[miic helper]", ...content);
 // }
+
+const GUEST_MII_DATA = [
+  "BAM5i2G9mwPpOoAAAADs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEEAAAAAAAAACAAAAAAAQAMDCAYEBgIKCAQEAgIMBAAAAP8ABAAACAQACggARP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BAOFdPR8ZsuhdoAAAAHs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEIAAAAAAAAACAAAAAAAQAMDBgYEBgIKDAQEAgIMAAAAAP8ABQAACAQACgYAN////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BAM2I3afbKlshYAAAALs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEMAAAAAAAAACAAAAAAAQAMDAQYEBgIKCAQEAgIMAQAAAP8AAAAACAQACgEAIf///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BAN9s2CERcxd8IAAAAPs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEQAAAAAAAAACAAAAAAAQAMDCAYEAAIKCAMEBAIMAgAAAP8AAgABCAQACggAGP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BAP3BYyHQ6gZsoAAAATs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEUAAAAAAAAACAAAAAAAQAMDBwYEAAIKDQMEBAIMAAAAAP8ABgABCAQACgcADv///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BANfFfqpycZfsoAAAAXs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEYAAAAAAAAACAAAAAAAQAMDAQYEAAIKCAMEBAIMAAAAAP8ABwABCAQACgEADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA=="
+];
 
 function getFFLModule() {
   return FFLModule;
@@ -85,13 +96,20 @@ async function loadAssets(resourcePath: string, bodyType: string = "wiiu") {
 }
 
 interface CharModelRequest extends RenderRequest {
-  followShirtPantsColor: boolean;
+  respectBodyColors: boolean;
   shaderType: string;
 }
 
 class MiiCreatorCharModel {
+  // Entire group.
   miiGroup!: THREE.Group;
+  // FFL CharModel.
   charModel!: CharModel;
+
+  // Only head part of group.
+  headModel!: THREE.Group;
+  // Only body part of group.
+  bodyModel!: THREE.Group;
 
   constructor() {}
 
@@ -256,7 +274,7 @@ class MiiCreatorCharModel {
     if (request.drawBody && getBodyModels().m !== null) {
       switch (gender) {
         case 0: {
-          bodyModel = getBodyModels().m.clone(true);
+          bodyModel = SkeletonUtils.clone(getBodyModels().m) as any;
 
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
@@ -267,7 +285,7 @@ class MiiCreatorCharModel {
           break;
         }
         case 1: {
-          bodyModel = getBodyModels().f.clone(true);
+          bodyModel = SkeletonUtils.clone(getBodyModels().f) as any;
 
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
@@ -282,9 +300,9 @@ class MiiCreatorCharModel {
       }
 
       bodyModel.scale.set(bodyScale.x * 7, bodyScale.y * 7, bodyScale.z * 7);
-      bodyModel.position.set(0, -10, 0);
 
       this.miiGroup.add(bodyModel);
+      bodyModel.position.set(0, 0, 0);
 
       var shirtColor =
         MiiFavoriteColorVec3Table[
@@ -296,7 +314,7 @@ class MiiCreatorCharModel {
         !ForbiddenShirtPantColors.includes(
           request.additionalInfo!.shirtColor
         ) &&
-        request.followShirtPantsColor !== false
+        request.respectBodyColors !== false
       ) {
         shirtColor =
           SwitchMiiColorTableSRGB[request.additionalInfo!.shirtColor];
@@ -330,7 +348,7 @@ class MiiCreatorCharModel {
         !ForbiddenShirtPantColors.includes(
           request.additionalInfo!.pantsColor
         ) &&
-        request.followShirtPantsColor !== false
+        request.respectBodyColors !== false
       ) {
         pantsColor =
           SwitchMiiColorTableSRGB[request.additionalInfo!.pantsColor];
@@ -393,13 +411,54 @@ function requestUserData(type: RequestType, pageTitle = document.title) {
       if (event.data === undefined) return;
       if (event.data.type === undefined) return;
       if (event.data.type !== "miic-auth-finalize") return;
+      if (event.data.canceled === true)
+        return resolve({ canceled: true, data: null });
 
       window.removeEventListener("message", messageListener);
 
-      resolve(event.data);
+      userData = event.data.data;
+      resolve({ canceled: false, data: event.data.data });
     };
 
     window.addEventListener("message", messageListener);
+  });
+}
+
+function injectCss() {
+  if (Html.qs("head>#mii-creator-helper-styles") === null) {
+    new Html("style")
+      .id("mii-creator-helper-styles")
+      .html(
+        /*css*/ `
+.mch-select-modal {
+  background: #0007;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+`
+      )
+      .appendTo("head");
+  }
+}
+
+function miiSelect() {
+  return new Promise((resolve) => {
+    injectCss();
+    const container = new Html("div")
+      .class("mch-select-modal")
+      .appendTo("body");
+    new Html("div").text("Select a Mii.").appendTo(container);
+
+    setTimeout(() => {
+      resolve(true);
+    });
+
+    // if (userData === undefined) return resolve(false);
+    // if (userData.personal_mii === null) return resolve(false);
+    // if (userData.library === null) return resolve(false);
   });
 }
 
@@ -412,8 +471,10 @@ export {
   ForbiddenShirtPantColors,
   getAdditionalInfoFromMii,
   getFFLModule,
+  GUEST_MII_DATA,
   loadAssets,
   Mii,
+  miiSelect,
   MiiCreatorCharModel,
   parseHexOrB64ToUint8Array,
   RequestType,

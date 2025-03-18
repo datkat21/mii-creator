@@ -94,7 +94,7 @@ export const getMiiIcon = async (
       break;
   }
 
-  console.log("icon view:", Object.keys(ViewType)[type]);
+  console.debug("icon view:", Object.keys(ViewType)[type]);
 
   if (Config.renderer.useRendererServer === false) {
     // Momentarily create CharModel
@@ -112,7 +112,7 @@ export const getMiiIcon = async (
     }
 
     if (getFFLWorkerExists()) {
-      console.log("Asking worker thread for an icon plz!");
+      console.debug("Asking worker thread for an icon plz!");
       const icon = await getFFLWorkerMakeIcon(
         {
           data,
@@ -260,21 +260,144 @@ export async function pushToServer() {
       console.error("Failed to sync library data: " + e);
     });
 }
-async function choosePersonalMii() {
-  alert("choosssee");
-  const personalMiiChooseModal = Modal.modal(
-    "Notice",
-    "Select a Mii to be your Personal Mii. This can be used across apps.",
-    "body",
-    {
-      text: __("Cancel")
-    },
-    {
+function choosePersonalMii(miiList: MiiLocalforage[]) {
+  return new Promise((resolve) => {
+    const personalMiiChooseModal = Modal.modal(__("Notice"), "", "body", {
       text: __("Confirm")
+    });
+    personalMiiChooseModal.classOn("random-mii-grid");
+    const container = personalMiiChooseModal.qs(".modal-body")!;
+    // Hide unused elements without deleting them
+    container
+      .qsa("span,.flex-group *")!
+      .forEach((e) => e!.style({ display: "none" }));
+
+    container.prepend(
+      new Html("span")
+        .style({
+          width: "100%",
+          padding: "14px 18px",
+          background: "var(--hover)",
+          color: "var(--text)",
+          border: "1px solid var(--stroke)",
+          "border-radius": "6px",
+          "flex-shrink": "0"
+        })
+        .text(
+          __(
+            "Choose a Mii to be your Personal Mii, which can be used across apps. This can always be changed later in Settings."
+          )
+        )
+    );
+
+    let randomMiiContainer = new Html("div")
+      .class("random-mii-container")
+      .appendTo(container);
+
+    let count = 0;
+    for (const mii of miiList) {
+      let button = new Html("button")
+        .append(new Html("img").attr({ src: "" }))
+        .appendTo(randomMiiContainer);
+
+      const m = new Mii(mii.mii);
+
+      function loadIcon() {
+        getMiiIcon(m, "lookalike").then((icon) => {
+          playLoadSound();
+          button.qs("img")?.attr({ src: icon });
+        });
+      }
+
+      button.on("click", async () => {
+        confirmPersonalMii(m, personalMiiChooseModal).then((result) => {
+          if (result) {
+            resolve(true);
+          }
+        });
+      });
+
+      //@ts-expect-error
+      if (window.browserMitigations !== undefined) {
+        // alert("browser mitigations enabled");
+        setTimeout(() => {
+          loadIcon();
+        }, count * 100);
+      } else {
+        // alert("browser mitigations disabled");
+        loadIcon();
+      }
+
+      count++;
     }
-  );
-  personalMiiChooseModal.classOn("random-mii-grid");
+  });
 }
+function confirmPersonalMii(mii: Mii, modalRef?: Html) {
+  return new Promise((resolve) => {
+    const miiIcon = new Html("img").style({
+      opacity: "0",
+      width: "210px",
+      height: "210px",
+      transition: "opacity 0.35s ease"
+    });
+
+    getMiiIcon(mii, "lookalike_preview", "all_body_sugar", 210).then((icon) => {
+      miiIcon.attr({ src: icon }).style({ opacity: "1" });
+    });
+
+    Modal.modal(
+      // Confirmation message
+      __("Is this OK?"),
+      new Html("div")
+        .style({
+          margin: "0 auto",
+          display: "flex",
+          "flex-direction": "column",
+          "align-items": "center"
+        })
+        .classOn("col")
+        .append(miiIcon)
+        .prepend(
+          new Html("span").text("This will be set as your Personal Mii.")
+        ),
+      "body",
+      // does nothing
+      {
+        text: "Cancel",
+        callback() {
+          resolve(false);
+        }
+      },
+      {
+        text: __("Close"),
+        callback() {
+          resolve(false);
+        }
+      },
+      {
+        text: __("Confirm"),
+        type: "primary",
+        async callback(e) {
+          // Click the invisible "confirm" button to close the modal normally
+          if (modalRef) modalRef.qs(".flex-group button")?.elm.click();
+          await fetch("/api/personal_mii", {
+            body: JSON.stringify({
+              nickname: mii.nickname,
+              creator: mii.creator,
+              ffsd: mii.exportBase64("ffsd"),
+              data: mii.exportBase64("miic"),
+              studio: mii.exportBase64("studioData")
+            }),
+            method: "POST",
+            headers: { "content-type": "application/json" }
+          }).catch(undefined);
+          resolve(true);
+        }
+      }
+    );
+  });
+}
+
 export async function Library(highlightMiiId?: string) {
   currentShader = await getSetting("shaderType");
   currentBodyModel = await getSetting("bodyModel");
@@ -330,12 +453,12 @@ export async function Library(highlightMiiId?: string) {
         .text(__("You don't have any Miis. Create one to get started!"))
     );
   } else {
-    await fetch("/api/personal_mii").then((e) => {
-      if (!e.ok) {
-        // not ok
-        choosePersonalMii();
-      }
-    });
+    const resp = await fetch("/api/personal_mii");
+
+    if (!resp.ok) {
+      // not ok
+      await choosePersonalMii(miis);
+    }
   }
 
   let miiErrorCount = 0,
@@ -354,7 +477,7 @@ export async function Library(highlightMiiId?: string) {
 
       miiData.validate();
 
-      console.log("MII DATA GOT:", miiData);
+      console.debug("MII DATA GOT:", miiData);
       // prevent error when importing converted Wii-era data
       // miiData.unknown1 = 0;
       // miiData.unknown2 = 0;

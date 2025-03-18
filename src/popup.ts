@@ -35,9 +35,30 @@ enum RequestType {
       );
       close();
     }
-    function authorize() {
+    async function authorize() {
+      let infoJson: any;
+      switch (req) {
+        case RequestType.Library:
+          infoJson = await fetch("/api/me").then((r) => r.json());
+          if (infoJson.personal_mii.error) infoJson.personal_mii = null;
+          break;
+        case RequestType.PersonalMiiOnly:
+          let personal_mii = await fetch("/api/personal_mii").then((r) =>
+            r.json()
+          );
+          if (personal_mii.error) personal_mii = null;
+          infoJson = { personal_mii };
+          break;
+        default:
+          window.opener.postMessage(
+            { type: "miic-auth-finalize", canceled: true },
+            "*"
+          );
+          close();
+          return;
+      }
       window.opener.postMessage(
-        { type: "miic-auth-finalize", canceled: false },
+        { type: "miic-auth-finalize", canceled: false, data: infoJson },
         "*"
       );
       close();

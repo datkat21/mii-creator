@@ -161,7 +161,7 @@ export type RFLCharData = {
   creatorName: string;
 };
 
-// picked by hand but should work
+// david picked by hand but should work
 export const Ver1ToVer3FacelineTex = [
   [0, 0],
   [1, 0],

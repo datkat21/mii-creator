@@ -32,7 +32,7 @@ let FFLModule: any,
   devicePixelRatio: number;
 
 function log(...message: any[]) {
-  console.log("[FFLWorker]", ...message);
+  console.debug("[FFLWorker]", ...message);
 }
 function initRenderer() {
   workerRenderer = new WebGLRenderer({
