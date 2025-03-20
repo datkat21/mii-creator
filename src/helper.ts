@@ -41,6 +41,12 @@ import { BodyType, ShaderType } from "./constants/BodyShaderTypes";
 import Html from "@datkat21/html";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 
+if (this === undefined) {
+  console.log("Running in module scope");
+} else {
+  console.log("Running in script scope");
+}
+
 let FFLModule: any, FFLWorker: Worker | undefined, userData: any;
 
 // function log(...content: string[]) {
@@ -72,7 +78,16 @@ const getAdditionalInfoFromMii = (miiData: Mii) => ({
   eyeSclera: miiData.eyeSclera
 });
 
-const root = new URL(import.meta.url);
+let root: URL;
+try {
+  if (import.meta) {
+    root = new URL(import.meta.url);
+  } else {
+    throw new Error("HUH");
+  }
+} catch (e) {
+  alert("SCRIPT SCOPE");
+}
 
 async function loadAssets(resourcePath: string, bodyType: string = "wiiu") {
   setRoot(root.origin + "/");
@@ -361,6 +376,7 @@ class MiiCreatorCharModel {
         opacity: 1
       });
 
+      // headMesh.position.set(0, bodyScale.y * 73, 0);
       headMesh.position.set(0, bodyScale.y * 75, 0);
     }
   }
