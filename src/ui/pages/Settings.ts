@@ -411,6 +411,9 @@ export async function Settings() {
               })
             )
         );
+        if (settingsInfo[key].render) {
+          settingsInfo[key].render(nonSettingsMulti);
+        }
         elements.set(key, nonSettingsMulti.elm);
         modalBody.append(nonSettingsMulti);
         break;

@@ -134,7 +134,7 @@ export async function customRender(miiData: Mii) {
     .appendTo(parent);
   let tabsContent = new Html("div")
     .classOn("tab-content")
-    .style({ flex: "1", height: "100%", overflow: "auto" })
+    .style({ flex: "1", height: "100%", overflow: "auto", gap: "0.5rem" })
     .appendTo(body);
 
   let configuration = {
@@ -425,14 +425,14 @@ export async function customRender(miiData: Mii) {
   );
 
   new Html("button")
-    .text(__("Download PNG"))
+    .text(__("Save Render"))
     .on("click", finalizeRender)
     .appendTo(tabsContent);
 
-  new Html("button")
-    .text(__("Download 3D model"))
-    .on("click", save3DModel)
-    .appendTo(tabsContent);
+  // new Html("button")
+  //   .text(__("Download 3D model"))
+  //   .on("click", save3DModel)
+  //   .appendTo(tabsContent);
 
   function resize() {
     let { width, height } = parentBox.elm.getBoundingClientRect();

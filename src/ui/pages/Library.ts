@@ -310,9 +310,9 @@ function choosePersonalMii(miiList: MiiLocalforage[]) {
       }
 
       button.on("click", async () => {
-        confirmPersonalMii(m, personalMiiChooseModal).then((result) => {
+        confirmPersonalMii(m, mii, personalMiiChooseModal).then((result) => {
           if (result) {
-            resolve(true);
+            resolve(mii.id);
           }
         });
       });
@@ -332,7 +332,11 @@ function choosePersonalMii(miiList: MiiLocalforage[]) {
     }
   });
 }
-function confirmPersonalMii(mii: Mii, modalRef?: Html) {
+function confirmPersonalMii(
+  mii: Mii,
+  miiLocalforage: MiiLocalforage,
+  modalRef?: Html
+) {
   return new Promise((resolve) => {
     const miiIcon = new Html("img").style({
       opacity: "0",
@@ -386,7 +390,8 @@ function confirmPersonalMii(mii: Mii, modalRef?: Html) {
               creator: mii.creator,
               ffsd: mii.exportBase64("ffsd"),
               data: mii.exportBase64("miic"),
-              studio: mii.exportBase64("studioData")
+              studio: mii.exportBase64("studioData"),
+              store_id: miiLocalforage.id
             }),
             method: "POST",
             headers: { "content-type": "application/json" }

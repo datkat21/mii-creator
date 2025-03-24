@@ -43,7 +43,7 @@ import type { BuildOutput } from "bun";
 async function build() {
   try {
     await compile(
-      ["./src/main.ts", "./src/api.ts", "./src/worker.ts"],
+      ["./src/main.ts", "./src/helper.ts", "./src/popup.ts", "./src/worker.ts"],
       "./public/dist/"
     );
   } catch (e) {

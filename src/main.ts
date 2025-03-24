@@ -97,7 +97,7 @@ if (
   // LOOOL! You're fine!
 } else {
   // get angry
-  selfDestructAfter2Minutes();
+  // selfDestructAfter2Minutes();
 }
 
 setupUi();

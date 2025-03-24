@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import localforage from "localforage";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import { GLTFLoader, type GLTF } from "three/examples/jsm/Addons.js";
 import { BodyType } from "../constants/BodyShaderTypes";
 
 //! NOTE: THIS ASSUMES THE ROOT IS THE PUBLIC FOLDER
@@ -33,7 +33,7 @@ async function loadBodyModel(modelPath: string) {
     } catch (e) {}
   } else console.warn("Body model has no animations");
 
-  return scene;
+  return model;
 }
 
 let bodyType = "wiiu";
@@ -50,14 +50,14 @@ export async function loadBodyModels(input?: string) {
   }
 
   if (bodyModels.m) {
-    bodyModels.m.traverse((o: any) => {
+    bodyModels.m.scene.traverse((o: any) => {
       if (o.isMesh) {
         o.dispose();
       }
     });
   }
   if (bodyModels.f) {
-    bodyModels.f.traverse((o: any) => {
+    bodyModels.f.scene.traverse((o: any) => {
       if (o.isMesh) {
         o.dispose();
       }
@@ -92,7 +92,7 @@ export async function loadHatModels() {
 }
 
 // Cloneable models used
-let bodyModels: Record<string, THREE.Group | null> = {
+let bodyModels: Record<string, GLTF | null> = {
   m: null,
   f: null
 };
@@ -101,5 +101,5 @@ let hatModels: THREE.Group[] = [];
 let isStreetpassBody = false;
 
 export const isStreetpass = () => isStreetpassBody;
-export const getBodyModels = () => bodyModels as Record<"m" | "f", THREE.Group>;
+export const getBodyModels = () => bodyModels as Record<"m" | "f", GLTF>;
 export const getHatModels = () => hatModels;

@@ -5,6 +5,7 @@ import { replayUpdateNotice } from "../ui/pages/Settings";
 
 import { _ } from "../util/Lang";
 import { Config } from "../config";
+import type Html from "@datkat21/html";
 const __ = _();
 
 /* Unused but here for translation purposes */
@@ -168,6 +169,20 @@ export const settingsInfo: Record<string, any> = {
       { label: __("White"), value: "white" },
       { label: __("Custom"), value: "custom", isColor: true }
     ]
+  },
+  personalMii: {
+    type: "non-settings-multi",
+    label: __("Personal Mii"),
+    description: __("Manage your choice of Personal Mii."),
+    choices: [
+      {
+        label: __("Choose"),
+        async select() {}
+      }
+    ],
+    render(html: Html) {
+      html.text("REAL");
+    }
   },
   saveData: {
     type: "non-settings-multi",

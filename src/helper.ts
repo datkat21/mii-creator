@@ -59,7 +59,14 @@ const GUEST_MII_DATA = [
   "BAM2I3afbKlshYAAAALs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEMAAAAAAAAACAAAAAAAQAMDAQYEBgIKCAQEAgIMAQAAAP8AAAAACAQACgEAIf///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
   "BAN9s2CERcxd8IAAAAPs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEQAAAAAAAAACAAAAAAAQAMDCAYEAAIKCAMEBAIMAgAAAP8AAgABCAQACggAGP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
   "BAP3BYyHQ6gZsoAAAATs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEUAAAAAAAAACAAAAAAAQAMDBwYEAAIKDQMEBAIMAAAAAP8ABgABCAQACgcADv///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
-  "BANfFfqpycZfsoAAAAXs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEYAAAAAAAAACAAAAAAAQAMDAQYEAAIKCAMEBAIMAAAAAP8ABwABCAQACgEADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA=="
+  "BANfFfqpycZfsoAAAAXs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEYAAAAAAAAACAAAAAAAQAMDAQYEAAIKCAMEBAIMAAAAAP8ABwABCAQACgEADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+
+  "BAVIEyyDkVU1GYD/cJm7kTTHqf8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEcAAAAAAAAACAAAAAAAQAMDCAYEBgIKCAQEAgIMBQAAAP8ACwAACAQACggAKv///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BAWUIlPmHJkY0oD/cJmB+j7p1g8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEgAAAAAAAAACAAAAAAAQAMDDgYEBgIKCQQEAgIMBwAAAP8ACQAACAQACg4APv///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BAVlJYmsV8fzIID/cJmJvGY0ejIAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEkAAAAAAAAACAAAAAAAQAMDAwYEBgIKCAQEAgIMBgAAAP8AAQAACAQACgMAef///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BABEp+/5p6E6GoDfGZofZsl0BT8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEoAAAAAAAAACAAAAAAAQAMDCAYEAAIKCAMEBAIMCAAAAP8AAwABCAQACggAB////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BABEp+/5p6E6GoDfGZofZsl0BT8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEsAAAAAAAAACAAAAAAAQAMDDgYEAAIKCwMEBAIMBwAAAP8ACgABCAQACg4AX////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BABEp+/5p6E6GoDfGZofZsl0BT8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEwAAAAAAAAACAAAAAAAQAMDBgYEAAIKCAMEBAIMBgAAAP8ACAABCAQACgYADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA=="
 ];
 
 function getFFLModule() {
@@ -113,6 +120,7 @@ async function loadAssets(resourcePath: string, bodyType: string = "wiiu") {
 interface CharModelRequest extends RenderRequest {
   respectBodyColors: boolean;
   shaderType: string;
+  useAnimation: boolean;
 }
 
 class MiiCreatorCharModel {
@@ -125,6 +133,13 @@ class MiiCreatorCharModel {
   headModel!: THREE.Group;
   // Only body part of group.
   bodyModel!: THREE.Group;
+  // Body meshes
+  bodyModelBody!: THREE.Mesh;
+  bodyModelHands!: THREE.Mesh;
+  bodyModelLegs!: THREE.Mesh;
+
+  mixer!: THREE.AnimationMixer;
+  clips!: Map<string, THREE.AnimationAction>;
 
   constructor() {}
 
@@ -219,6 +234,7 @@ class MiiCreatorCharModel {
 
     // Create an offscreen scene for the icon.
     this.miiGroup = new THREE.Group();
+    this.headModel = new THREE.Group();
 
     // Stuff related to hat and body rendering
     const gender = charModel._model.charInfo.personal.gender;
@@ -265,7 +281,7 @@ class MiiCreatorCharModel {
         }
       }) as any;
 
-      this.miiGroup.add(hatModel);
+      this.headModel.add(hatModel);
 
       // this could easier be done with a negative scale vector but eh
       const shiftPos = charModel.partsTransform.hatTranslate.y;
@@ -279,17 +295,20 @@ class MiiCreatorCharModel {
 
     // Add meshes from the CharModel.
     const headMesh = charModel.meshes!.clone();
-    this.miiGroup.add(headMesh);
+    this.headModel.add(headMesh);
 
     let bodyModel: THREE.Group,
       bodyModelBody: THREE.Mesh,
       bodyModelHands: THREE.Mesh,
-      bodyModelLegs: THREE.Mesh;
+      bodyModelLegs: THREE.Mesh,
+      bodyModelAnims: THREE.AnimationClip[];
+
+    this.miiGroup.add(this.headModel);
 
     if (request.drawBody && getBodyModels().m !== null) {
       switch (gender) {
         case 0: {
-          bodyModel = SkeletonUtils.clone(getBodyModels().m) as any;
+          bodyModel = SkeletonUtils.clone(getBodyModels().m.scene) as any;
 
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
@@ -297,10 +316,13 @@ class MiiCreatorCharModel {
           bodyModelBody = bodyModel.getObjectByName("body_m") as THREE.Mesh;
           bodyModelHands = bodyModel.getObjectByName("hands_m") as THREE.Mesh;
           bodyModelLegs = bodyModel.getObjectByName("legs_m") as THREE.Mesh;
+          if (request.useAnimation) {
+            bodyModelAnims = getBodyModels().m.animations;
+          }
           break;
         }
         case 1: {
-          bodyModel = SkeletonUtils.clone(getBodyModels().f) as any;
+          bodyModel = SkeletonUtils.clone(getBodyModels().f.scene) as any;
 
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
@@ -308,6 +330,9 @@ class MiiCreatorCharModel {
           bodyModelBody = bodyModel.getObjectByName("body_f") as THREE.Mesh;
           bodyModelHands = bodyModel.getObjectByName("hands_f") as THREE.Mesh;
           bodyModelLegs = bodyModel.getObjectByName("legs_f") as THREE.Mesh;
+          if (request.useAnimation) {
+            bodyModelAnims = getBodyModels().f.animations;
+          }
           break;
         }
         default:
@@ -378,7 +403,48 @@ class MiiCreatorCharModel {
 
       // headMesh.position.set(0, bodyScale.y * 73, 0);
       headMesh.position.set(0, bodyScale.y * 75, 0);
+
+      this.bodyModel = bodyModel;
+      this.bodyModelBody = bodyModelBody;
+      this.bodyModelHands = bodyModelHands;
+      this.bodyModelLegs = bodyModelLegs;
+
+      if (request.useAnimation) {
+        this.mixer = new THREE.AnimationMixer(bodyModel);
+        this.clips = new Map();
+
+        for (const clip of bodyModelAnims!) {
+          this.clips.set(clip.name, this.mixer.clipAction(clip));
+        }
+      }
     }
+  }
+
+  mixerUpdate(delta: number) {
+    this.mixer.update(delta);
+
+    let headBone = this.bodyModel.getObjectByName("head") as THREE.Bone;
+    if (headBone === undefined)
+      headBone = this.bodyModel.getObjectByName("Head") as THREE.Bone;
+
+    if (!headBone) return alert("???");
+    headBone.updateMatrixWorld(true);
+
+    // Extract the position and rotation from the matrix
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+
+    headBone.matrixWorld.decompose(position, quaternion, scale);
+    if (this.headModel) {
+      // Set the head model's position and rotation
+      this.headModel.position.copy(position);
+      this.headModel.setRotationFromQuaternion(quaternion);
+    }
+  }
+
+  setExpression(expression: number) {
+    this.charModel.setExpression(expression);
   }
 
   // TODO: multiple expressionFlag, setExpression, dispose

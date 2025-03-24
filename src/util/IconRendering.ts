@@ -224,7 +224,7 @@ export function createMiiRender(
     if (request.drawBody && getBodyModels().m !== null) {
       switch (gender) {
         case 0: {
-          bodyModel = getBodyModels().m;
+          bodyModel = getBodyModels().m.scene;
 
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
@@ -235,7 +235,7 @@ export function createMiiRender(
           break;
         }
         case 1: {
-          bodyModel = getBodyModels().f;
+          bodyModel = getBodyModels().f.scene;
 
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
