@@ -368,7 +368,7 @@ export async function traverse3DMaterialFix(
   });
 }
 
-function loadBlobTexture(blob: Blob): Promise<THREE.Texture> {
+export function loadBlobTexture(blob: Blob): Promise<THREE.Texture> {
   return new Promise((resolve) => {
     var texture = new THREE.Texture();
     var url = URL.createObjectURL(blob);
@@ -382,7 +382,9 @@ function loadBlobTexture(blob: Blob): Promise<THREE.Texture> {
 
       resolve(texture);
 
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 10000);
     };
   });
 }

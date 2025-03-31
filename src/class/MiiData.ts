@@ -50,6 +50,7 @@ export default class Mii {
   birthMonth!: number;
   birthYear!: number;
   build!: number;
+  clothesType!: number;
   eyeAspect!: number;
   eyebrowAspect!: number;
   eyebrowColor!: number;
@@ -106,6 +107,7 @@ export default class Mii {
   personality!: number;
   regionMove!: number;
   shirtColor!: number;
+  shoesColor!: number;
   special!: number;
   valid!: boolean;
 
@@ -188,8 +190,16 @@ export default class Mii {
       case 122:
       case 123:
       case 124:
-        tempArray = allocateArray(124, input);
+      case 125:
+      case 126:
+        tempArray = allocateArray(126, input);
         data = MiiCreatorV4Data.unpack(tempArray);
+        if (input.length < 126) {
+          data.shoesColor = -1;
+        }
+        if (input.length < 125) {
+          data.clothesType = -1;
+        }
         break;
       default:
         throw new Error(
@@ -207,6 +217,8 @@ export default class Mii {
     if (data.personality === 255) data.personality = -1;
     if (data.shirtColor === 255) data.shirtColor = -1;
     if (data.wigType === 255) data.wigType = -1;
+    if (data.clothesType === 255) data.clothesType = -1;
+    if (data.shoesColor === 255) data.shoesColor = -1;
 
     // console.log("new data:", data);
 
@@ -234,6 +246,7 @@ export default class Mii {
       birthMonth: this.birthMonth,
       birthYear: this.birthYear,
       build: this.build,
+      clothesType: this.clothesType,
       eyeAspect: this.eyeAspect,
       eyebrowAspect: this.eyebrowAspect,
       eyebrowColor: this.eyebrowColor,
@@ -290,6 +303,7 @@ export default class Mii {
       personality: this.personality,
       regionMove: this.regionMove,
       shirtColor: this.shirtColor,
+      shoesColor: this.shoesColor,
       special: this.special,
       ...override
     };
@@ -336,6 +350,7 @@ export default class Mii {
     this.birthMonth = data.birthMonth;
     this.birthYear = data.birthYear;
     this.build = data.build;
+    this.clothesType = data.clothesType;
     this.eyeAspect = data.eyeAspect;
     this.eyebrowAspect = data.eyebrowAspect;
     this.eyebrowColor = data.eyebrowColor;
@@ -392,6 +407,7 @@ export default class Mii {
     this.regionMove = data.regionMove;
     this.shirtColor = data.shirtColor;
     this.special = data.special;
+    this.shoesColor = data.shoesColor;
     this.temporary = data.temporary;
 
     if (

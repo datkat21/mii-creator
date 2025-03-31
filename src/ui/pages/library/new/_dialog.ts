@@ -67,9 +67,9 @@ export const miiCreateDialog = () => {
             .attr({
               type: "file",
               accept:
-                ".ffsd,.cfsd,.charinfo,.rsd," +
+                ".ffsd,.cfsd,.charinfo,.rsd,.rcd" +
                 // add unofficial formats
-                ".miic,.mii,.miigx,.cfcd,.ufsd,.mnms,.nfcd",
+                ".miic,.mii,.miigx,.cfcd,.ufsd,.mnms,.nfcd,",
               multiple: "on"
             })
             .style({ margin: "auto" })
@@ -106,7 +106,7 @@ export const miiCreateDialog = () => {
                     throw e;
                   });
                 } catch (e) {
-                  Modal.alert(__("Error"), __("Invalid Mii data: $1", e));
+                  Modal.alert(__("Error"), __("Invalid Mii data: %1", e));
                   console.error(e);
                   target.value = "";
                   continue;

@@ -865,6 +865,16 @@ export async function Library(highlightMiiId?: string) {
                   ),
                   "0800400308040402020c0301050400020a0000000000000804000a01004b4004000214031303190d04000a040109"
                 );
+                createMiiCard(
+                  container,
+                  // MilkGalaxy's name
+                  __("MilkGalaxy"),
+                  "milkgalaxy",
+                  "https://www.youtube.com/channel/UCUHVT7e1MT0Mpiv0e8WB2fQ",
+                  // MilkGalaxy's attribution
+                  __("Helped create custom clothing"),
+                  "080057033c05030c030d0101060415030c0000010307000804000a1701656204000214011303230d04000a010a0a"
+                );
               }
             },
             {

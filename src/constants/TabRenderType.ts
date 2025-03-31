@@ -1,7 +1,12 @@
 import type Html from "@datkat21/html";
 // import type Mii from "../external/mii-js/mii";
 import type Mii from "../class/MiiData";
-import type { IconSet, MiiEditor, RenderPart } from "../class/MiiEditor";
+import type {
+  BodyUpdateType,
+  IconSet,
+  MiiEditor,
+  RenderPart
+} from "../class/MiiEditor";
 
 export type TabRenderInit = {
   container: Html;
@@ -10,7 +15,8 @@ export type TabRenderInit = {
   callback: (
     newMii: Mii,
     forceRender: boolean,
-    renderPart: RenderPart
+    renderPart: RenderPart,
+    bodyUpdateType: BodyUpdateType
   ) => any | Promise<any>;
   editor: MiiEditor;
   useAccessibility: boolean;

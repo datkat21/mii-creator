@@ -29,7 +29,7 @@ export const newFromNNID = async () => {
 
   Loader.hide();
   if (result.error !== undefined) {
-    await Modal.alert(__("Error"), __("Couldn't get Mii: $1", result.error));
+    await Modal.alert(__("Error"), __("Couldn't get Mii: %1", result.error));
     return;
   }
 
@@ -65,7 +65,7 @@ export const newFromPNID = async () => {
   if (!pnid.ok) {
     await Modal.alert(
       __("Error"),
-      __("Couldn't get Mii: $1", await pnid.text())
+      __("Couldn't get Mii: %1", await pnid.text())
     );
     return;
   }

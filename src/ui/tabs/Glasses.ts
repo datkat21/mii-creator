@@ -26,8 +26,8 @@ export function GlassesTab(data: TabRenderInit) {
     MiiPagedFeatureSet({
       mii: data.mii,
       // hacky workaround for color palette
-      onChange: (newMii, forceRender, renderPart) => {
-        data.callback(newMii, forceRender, renderPart);
+      onChange: (newMii, forceRender, renderPart, updateType) => {
+        data.callback(newMii, forceRender, renderPart, updateType);
       },
       entries: {
         glassType: {

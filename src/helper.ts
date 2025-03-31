@@ -526,7 +526,7 @@ function injectCss() {
   }
 }
 
-function miiSelect() {
+function requestMiiSelection() {
   return new Promise((resolve) => {
     injectCss();
     const container = new Html("div")
@@ -556,7 +556,7 @@ export {
   GUEST_MII_DATA,
   loadAssets,
   Mii,
-  miiSelect,
+  requestMiiSelection as miiSelect,
   MiiCreatorCharModel,
   parseHexOrB64ToUint8Array,
   RequestType,

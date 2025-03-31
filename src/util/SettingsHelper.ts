@@ -179,10 +179,10 @@ export const settingsInfo: Record<string, any> = {
         label: __("Choose"),
         async select() {}
       }
-    ],
-    render(html: Html) {
-      html.text("REAL");
-    }
+    ]
+    // render(html: Html) {
+    //   html.text("REAL");
+    // }
   },
   saveData: {
     type: "non-settings-multi",

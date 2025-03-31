@@ -58,7 +58,14 @@ export type IconSet = {
 
 export enum RenderPart {
   Head,
-  Face
+  Face,
+  Body
+}
+
+export enum BodyUpdateType {
+  None,
+  ClothingUpdate,
+  RepositionCamera
 }
 
 let activeMii: Mii;
@@ -66,6 +73,7 @@ export const getMii = () => activeMii;
 let currentEditor: MiiEditor | null = null;
 
 import { _ } from "../util/Lang";
+import { ExtClothesTab } from "../ui/tabs/ExtClothes";
 const __ = _();
 
 export class MiiEditor {
@@ -113,10 +121,10 @@ export class MiiEditor {
 
     // default male mii
     let initString =
-      "BAUAAAAAAAAAAID/cJkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE0AaQBpAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDAQYEBgIKCAQEAgIMAAAAAP8AAAAACAQACgEAIf///0AABAACFAMTBBcNBAAKBAEJ//8A/wA=";
+      "BAXGigDvV8wSNID/cJl869TJwxYAAAAAAAAAAAAAAAAAAAAAAAAAAE0AaQBpAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDAQYEBgIKCAQEAgIMAAAAAP8AAAAACAQACgEAIf///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAP//";
     if (gender === MiiGender.Female) {
       initString =
-        "BAAAAAAAAAAAAIDfGZoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE0AaQBpAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDAQYEAAIKCAMEBAIMAAAAAP8AAAABCAQACgEADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wA=";
+        "BACnywgm6RFTRIDfGZqVDHu5NhQAAAAAAAAAAAAAAAAAAAAAAAAAAE0AaQBpAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDAQYEAAIKCAMEBAIMAAAAAP8AAAABCAQACgEADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAP//";
     }
     if (init) initString = init;
     if (onShutdown) {
@@ -333,11 +341,11 @@ export class MiiEditor {
         if (this.ui.scene) this.ui.scene.focusCamera(CameraFocusPart);
         await Tab({
           container: content,
-          callback: (mii, forceRender, renderPart) => {
+          callback: (mii, forceRender, renderPart, bodyUpdateType) => {
             this.mii = mii;
             activeMii = mii;
             // use of forceRender forces reload of the head in 3D mode
-            this.render(forceRender, renderPart);
+            this.render(forceRender, renderPart, bodyUpdateType);
             this.#updateCssVars();
             this.dirty = true;
           },
@@ -400,8 +408,8 @@ export class MiiEditor {
         select: TabInit(FavoriteColorTab, CameraPosition.MiiFullBody)
       },
       {
-        icon: EditorIcons.gender,
-        select: TabInit(OptionsTab, CameraPosition.MiiFullBody)
+        icon: EditorIcons.clothes,
+        select: TabInit(ExtClothesTab, CameraPosition.MiiFullBody)
       },
       {
         icon: EditorIcons.details,
@@ -464,7 +472,8 @@ export class MiiEditor {
 
   async render(
     forceReloadHead: boolean = true,
-    renderPart: RenderPart = RenderPart.Head
+    renderPart: RenderPart = RenderPart.Head,
+    bodyUpdateType: BodyUpdateType = BodyUpdateType.None
   ) {
     if (Config.renderer.allow3DMode === false)
       this.renderingMode = RenderMode.Canvas2DRenderer;
@@ -477,13 +486,16 @@ export class MiiEditor {
           }
           this.ui.mii.qs("canvas.scene")?.style({ display: "block" });
           this.ui.scene.mii = this.mii;
-          if (forceReloadHead) {
+          if (renderPart === RenderPart.Body) {
+            // only reload body
+            this.ui.scene.updateBody(bodyUpdateType);
+          } else if (forceReloadHead) {
             // reload head and body
+            if (bodyUpdateType !== BodyUpdateType.None) {
+              this.ui.scene.updateBody(bodyUpdateType);
+            }
             this.ui.scene.updateMiiHead(renderPart);
             this.ui.scene.sparkle();
-          } else {
-            // only reload body
-            this.ui.scene.updateBody(true);
           }
           return;
         }
@@ -533,13 +545,16 @@ export class MiiEditor {
         }
         this.ui.mii.qs("canvas.scene")?.style({ display: "block" });
         this.ui.scene.mii = this.mii;
-        if (forceReloadHead) {
+        if (renderPart === RenderPart.Body) {
+          // only reload body
+          this.ui.scene.updateBody(bodyUpdateType);
+        } else if (forceReloadHead) {
           // reload head and body
+          if (bodyUpdateType !== BodyUpdateType.None) {
+            this.ui.scene.updateBody(bodyUpdateType);
+          }
           this.ui.scene.updateMiiHead(renderPart);
           this.ui.scene.sparkle();
-        } else {
-          // only reload body
-          this.ui.scene.updateBody(true);
         }
         break;
     }

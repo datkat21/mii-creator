@@ -4,7 +4,7 @@ import {
 } from "../components/MiiPagedFeatureSet";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
-import { RenderPart } from "../../class/MiiEditor";
+import { BodyUpdateType, RenderPart } from "../../class/MiiEditor";
 import { makeSeparatorGapThinFSI } from "../../constants/MiiFeatureTable";
 
 import { _ } from "../../util/Lang";
@@ -29,8 +29,9 @@ export function OptionsTab(data: TabRenderInit) {
                 : EditorIcons.genderFemale,
               property: "gender",
               isNumber: true,
-              forceRender: false,
-              part: RenderPart.Face,
+              forceRender: true,
+              part: RenderPart.Body,
+              bodyUpdateType: BodyUpdateType.ClothingUpdate,
               soundOff: "select_misc",
               soundOn: "select_misc"
             }
@@ -46,7 +47,7 @@ export function OptionsTab(data: TabRenderInit) {
               property: "favorite",
               isNumber: true,
               forceRender: false,
-              part: RenderPart.Face,
+              part: RenderPart.Body,
               soundOff: "select_color",
               soundOn: "select_color"
             },
@@ -58,7 +59,7 @@ export function OptionsTab(data: TabRenderInit) {
               property: "special",
               isNumber: true,
               forceRender: false,
-              part: RenderPart.Face,
+              part: RenderPart.Body,
               soundOff: "select_color",
               soundOn: "select_color"
             }

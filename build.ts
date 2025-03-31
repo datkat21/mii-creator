@@ -22,7 +22,7 @@ export async function compile(
     //   identifiers: true,
     //   syntax: true,
     //   whitespace: true
-    // },
+    // }
     // plugins: [stripDebug({ exclude: ["warn"] })]
   }).catch((e) => {
     console.error("Failed to build:", e);

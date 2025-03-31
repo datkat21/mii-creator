@@ -10,7 +10,7 @@ import {
 } from "../../constants/ColorTables";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import { ArrayNum } from "../../util/Numbers";
-import { RenderPart } from "../../class/MiiEditor";
+import { BodyUpdateType, RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   makeSeparatorGapThinDesktop,
@@ -36,7 +36,8 @@ export function HeadTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.face[k],
-            part: RenderPart.Head
+            part: RenderPart.Head,
+            bodyUpdateType: BodyUpdateType.None
           }))
         },
         facelineMake: {
@@ -45,7 +46,8 @@ export function HeadTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.makeup[k],
-            part: RenderPart.Head
+            part: RenderPart.Head,
+            bodyUpdateType: BodyUpdateType.None
           }))
         },
         facelineWrinkle: {
@@ -56,7 +58,8 @@ export function HeadTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.wrinkles[k],
-            part: RenderPart.Head
+            part: RenderPart.Head,
+            bodyUpdateType: BodyUpdateType.None
           }))
         },
         facelineColor: {
@@ -66,7 +69,8 @@ export function HeadTab(data: TabRenderInit) {
               type: FeatureSetType.Icon,
               value: k,
               color: MiiSkinColorTable[k],
-              part: RenderPart.Head
+              part: RenderPart.Head,
+              bodyUpdateType: BodyUpdateType.ClothingUpdate
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
@@ -74,7 +78,8 @@ export function HeadTab(data: TabRenderInit) {
                 type: FeatureSetType.Icon,
                 value: k,
                 color: MiiSwitchSkinColorList[k],
-                part: RenderPart.Head
+                part: RenderPart.Head,
+                bodyUpdateType: BodyUpdateType.ClothingUpdate
               })),
               MiiSwitchSkinColorTable,
               makeSeparatorGapThinFSI
@@ -96,7 +101,8 @@ export function HeadTab(data: TabRenderInit) {
               forceRender: true,
               value: -1,
               icon: `<span class="disable-item">${__("Disabled")}</span>`,
-              part: RenderPart.Head
+              part: RenderPart.Head,
+              bodyUpdateType: BodyUpdateType.ClothingUpdate
             },
             makeSeparatorGapThinFSI(),
             ...rearrangeArray(
@@ -105,7 +111,8 @@ export function HeadTab(data: TabRenderInit) {
                 value: k,
                 // icon: `<span style="display:flex;justify-content:center;align-items:center;position:relative;z-index:1;">${k}</span>`,
                 color: SwitchMiiColorTable[k],
-                part: RenderPart.Head
+                part: RenderPart.Head,
+                bodyUpdateType: BodyUpdateType.ClothingUpdate
               })),
               MiiSwitchColorTable,
               makeSeparatorGapThinLaptop

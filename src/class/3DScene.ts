@@ -23,18 +23,31 @@ import {
   cPantsColorRed,
   MiiFavoriteFFLColorLookupTable
 } from "./3d/shader/fflShaderConst";
-import { MiiEditor, RenderPart } from "./MiiEditor";
+import { BodyUpdateType, MiiEditor, RenderPart } from "./MiiEditor";
 import { Config } from "../config";
 import { getSoundManager } from "./audio/SoundManager";
 import { SparkleParticle } from "./3d/effect/SparkleParticle";
-import { HatType, HatTypeList } from "../constants/Extensions";
-import { traverseAddShader, traverseMesh } from "./3d/shader/ShaderUtils";
+import {
+  ClothesType,
+  ClothesTypeList,
+  ExtClothesList,
+  HatType,
+  HatTypeList
+} from "../constants/Extensions";
+import {
+  getShaderMaterialFromShaderType,
+  traverseAddShader,
+  traverseMesh
+} from "./3d/shader/ShaderUtils";
 import { getSetting } from "../util/SettingsHelper";
 import { ShaderType } from "../constants/BodyShaderTypes";
 import { getHeadModel, getMaskTex, type ModelFlag } from "../util/MiiRendering";
 import { makeExpressionFlag, type CharModel } from "../external/ffl.js/ffl";
 import JSZip from "jszip";
 import { streetpassHandScaling } from "../util/scaling";
+import { colorMixTexture } from "./3d/shader/ColorMix";
+import { loadBlobTexture } from "../ui/pages/library/util/3DModel";
+import FFLShaderMaterial from "../external/ffl.js/FFLShaderMaterial";
 // import Stats from "three/examples/jsm/libs/stats.module.js";
 
 export enum CameraPosition {
@@ -71,6 +84,7 @@ export class Mii3DScene {
   shaderType!: ShaderType;
   simpleShaderLegacyColors!: boolean;
   hatModels!: GLTF[];
+  clothingTextures!: Record<string, THREE.Texture>;
   editor?: MiiEditor;
   camSetup!: () => void;
   texResolution: number;
@@ -257,8 +271,13 @@ export class Mii3DScene {
     this.#camera.updateProjectionMatrix();
     this.resize();
   }
-  async #loadHatModels(path: string = "./assets/models/hat_models_bundle.zip") {
-    this.hatModels = [];
+  async #loadZip(
+    path: string,
+    out: keyof Mii3DScene,
+    useKeys: boolean,
+    type: "gltf" | "texture"
+  ) {
+    (this[out] as any) = [];
 
     // Load hat models bundle
     const data = await fetch(path).then((j) => j.blob());
@@ -270,10 +289,21 @@ export class Mii3DScene {
     }
     const resolves = await Promise.all(promises);
     for (let i = 0; i < fileList.length; i++) {
-      console.log("File:", fileList[i]);
       const url = URL.createObjectURL(resolves[i]);
-      const gltf = await this.#gltfLoader.loadAsync(url);
-      this.hatModels[i] = gltf;
+      let result: any;
+      if (type === "gltf") {
+        result = await this.#gltfLoader.loadAsync(url);
+      } else {
+        result = await this.#textureLoader.loadAsync(url);
+        (result as THREE.Texture).flipY = false;
+      }
+      if (useKeys) {
+        const fileName = fileList[i].split(".");
+        fileName.pop();
+        (this[out] as any)[fileName.join(".")] = result;
+      } else {
+        (this[out] as any)[i] = result;
+      }
       URL.revokeObjectURL(url);
     }
   }
@@ -435,11 +465,25 @@ export class Mii3DScene {
     this.ready = false;
     this.getRendererElement().style.opacity = "0";
     await this.#addBody();
+    this.updateBody(BodyUpdateType.ClothingUpdate);
+
     this.swapAnimation("Wait", true);
-    await this.#loadHatModels();
+    await this.#loadZip(
+      "./assets/models/hat_models_bundle.zip",
+      "hatModels",
+      false,
+      "gltf"
+    );
+    await this.#loadZip(
+      "./assets/images/mii_clothes_textures_bundle.zip",
+      "clothingTextures",
+      true,
+      "texture"
+    );
     this.ready = true;
     this.preparing = false;
     this.resize();
+    this.updateBody(BodyUpdateType.ClothingUpdate);
     if (this.setupType === SetupType.Screenshot) {
       this.#initCallback && this.#initCallback(this.#renderer);
       this.resize();
@@ -457,6 +501,19 @@ export class Mii3DScene {
         this.focusCamera(CameraPosition.MiiHead, true, false);
       }, 500);
     }
+
+    // this.#scene.fog = new THREE.FogExp2(0xff0000, 1);
+    // let a = new THREE.PlaneGeometry(50, 50);
+    // let m = new THREE.Mesh(
+    //   a,
+    //   new FFLShaderMaterial({
+    //     color: new THREE.Color(0x00ff00),
+    //     modulateMode: 0,
+    //     modulateType: 0
+    //   }) as any
+    // );
+    // m.rotation.set(-(Math.PI / 2), 0, 0);
+    // this.#scene.add(m);
   }
   getRendererElement() {
     return this.#renderer.domElement;
@@ -640,6 +697,11 @@ export class Mii3DScene {
       ? SwitchMiiColorTableSRGB[this.mii.shirtColor]
       : MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor];
   }
+  getShoesColor() {
+    return this.mii.shoesColor !== -1 && this.mii.shoesColor < 100
+      ? SwitchMiiColorTableSRGB[this.mii.shoesColor]
+      : [1, 1, 1];
+  }
   getPantsColor() {
     if (
       this.mii.pantsColor !== -1 &&
@@ -660,7 +722,7 @@ export class Mii3DScene {
     }
     return cPantsColorGray;
   }
-  async updateBody(force?: boolean) {
+  async updateBody(updateType: BodyUpdateType = BodyUpdateType.None) {
     if (!this.ready) return;
     this.resize();
 
@@ -842,6 +904,8 @@ export class Mii3DScene {
           if (bodyModel === "miitomo") {
             // hacky
             this.#scene.getObjectByName("MiiHead")!.rotation.z -= Math.PI / 2;
+          } else {
+            this.#scene.getObjectByName("MiiHead")!.position.y += 0.1;
           }
         }
       };
@@ -855,44 +919,99 @@ export class Mii3DScene {
         // (shaderSetting.startsWith("wiiu") ||
         //   shaderSetting === "lightDisabled") &&
         this.shaderOverride === false;
-      const colorHands = await getSetting("bodyModelHands");
 
       const nBody = bodyN
         .getObjectByName(type)!
         .getObjectByName("body_" + type)! as THREE.Mesh;
-      if (hasShaderApplied) {
-        (nBody.material as any).color = new THREE.Color(
-          ...this.getShirtColor()
-        );
-      }
+
       const nLegs = bodyN
         .getObjectByName(type)!
         .getObjectByName("legs_" + type)! as THREE.Mesh;
-      if (hasShaderApplied)
-        (nLegs.material as any).color = new THREE.Color(
-          ...this.getPantsColor()
-        );
 
-      if (this.shaderOverride) {
-        if (this.simpleShaderLegacyColors === false) {
-          const lookupTable = MiiFavoriteColorLookupTable;
-          (nBody.material as THREE.MeshBasicMaterial).color.set(
-            lookupTable[this.mii.favoriteColor]
-          );
-        } else {
-          const lookupTable = MiiFavoriteColorVec3Table;
-          (nBody.material as THREE.MeshBasicMaterial).color.set(
-            lookupTable[this.mii.favoriteColor][0],
-            lookupTable[this.mii.favoriteColor][1],
-            lookupTable[this.mii.favoriteColor][2]
+      const colorHands = await getSetting("bodyModelHands");
+
+      if (updateType === BodyUpdateType.ClothingUpdate) {
+        if (hasShaderApplied) {
+          (nBody.material as any).color = new THREE.Color(
+            ...this.getShirtColor()
           );
         }
+        if (hasShaderApplied)
+          (nLegs.material as any).color = new THREE.Color(
+            ...this.getPantsColor()
+          );
 
-        (nLegs.material as THREE.MeshBasicMaterial).color.set(
-          this.getPantsColor()[0],
-          this.getPantsColor()[1],
-          this.getPantsColor()[2]
-        );
+        if (this.mii.clothesType !== -1) {
+          console.log("clothing update");
+          let texture: THREE.Texture;
+
+          switch (ClothesTypeList[this.mii.clothesType]) {
+            case ClothesType.COLOR_MIXED: {
+              let tex = await colorMixTexture(
+                this.clothingTextures[
+                  ExtClothesList[this.mii.clothesType] +
+                    (this.type == "f" ? "F" : "")
+                ],
+                // this.clothingTextures["LS+Pants" + (this.type == "f" ? "F" : "")],
+                new THREE.Vector4(...this.getShirtColor(), 1),
+                new THREE.Vector4(...this.getShoesColor(), 1),
+                new THREE.Vector4(...this.getPantsColor(), 1),
+                this.charModel ? this.charModel!.facelineColor : 0xff0000
+              );
+              texture = await loadBlobTexture(tex);
+              break;
+            }
+            case ClothesType.TEXTURE_COLOR: {
+              texture =
+                this.clothingTextures[
+                  ExtClothesList[this.mii.clothesType] +
+                    (this.type == "f" ? "F" : "")
+                ];
+              break;
+            }
+            default:
+              throw "???";
+          }
+          this.#renderer.initTexture(texture);
+
+          let nBodyMat = nBody.material as any;
+          let nLegsMat = nLegs.material as any;
+
+          nBodyMat.dispose();
+          nLegsMat.dispose();
+
+          const params = { modulateType: 9, modulateMode: 1, map: texture };
+          const newBodyMat = new (await getShaderMaterialFromShaderType())(
+            params
+          );
+          // const newBodyMat = new THREE.MeshBasicMaterial(params);
+
+          nBody.material = newBodyMat as any;
+          nLegs.material = newBodyMat as any;
+
+          console.log("mat changed!", newBodyMat, nBody, nLegs);
+        } else {
+          (nBody.material as any) =
+            new (await getShaderMaterialFromShaderType())({
+              color: new THREE.Color(
+                this.getShirtColor()[0],
+                this.getShirtColor()[1],
+                this.getShirtColor()[2]
+              ),
+              modulateMode: 0,
+              modulateType: 9
+            });
+          (nLegs.material as any) =
+            new (await getShaderMaterialFromShaderType())({
+              color: new THREE.Color(
+                this.getPantsColor()[0],
+                this.getPantsColor()[1],
+                this.getPantsColor()[2]
+              ),
+              modulateMode: 0,
+              modulateType: 10
+            });
+        }
       }
 
       const nHands = bodyN
@@ -958,7 +1077,7 @@ export class Mii3DScene {
     }
 
     // Update camera smoothly when body scaling is changed in the editor
-    if (force)
+    if (updateType === BodyUpdateType.RepositionCamera)
       requestAnimationFrame(() => {
         this.focusCamera(this.currentPosition, true, true, false);
       });
@@ -1229,7 +1348,7 @@ export class Mii3DScene {
 
     if (this.headReady === false) this.fadeIn();
     this.headReady = true;
-    await this.updateBody();
+    // await this.updateBody();
     this.resize();
   }
 

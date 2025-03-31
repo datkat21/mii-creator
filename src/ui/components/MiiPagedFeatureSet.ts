@@ -4,7 +4,7 @@ import Mii from "../../class/MiiData";
 import { TabList, TabListType, type Tab } from "./TabList";
 import md5 from "md5";
 import { playSound } from "../../class/audio/SoundManager";
-import { MiiEditor, RenderPart } from "../../class/MiiEditor";
+import { BodyUpdateType, MiiEditor, RenderPart } from "../../class/MiiEditor";
 
 export enum FeatureSetType {
   Icon,
@@ -25,6 +25,7 @@ export interface FeatureSetIconItem {
   selectedCondition?: () => boolean;
   selectedCallback?: (tmpMii: Mii) => void;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
 }
 export interface FeatureSetTextItem {
   type: FeatureSetType.Text;
@@ -33,6 +34,7 @@ export interface FeatureSetTextItem {
   label: string;
   sound?: string;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
 }
 export interface FeatureSetRangeItem {
   type: FeatureSetType.Range;
@@ -46,6 +48,7 @@ export interface FeatureSetRangeItem {
   property: string;
   label?: string;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
   inverse?: boolean;
 }
 export interface FeatureSetSliderItem {
@@ -60,6 +63,7 @@ export interface FeatureSetSliderItem {
   property: string;
   label?: string;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
 }
 export interface FeatureSetSwitchItem {
   type: FeatureSetType.Switch;
@@ -70,6 +74,7 @@ export interface FeatureSetSwitchItem {
   soundOn?: string;
   property: string;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
   isNumber?: boolean;
 }
 export interface FeatureSetMiscItem {
@@ -78,6 +83,7 @@ export interface FeatureSetMiscItem {
   select(): any | Promise<any>;
   // added to prevent error because lazy
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
   part?: RenderPart;
 }
 
@@ -98,7 +104,12 @@ export interface FeatureSetEntry {
 export interface FeatureSet {
   mii?: any;
   miiIsNotMii?: boolean;
-  onChange: (mii: Mii, forceRender: boolean, part: RenderPart) => void;
+  onChange: (
+    mii: Mii,
+    forceRender: boolean,
+    part: RenderPart,
+    updateType: BodyUpdateType
+  ) => void;
   entries: Record<string, FeatureSetEntry>;
 }
 
@@ -144,16 +155,27 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
           for (const item of entry.items) {
             const id = md5(String(Math.random() * 21412855));
 
-            let forceRender = true;
+            let forceRender = true,
+              updateType = BodyUpdateType.None;
 
             if (item.forceRender !== undefined) {
               if (item.forceRender === false) {
                 forceRender = false;
               }
             }
+            if (item.bodyUpdateType !== undefined) {
+              if (item.bodyUpdateType !== BodyUpdateType.None) {
+                updateType = item.bodyUpdateType;
+              }
+            }
 
             const update = () =>
-              set.onChange(tmpMii, forceRender, item.part || RenderPart.Head);
+              set.onChange(
+                tmpMii,
+                forceRender,
+                item.part || RenderPart.Head,
+                updateType
+              );
 
             // Used for true values (Switch colors usually use this to save time)
             let value = (tmpMii as Record<string, any>)[property];
@@ -272,6 +294,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   let frontIcon = new Html("span")
                     .html(item.iconStart)
                     .on("click", () => {
+                      // i hate this
+                      if (MiiEditor.getCurrentEditor() !== null) {
+                        tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                      }
+
                       featureSlider.val(Number(featureSlider.getValue()) - 1);
                       (tmpMii as Record<string, any>)[item.property] = Number(
                         featureSlider.getValue()
@@ -296,6 +323,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   let backIcon = new Html("span")
                     .html(item.iconEnd)
                     .on("click", () => {
+                      // i hate this
+                      if (MiiEditor.getCurrentEditor() !== null) {
+                        tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                      }
+
                       featureSlider.val(Number(featureSlider.getValue()) + 1);
                       (tmpMii as Record<string, any>)[item.property] = Number(
                         featureSlider.getValue()
@@ -312,6 +344,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                 );
 
                 featureSlider.on("input", () => {
+                  // i hate this
+                  if (MiiEditor.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                  }
+
                   playSound("slider_tick");
                   (tmpMii as Record<string, any>)[item.property] = Number(
                     featureSlider.getValue()
@@ -337,6 +374,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   let frontIcon = new Html("span")
                     .html(item.iconStart)
                     .on("click", () => {
+                      // i hate this
+                      if (MiiEditor.getCurrentEditor() !== null) {
+                        tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                      }
+
                       featureRange.val(
                         Number(featureRange.getValue()) +
                           (item.inverse ? 1 : -1)
@@ -370,6 +412,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   let backIcon = new Html("span")
                     .html(item.iconEnd)
                     .on("click", () => {
+                      // i hate this
+                      if (MiiEditor.getCurrentEditor() !== null) {
+                        tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                      }
+
                       featureRange.val(
                         Number(featureRange.getValue()) +
                           (item.inverse ? -1 : 1)
@@ -397,6 +444,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                 );
 
                 featureRange.on("change", () => {
+                  // i hate this
+                  if (MiiEditor.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                  }
+
                   const newValue = item.inverse
                     ? item.max + item.min - Number(featureRange.getValue())
                     : Number(featureRange.getValue());
@@ -444,6 +496,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   .appendTo(featureSwitch);
 
                 const switchToggle = (value: boolean) => {
+                  // i hate this
+                  if (MiiEditor.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                  }
+
                   let valueToSet: boolean | number = value;
                   if (item.isNumber) {
                     valueToSet = Number(valueToSet);
@@ -496,7 +553,10 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
   }
 
   if (Object.keys(set.entries).length === 1) {
-    tabListInit[0].select(setContainer);
+    let tabs = TabList(tabListInit, TabListType.NotSquare);
+    tabs.list.appendTo(setContainer);
+    tabs.content.appendTo(setContainer);
+    // tabListInit[0].select(setContainer);
   } else {
     let tabs = TabList(tabListInit, TabListType.NotSquare);
     tabs.list.appendTo(setContainer);

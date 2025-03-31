@@ -111,7 +111,7 @@ export const newFromQRCode = async () => {
             __("Notice"),
             new Html("span").html(
               __(
-                'Tomodachi Life QR codes aren\'t supported yet. Use <a href="https://mii-unsecure.ariankordi.net" target="_blank">$1</a> to scan it.',
+                'Tomodachi Life QR codes aren\'t supported yet. Use <a href="https://mii-unsecure.ariankordi.net" target="_blank">%1</a> to scan it.',
                 __("Mii Renderer (REAL)")
               )
             )

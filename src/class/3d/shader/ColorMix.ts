@@ -35,17 +35,16 @@ function ColorMixShaderMaterial(
           discard;
         }
         
-        // Mix RGB channels using each constant’s color (rgb)
-        vec3 mixedColor = texColor.r * u_const1.rgb +
-                          texColor.g * u_const2.rgb +
-                          texColor.b * u_const3.rgb;
-                          
-        // Mix alpha channels using each constant’s alpha (a)
-        float mixedAlpha = texColor.r * u_const1.a +
-                           texColor.g * u_const2.a +
-                           texColor.b * u_const3.a;
-      
-        gl_FragColor = vec4(mixedColor, mixedAlpha);
+// Mix RGB channels using each constant’s color (rgb)
+vec3 mixedColor = texColor.r * u_const1.rgb +
+                  texColor.g * u_const2.rgb +
+                  texColor.b * u_const3.rgb;
+
+// Use the texture's own alpha
+float mixedAlpha = texColor.a;
+
+// Premultiply the mixed color by its alpha
+gl_FragColor = vec4(mixedColor * mixedAlpha, mixedAlpha);
       }
     `
   });
@@ -55,7 +54,8 @@ export function colorMixTexture(
   tex: THREE.Texture,
   constR: THREE.Vector4Like = new THREE.Vector4(0, 1, 1, 1),
   constG: THREE.Vector4Like = new THREE.Vector4(1, 1, 0, 1),
-  constB: THREE.Vector4Like = new THREE.Vector4(1, 1, 0, 1)
+  constB: THREE.Vector4Like = new THREE.Vector4(1, 1, 0, 1),
+  constA: THREE.ColorRepresentation | undefined
 ) {
   return new Promise<Blob>((resolve) => {
     // --- Scene, Camera, and Renderer Setup ---
@@ -77,12 +77,15 @@ export function colorMixTexture(
 
     // Create the WebGL renderer and add its canvas to the document.
     const renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
+    // document.body.appendChild(renderer.domElement);
     // renderer.setClearColor(0x314c4b);
-    renderer.setClearAlpha(0);
-    renderer.setSize(width, height);
-    document.body.appendChild(renderer.domElement);
 
-    console.time("draw texture");
+    if (constA) {
+      renderer.setClearColor(constA);
+    } else {
+      renderer.setClearColor(0xff0000);
+    }
+    renderer.setSize(width, height);
 
     //@ts-expect-error
     window.camera = camera;
@@ -102,6 +105,11 @@ export function colorMixTexture(
       renderer.domElement.toBlob((blob) => {
         if (blob === null) return console.error("blob is null???");
         resolve(blob);
+        renderer.forceContextLoss();
+        renderer.dispose();
+        geometry.dispose();
+        plane.material.dispose();
+        renderer.domElement.remove();
       });
     }
     render();
