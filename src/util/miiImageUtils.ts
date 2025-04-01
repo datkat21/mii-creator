@@ -131,7 +131,10 @@ export const QRCodeCanvas = async (
         shirtColor: mii2.shirtColor,
         special: mii2.special,
         temporary: mii2.temporary,
-        eyeSclera: mii2.eyeSclera
+        eyeSclera: mii2.eyeSclera,
+        wigType: mii2.wigType,
+        clothesType: mii2.clothesType,
+        shoesColor: mii2.shoesColor
       },
       size: 720,
       expression: 0,

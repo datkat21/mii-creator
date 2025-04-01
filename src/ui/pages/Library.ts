@@ -127,7 +127,10 @@ export const getMiiIcon = async (
             favorite: miiData.favorite,
             special: miiData.special,
             temporary: miiData.temporary,
-            eyeSclera: miiData.eyeSclera
+            eyeSclera: miiData.eyeSclera,
+            wigType: miiData.wigType,
+            clothesType: miiData.clothesType,
+            shoesColor: miiData.shoesColor
           },
           drawBody,
           size
@@ -494,7 +497,7 @@ export async function Library(highlightMiiId?: string) {
         miiData.createId[6] === 22 &&
         miiData.createId[7] === 24 &&
         miiData.createId[8] === 250 &&
-        miiData.createId[9] === 193
+        miiData.createId[9] === 191 //193
       ) {
         miiContainer
           .classOn("highlight")

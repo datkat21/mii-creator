@@ -14,6 +14,7 @@ export enum ShaderType {
   Switch = "switch",
   LightDisabled = "lightDisabled",
   Miitomo = "miitomo",
+  MiitomoBasic = "miitomo_basic",
   WiiUBlinn = "wiiu_blinn",
   WiiUFFLIconWithBody = "wiiu_ffliconwithbody",
   WiiUToon = "wiiu_toon"

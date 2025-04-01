@@ -25,6 +25,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
     },
     {
       text: __("Save Mii Creator data"),
+      type: "primary",
       async callback() {
         const blob = new Blob([miiData.export()]);
         const url = URL.createObjectURL(blob);
@@ -110,6 +111,11 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
           {
             text: __("Download .RSD (Wii)"),
             async callback() {
+              Modal.alert(
+                __("Notice"),
+                __("Sorry, RSD export isn't available yet.")
+              );
+              return;
               const blob = new Blob([miiData.export("rsd")]);
               const url = URL.createObjectURL(blob);
 

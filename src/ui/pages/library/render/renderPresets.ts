@@ -33,7 +33,10 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
       shirtColor: miiData.shirtColor,
       special: miiData.special,
       temporary: miiData.temporary,
-      eyeSclera: miiData.eyeSclera
+      eyeSclera: miiData.eyeSclera,
+      wigType: miiData.wigType,
+      clothesType: miiData.clothesType,
+      shoesColor: miiData.shoesColor
     }
   };
   Modal.modal(

@@ -165326,6 +165326,178 @@ var VolumeRenderShader1 = {
 				}`
 };
 // node_modules/three/examples/jsm/utils/SkeletonUtils.js
+var exports_SkeletonUtils = {};
+__export(exports_SkeletonUtils, {
+  retargetClip: () => retargetClip,
+  retarget: () => retarget,
+  clone: () => clone
+});
+function getBoneName(bone, options) {
+  if (options.getBoneName !== undefined) {
+    return options.getBoneName(bone);
+  }
+  return options.names[bone.name];
+}
+function retarget(target, source, options = {}) {
+  const quat = new Quaternion, scale2 = new Vector3, relativeMatrix = new Matrix4, globalMatrix = new Matrix4;
+  options.preserveBoneMatrix = options.preserveBoneMatrix !== undefined ? options.preserveBoneMatrix : true;
+  options.preserveBonePositions = options.preserveBonePositions !== undefined ? options.preserveBonePositions : true;
+  options.useTargetMatrix = options.useTargetMatrix !== undefined ? options.useTargetMatrix : false;
+  options.hip = options.hip !== undefined ? options.hip : "hip";
+  options.hipInfluence = options.hipInfluence !== undefined ? options.hipInfluence : new Vector3(1, 1, 1);
+  options.scale = options.scale !== undefined ? options.scale : 1;
+  options.names = options.names || {};
+  const sourceBones = source.isObject3D ? source.skeleton.bones : getBones(source), bones = target.isObject3D ? target.skeleton.bones : getBones(target);
+  let bone, name2, boneTo, bonesPosition;
+  if (target.isObject3D) {
+    target.skeleton.pose();
+  } else {
+    options.useTargetMatrix = true;
+    options.preserveBoneMatrix = false;
+  }
+  if (options.preserveBonePositions) {
+    bonesPosition = [];
+    for (let i = 0;i < bones.length; i++) {
+      bonesPosition.push(bones[i].position.clone());
+    }
+  }
+  if (options.preserveBoneMatrix) {
+    target.updateMatrixWorld();
+    target.matrixWorld.identity();
+    for (let i = 0;i < target.children.length; ++i) {
+      target.children[i].updateMatrixWorld(true);
+    }
+  }
+  for (let i = 0;i < bones.length; ++i) {
+    bone = bones[i];
+    name2 = getBoneName(bone, options);
+    boneTo = getBoneByName(name2, sourceBones);
+    globalMatrix.copy(bone.matrixWorld);
+    if (boneTo) {
+      boneTo.updateMatrixWorld();
+      if (options.useTargetMatrix) {
+        relativeMatrix.copy(boneTo.matrixWorld);
+      } else {
+        relativeMatrix.copy(target.matrixWorld).invert();
+        relativeMatrix.multiply(boneTo.matrixWorld);
+      }
+      scale2.setFromMatrixScale(relativeMatrix);
+      relativeMatrix.scale(scale2.set(1 / scale2.x, 1 / scale2.y, 1 / scale2.z));
+      globalMatrix.makeRotationFromQuaternion(quat.setFromRotationMatrix(relativeMatrix));
+      if (target.isObject3D) {
+        if (options.localOffsets) {
+          if (options.localOffsets[bone.name]) {
+            globalMatrix.multiply(options.localOffsets[bone.name]);
+          }
+        }
+      }
+      globalMatrix.copyPosition(relativeMatrix);
+    }
+    if (name2 === options.hip) {
+      globalMatrix.elements[12] *= options.scale * options.hipInfluence.x;
+      globalMatrix.elements[13] *= options.scale * options.hipInfluence.y;
+      globalMatrix.elements[14] *= options.scale * options.hipInfluence.z;
+      if (options.hipPosition !== undefined) {
+        globalMatrix.elements[12] += options.hipPosition.x * options.scale;
+        globalMatrix.elements[13] += options.hipPosition.y * options.scale;
+        globalMatrix.elements[14] += options.hipPosition.z * options.scale;
+      }
+    }
+    if (bone.parent) {
+      bone.matrix.copy(bone.parent.matrixWorld).invert();
+      bone.matrix.multiply(globalMatrix);
+    } else {
+      bone.matrix.copy(globalMatrix);
+    }
+    bone.matrix.decompose(bone.position, bone.quaternion, bone.scale);
+    bone.updateMatrixWorld();
+  }
+  if (options.preserveBonePositions) {
+    for (let i = 0;i < bones.length; ++i) {
+      bone = bones[i];
+      name2 = getBoneName(bone, options) || bone.name;
+      if (name2 !== options.hip) {
+        bone.position.copy(bonesPosition[i]);
+      }
+    }
+  }
+  if (options.preserveBoneMatrix) {
+    target.updateMatrixWorld(true);
+  }
+}
+function retargetClip(target, source, clip, options = {}) {
+  options.useFirstFramePosition = options.useFirstFramePosition !== undefined ? options.useFirstFramePosition : false;
+  options.fps = options.fps !== undefined ? options.fps : Math.max(...clip.tracks.map((track) => track.times.length)) / clip.duration;
+  options.names = options.names || [];
+  if (!source.isObject3D) {
+    source = getHelperFromSkeleton(source);
+  }
+  const numFrames = Math.round(clip.duration * (options.fps / 1000) * 1000), delta = clip.duration / (numFrames - 1), convertedTracks = [], mixer = new AnimationMixer(source), bones = getBones(target.skeleton), boneDatas = [];
+  let positionOffset, bone, boneTo, boneData, name2;
+  mixer.clipAction(clip).play();
+  let start = 0, end = numFrames;
+  if (options.trim !== undefined) {
+    start = Math.round(options.trim[0] * options.fps);
+    end = Math.min(Math.round(options.trim[1] * options.fps), numFrames) - start;
+    mixer.update(options.trim[0]);
+  } else {
+    mixer.update(0);
+  }
+  source.updateMatrixWorld();
+  for (let frame = 0;frame < end; ++frame) {
+    const time2 = frame * delta;
+    retarget(target, source, options);
+    for (let j2 = 0;j2 < bones.length; ++j2) {
+      bone = bones[j2];
+      name2 = getBoneName(bone, options) || bone.name;
+      boneTo = getBoneByName(name2, source.skeleton);
+      if (boneTo) {
+        boneData = boneDatas[j2] = boneDatas[j2] || { bone };
+        if (options.hip === name2) {
+          if (!boneData.pos) {
+            boneData.pos = {
+              times: new Float32Array(end),
+              values: new Float32Array(end * 3)
+            };
+          }
+          if (options.useFirstFramePosition) {
+            if (frame === 0) {
+              positionOffset = bone.position.clone();
+            }
+            bone.position.sub(positionOffset);
+          }
+          boneData.pos.times[frame] = time2;
+          bone.position.toArray(boneData.pos.values, frame * 3);
+        }
+        if (!boneData.quat) {
+          boneData.quat = {
+            times: new Float32Array(end),
+            values: new Float32Array(end * 4)
+          };
+        }
+        boneData.quat.times[frame] = time2;
+        bone.quaternion.toArray(boneData.quat.values, frame * 4);
+      }
+    }
+    if (frame === end - 2) {
+      mixer.update(delta - 0.0000001);
+    } else {
+      mixer.update(delta);
+    }
+    source.updateMatrixWorld();
+  }
+  for (let i = 0;i < boneDatas.length; ++i) {
+    boneData = boneDatas[i];
+    if (boneData) {
+      if (boneData.pos) {
+        convertedTracks.push(new VectorKeyframeTrack(".bones[" + boneData.bone.name + "].position", boneData.pos.times, boneData.pos.values));
+      }
+      convertedTracks.push(new QuaternionKeyframeTrack(".bones[" + boneData.bone.name + "].quaternion", boneData.quat.times, boneData.quat.values));
+    }
+  }
+  mixer.uncacheAction(clip);
+  return new AnimationClip(clip.name, -1, convertedTracks);
+}
 function clone(source) {
   const sourceLookup = new Map;
   const cloneLookup = new Map;
@@ -165348,6 +165520,20 @@ function clone(source) {
     clonedMesh.bind(clonedMesh.skeleton, clonedMesh.bindMatrix);
   });
   return clone2;
+}
+function getBoneByName(name2, skeleton) {
+  for (let i = 0, bones = getBones(skeleton);i < bones.length; i++) {
+    if (name2 === bones[i].name)
+      return bones[i];
+  }
+}
+function getBones(skeleton) {
+  return Array.isArray(skeleton) ? skeleton : skeleton.bones;
+}
+function getHelperFromSkeleton(skeleton) {
+  const source = new SkeletonHelper(skeleton.bones[0]);
+  source.skeleton = skeleton;
+  return source;
 }
 function parallelTraverse(a2, b3, callback) {
   callback(a2, b3);
@@ -165550,6 +165736,7 @@ var ShaderType;
   ShaderType2["Switch"] = "switch";
   ShaderType2["LightDisabled"] = "lightDisabled";
   ShaderType2["Miitomo"] = "miitomo";
+  ShaderType2["MiitomoBasic"] = "miitomo_basic";
   ShaderType2["WiiUBlinn"] = "wiiu_blinn";
   ShaderType2["WiiUFFLIconWithBody"] = "wiiu_ffliconwithbody";
   ShaderType2["WiiUToon"] = "wiiu_toon";
@@ -165586,6 +165773,7 @@ var setRoot = (newRoot) => {
   root = newRoot;
 };
 var gltfLoader = new GLTFLoader;
+var imageLoader = new ImageBitmapLoader;
 function makeModelPath(gender, modelName) {
   return `${root}assets/models/miiBody${gender}_${modelName}.glb`;
 }
@@ -165616,6 +165804,7 @@ async function loadBodyModels(input) {
     bodyModels = {};
   }
   bodyType = input || await import_localforage2.default.getItem("settings_bodyModel") || "wiiu";
+  bodyModelName = bodyType;
   if (bodyType === "streetpass" /* StreetPass */) {
     isStreetpassBody = true;
   }
@@ -165654,15 +165843,47 @@ async function loadHatModels() {
     URL.revokeObjectURL(url);
   }
 }
+async function loadClothesTextures() {
+  clothesTextures = {};
+  imageLoader.setOptions({ imageOrientation: "flipY" });
+  const data2 = await fetch(root + "assets/images/mii_clothes_textures_bundle.zip").then((j2) => j2.blob());
+  console.log("Got it");
+  const zip = await import_jszip2.default.loadAsync(data2);
+  console.log("Got zip");
+  let promises = [];
+  const fileList = Object.keys(zip.files);
+  for (const file of fileList) {
+    promises.push(zip.files[file].async("blob"));
+  }
+  const resolves = await Promise.all(promises);
+  console.log("Got files");
+  for (let i = 0;i < fileList.length; i++) {
+    const url = URL.createObjectURL(resolves[i]);
+    let result;
+    console.log("Loading texture");
+    result = new CanvasTexture(await imageLoader.loadAsync(url));
+    console.log("Loading texture done");
+    const fileName = fileList[i].split(".");
+    fileName.pop();
+    clothesTextures[fileName.join(".")] = result;
+    console.log("Loading " + fileName.join("."));
+    URL.revokeObjectURL(url);
+  }
+  console.log("Done");
+}
 var bodyModels = {
   m: null,
   f: null
 };
+var bodyModelName = "wiiu";
 var hatModels = [];
+var clothesTextures = {};
 var isStreetpassBody = false;
 var isStreetpass = () => isStreetpassBody;
 var getBodyModels = () => bodyModels;
 var getHatModels = () => hatModels;
+var getLoadedBodyModelName = () => bodyModelName;
+var getClothesTextures = () => clothesTextures;
 
 // src/class/3d/shader/fflShaderConst.ts
 var FFLBlinnMaterial = {
@@ -165704,11 +165925,12 @@ var MiiFavoriteFFLColorLookupTable = {
 
 // src/class/3d/shader/ShaderUtils.ts
 var import_FFLShaderMaterial2 = __toESM(require_FFLShaderMaterial(), 1);
-var import_LUTShaderMaterial = __toESM(require_LUTShaderMaterial(), 1);
+var import_LUTShaderMaterial2 = __toESM(require_LUTShaderMaterial(), 1);
 var import_localforage3 = __toESM(require_localforage(), 1);
 
 // src/class/3d/shader/FFLShaderAlternateMaterial.ts
 var import_FFLShaderMaterial = __toESM(require_FFLShaderMaterial(), 1);
+var import_LUTShaderMaterial = __toESM(require_LUTShaderMaterial(), 1);
 class FFLShaderBlinnMaterial extends import_FFLShaderMaterial.default {
   constructor(options = {}) {
     options = Object.assign({
@@ -165755,8 +165977,21 @@ class FFLShaderBrightMaterial extends import_FFLShaderMaterial.default {
   }
 }
 
+class LUTShaderPretendoMaterial extends import_LUTShaderMaterial.default {
+  constructor(options = {}) {
+    options = Object.assign({}, options);
+    super(options);
+    this.uniforms.uDirLightDirAndType0.value = new Vector4(-0.2, 0.5, 0.8, -1);
+    this.uniforms.uDirLightDirAndType1.value = new Vector4(0, -0.19612, 0.98058, -1);
+    this.uniforms.uHSLightGroundColor.value = new Color(14793111).convertLinearToSRGB();
+    this.uniforms.uHSLightSkyColor.value = new Color(14800590).convertLinearToSRGB();
+    this.uniforms.uDirLightColor0.value = new Color(5919571).convertLinearToSRGB();
+    this.uniforms.uDirLightColor1.value = new Color(1710104).convertLinearToSRGB();
+  }
+}
+
 // src/class/3d/shader/ShaderUtils.ts
-var getSetting = async (key2) => {
+var getSettingSafe = async (key2) => {
   const value2 = await import_localforage3.default.getItem("settings_" + key2);
   if (value2 == null && key2 === "shaderType") {
     return "wiiu";
@@ -165772,7 +166007,7 @@ function traverseAddShader(model, mii) {
   });
 }
 async function traverseMesh(node, mpCharInfo) {
-  const shaderSetting = await getSetting("shaderType");
+  const shaderSetting = await getSettingSafe("shaderType");
   const originalMaterial = node.material;
   const userData = node.geometry.userData;
   if (userData.ignore !== undefined) {
@@ -165833,7 +166068,10 @@ async function traverseMesh(node, mpCharInfo) {
       finalMat = new FFLShaderLightDisabledMaterial(params);
       break;
     case "miitomo" /* Miitomo */:
-      finalMat = new import_LUTShaderMaterial.default(params);
+      finalMat = new import_LUTShaderMaterial2.default(params);
+      break;
+    case "miitomo_basic" /* MiitomoBasic */:
+      finalMat = new LUTShaderPretendoMaterial(params);
       break;
     case "wiiu_blinn" /* WiiUBlinn */:
       finalMat = new FFLShaderBlinnMaterial(params);
@@ -165850,7 +166088,7 @@ async function traverseMesh(node, mpCharInfo) {
   node.material = finalMat;
 }
 async function getMaterialOverridesFromShaderType(shader = undefined) {
-  let shaderType = shader || await getSetting("shaderType");
+  let shaderType = shader || await getSettingSafe("shaderType");
   switch (shaderType) {
     case "wiiu" /* WiiU */:
       return null;
@@ -165870,11 +166108,12 @@ async function getMaterialOverridesFromShaderType(shader = undefined) {
     case "switch" /* Switch */:
       return null;
     case "miitomo" /* Miitomo */:
+    case "miitomo_basic" /* MiitomoBasic */:
       return null;
   }
 }
 async function getShaderMaterialFromShaderType(type) {
-  const shaderType = type || await getSetting("shaderType");
+  const shaderType = type || await getSettingSafe("shaderType");
   switch (shaderType) {
     case "wiiu" /* WiiU */:
       return import_FFLShaderMaterial2.default;
@@ -165889,7 +166128,9 @@ async function getShaderMaterialFromShaderType(type) {
     case "switch" /* Switch */:
       return import_FFLShaderMaterial2.default;
     case "miitomo" /* Miitomo */:
-      return import_LUTShaderMaterial.default;
+      return import_LUTShaderMaterial2.default;
+    case "miitomo_basic" /* MiitomoBasic */:
+      return LUTShaderPretendoMaterial;
   }
 }
 
@@ -165905,21 +166146,16 @@ var ExtHatNameList = [
   "Hijab",
   "Bike Helmet"
 ];
-var ExtClothesList = [
-  "LS+Pants",
-  "SS+Shorts",
-  "TT+Shorts",
-  "empty empty"
-];
+var ExtClothesList = ["LS+Pants", "SS+Shorts", "TT+Shorts"];
 var HatTypeList = [
   1 /* HAT */,
   1 /* HAT */,
   1 /* HAT */,
-  0 /* HEAD */,
-  0 /* HEAD */,
+  4 /* SIDE */,
+  4 /* SIDE */,
   0 /* HEAD */,
   1 /* HAT */,
-  3 /* BALD */,
+  6 /* BALD */,
   1 /* HAT */
 ];
 var ClothesTypeList = [
@@ -166061,6 +166297,140 @@ async function renderTargetToDataTexture(renderTarget, renderer2, flipY = false,
   return dataTexture;
 }
 
+// src/class/3d/shader/ColorMix.ts
+function ColorMixShaderMaterial(texture, r, g3, b3) {
+  return new ShaderMaterial({
+    uniforms: {
+      u_texture: { value: texture },
+      u_const1: { value: r },
+      u_const2: { value: g3 },
+      u_const3: { value: b3 }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D u_texture;
+      uniform vec4 u_const1;
+      uniform vec4 u_const2;
+      uniform vec4 u_const3;
+      varying vec2 vUv;
+      
+      void main() {
+        vec4 texColor = texture2D(u_texture, vUv);
+
+        // Optionally discard low-alpha texture pixels.
+        if (texColor.a <= 0.2) {
+          discard;
+        }
+        
+// Mix RGB channels using each constant’s color (rgb)
+vec3 mixedColor = texColor.r * u_const1.rgb +
+                  texColor.g * u_const2.rgb +
+                  texColor.b * u_const3.rgb;
+
+// Use the texture's own alpha
+float mixedAlpha = texColor.a;
+
+// Premultiply the mixed color by its alpha
+gl_FragColor = vec4(mixedColor * mixedAlpha, mixedAlpha);
+      }
+    `
+  });
+}
+function colorMixTexture(tex, constR = new Vector4(0, 1, 1, 1), constG = new Vector4(1, 1, 0, 1), constB = new Vector4(1, 1, 0, 1), constA, rendererMain, textureResolution) {
+  return new Promise((resolve) => {
+    const scene = new Scene;
+    let width2, height2;
+    if (tex instanceof ImageBitmap) {
+      width2 = tex.width;
+      height2 = tex.height;
+    } else {
+      width2 = tex.image.width;
+      height2 = tex.image.height;
+    }
+    if (textureResolution) {
+      let aspect2 = width2 / height2;
+      width2 = textureResolution;
+      height2 = textureResolution / aspect2;
+    }
+    const renderSize = new Vector2(0, 0);
+    rendererMain.getSize(renderSize);
+    console.log("[CMT DEBUG] width, height", width2, height2);
+    const camera = new OrthographicCamera(width2 / -2, width2 / 2, height2 / 2, height2 / -2, 0.1, 1000);
+    camera.position.z = 1;
+    console.log("[CMT DEBUG] camera Created!");
+    const renderer2 = rendererMain;
+    console.log("[CMT DEBUG] renderer Created!");
+    let oldClearColor = new Color;
+    renderer2.getClearColor(oldClearColor);
+    let oldClearAlpha = renderer2.getClearAlpha();
+    renderer2.setClearColor(constA, 1);
+    console.log("[CMT DEBUG] using red for alpha.");
+    renderer2.setSize(width2, height2, false);
+    console.log("[CMT DEBUG] set renderer size OK.");
+    if (typeof window !== "undefined")
+      window.camera = camera;
+    const geometry = new PlaneGeometry(width2, height2);
+    console.log("[CMT DEBUG] create geometry OK");
+    const plane = new Mesh(geometry, ColorMixShaderMaterial(tex, constR, constG, constB));
+    console.log("[CMT DEBUG] create mesh OK");
+    scene.add(plane);
+    console.log("[CMT DEBUG] add mesh to scene");
+    function render() {
+      console.log("[CMT DEBUG] render scene OK");
+      function finalize(blob) {
+        if (blob === null)
+          return console.error("blob is null???");
+        resolve(blob);
+        renderer2.setClearColor(0);
+        renderer2.setClearAlpha(0);
+        geometry.dispose();
+        plane.material.dispose();
+        console.log("[CMT DEBUG] disposed of scene OK");
+      }
+      renderer2.render(scene, camera);
+      if (typeof document === "undefined") {
+        renderer2.domElement.convertToBlob({ type: "image/png" }).then(finalize);
+      } else {
+        renderer2.domElement.toBlob(finalize);
+      }
+    }
+    console.log("[CMT DEBUG] preparing render");
+    render();
+  });
+}
+
+// src/ui/pages/library/util/3DModel.ts
+function loadBlobTexture(blob) {
+  return new Promise((resolve) => {
+    var texture = new Texture;
+    var url = URL.createObjectURL(blob);
+    var image = new Image;
+    image.src = url;
+    image.onload = function() {
+      texture.image = image;
+      texture.needsUpdate = true;
+      resolve(texture);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1e4);
+    };
+  });
+}
+function loadBlobTextureWorker(blob, width2 = 512, height2 = 512) {
+  return new Promise((resolve) => {
+    createImageBitmap(blob, 0, 0, width2, height2).then((r) => {
+      console.log("bitmap canvas texture created");
+      return resolve(new CanvasTexture(r));
+    });
+  });
+}
+
 // src/util/IconRendering.ts
 var defaultParams = {
   type: ViewType2.Face,
@@ -166076,6 +166446,7 @@ function createMiiRender(request) {
       dataInput = parseHexOrB64ToUint8Array(request.data);
     else
       dataInput = request.data;
+    const isTemporary = request.isTemporary !== false;
     const mii = new Mii(dataInput);
     const localModule = request.module;
     if (localModule === undefined)
@@ -166089,16 +166460,16 @@ function createMiiRender(request) {
         case 2 /* FACE_ONLY */:
           modelFlag = FFLModelFlag.FACE_ONLY;
           break;
-        case 3 /* BALD */:
+        case 6 /* BALD */:
           mii.hairType = 30;
           dataInput = mii.export("studioData");
           break;
       }
     }
     console.log("miic additional info:", JSON.stringify(request.additionalInfo));
-    const shaderMaterial = await getShaderMaterialFromShaderType();
-    const shaderOverrides = await getMaterialOverridesFromShaderType();
-    let texResolution = 512;
+    const shaderMaterial = await getShaderMaterialFromShaderType(request.shaderType);
+    const shaderOverrides = await getMaterialOverridesFromShaderType(request.shaderType);
+    let texResolution = request.texResolution || 512;
     if (request.size > 512) {
       texResolution = 1024;
     } else if (request.size > 1024) {
@@ -166123,13 +166494,23 @@ function createMiiRender(request) {
     if (request.additionalInfo.eyeSclera === 1 && mii.eyeColor !== 8) {
       self.eyeScleraHack = false;
     }
-    const iconScene = new Scene;
-    iconScene.background = null;
+    let miiGroup, headModel;
+    if (isTemporary) {
+      miiGroup = new Scene;
+      miiGroup.background = null;
+    } else {
+      miiGroup = new Group;
+      headModel = new Group;
+    }
     const gender = charModel._model.charInfo.personal.gender;
     const bodyScale = charModel.getBodyScale();
     if (request.additionalInfo.hatType !== -1) {
       let hatColor = [0, 0, 0];
-      const model = getHatModels()[request.additionalInfo.hatType];
+      let hatModel;
+      if (isTemporary)
+        hatModel = getHatModels()[request.additionalInfo.hatType];
+      else
+        hatModel = getHatModels()[request.additionalInfo.hatType].clone(true);
       hatColor = MiiFavoriteColorVec3Table[mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length];
       if (request.additionalInfo.hatFavoriteColor !== -1) {
         hatColor = MiiFavoriteColorVec3Table[request.additionalInfo.hatFavoriteColor];
@@ -166137,7 +166518,7 @@ function createMiiRender(request) {
       if (request.additionalInfo.hatCommonColor !== -1) {
         hatColor = SwitchMiiColorTableSRGB[request.additionalInfo.hatCommonColor];
       }
-      model.traverse((m) => {
+      hatModel.traverse((m) => {
         if (m.isMesh) {
           const oldMat = m.material.map;
           m.material = new shaderMaterial({
@@ -166150,37 +166531,64 @@ function createMiiRender(request) {
           });
         }
       });
-      iconScene.add(model);
+      if (isTemporary) {
+        miiGroup.add(hatModel);
+      } else {
+        headModel.add(hatModel);
+      }
       const shiftPos = charModel.partsTransform.hatTranslate.y;
       if (request.drawBody) {
-        model.position.set(0, bodyScale.y * 75 + shiftPos, 0);
+        if (isTemporary) {
+          hatModel.position.set(0, bodyScale.y * 75 + shiftPos, 0);
+        } else {
+          hatModel.position.set(0, shiftPos, 0);
+        }
       } else {
         charModel.partsTransform.hatTranslate.y;
-        model.position.set(0, shiftPos, 0);
+        hatModel.position.set(0, shiftPos, 0);
       }
     }
     const headMesh = charModel.meshes.clone();
-    iconScene.add(headMesh);
-    const iconCamera = getCameraForViewType2(request.type, undefined, undefined, bodyScale.y);
-    let bodyModel, bodyModelBody, bodyModelHands, bodyModelLegs;
+    if (isTemporary) {
+      miiGroup.add(headMesh);
+    } else {
+      headModel.add(headMesh);
+    }
+    let iconCamera;
+    if (isTemporary)
+      iconCamera = getCameraForViewType2(request.type, undefined, undefined, bodyScale.y);
+    let bodyModel, bodyModelBody, bodyModelHands, bodyModelLegs, bodyModelAnims;
+    if (headModel !== undefined) {
+      miiGroup.add(headModel);
+    }
     if (request.drawBody && getBodyModels().m !== null) {
       switch (gender) {
         case 0: {
-          bodyModel = getBodyModels().m.scene;
+          if (isTemporary)
+            bodyModel = getBodyModels().m.scene;
+          else
+            bodyModel = exports_SkeletonUtils.clone(getBodyModels().m.scene);
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
           bodyModelBody = bodyModel.getObjectByName("body_m");
           bodyModelHands = bodyModel.getObjectByName("hands_m");
           bodyModelLegs = bodyModel.getObjectByName("legs_m");
+          if (!isTemporary)
+            bodyModelAnims = getBodyModels().m.animations;
           break;
         }
         case 1: {
-          bodyModel = getBodyModels().f.scene;
+          if (isTemporary)
+            bodyModel = getBodyModels().f.scene;
+          else
+            bodyModel = exports_SkeletonUtils.clone(getBodyModels().f.scene);
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
           bodyModelBody = bodyModel.getObjectByName("body_f");
           bodyModelHands = bodyModel.getObjectByName("hands_f");
           bodyModelLegs = bodyModel.getObjectByName("legs_f");
+          if (!isTemporary)
+            bodyModelAnims = getBodyModels().f.animations;
           break;
         }
         default:
@@ -166188,7 +166596,7 @@ function createMiiRender(request) {
       }
       bodyModel.scale.set(bodyScale.x * 7, bodyScale.y * 7, bodyScale.z * 7);
       bodyModel.position.set(0, 0, 0);
-      iconScene.add(bodyModel);
+      miiGroup.add(bodyModel);
       var shirtColor = MiiFavoriteColorVec3Table[mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length];
       if (request.additionalInfo.shirtColor !== -1 && !ForbiddenShirtPantColors.includes(request.additionalInfo.shirtColor)) {
         shirtColor = SwitchMiiColorTableSRGB[request.additionalInfo.shirtColor];
@@ -166220,15 +166628,65 @@ function createMiiRender(request) {
         color: new Color(...pantsColor),
         opacity: 1
       });
-      headMesh.position.set(0, bodyScale.y * 75, 0);
-      switch (request.type) {
-        case ViewType2.Face:
-        case ViewType2.MakeIcon:
-        case ViewType2.IconFovy45:
-        case ViewType2.CreditIcon: {
-          iconCamera.position.y += bodyScale.y * 76;
+      const nBody = bodyModelBody;
+      const nLegs = bodyModelLegs;
+      if (request.additionalInfo.clothesType !== undefined && request.additionalInfo.clothesType !== -1 && getLoadedBodyModelName() !== "miitomo" && request.additionalInfo.clothesType < ExtClothesList.length) {
+        console.log("clothing update");
+        let shirtTexture, pantsTexture = null;
+        const suffix = mii.gender == 1 ? "F" : "";
+        let key2 = `${getLoadedBodyModelName()}_${ExtClothesList[request.additionalInfo.clothesType]}${suffix}`;
+        let shirtKey = key2;
+        if (getLoadedBodyModelName() === "miitomo") {
+          shirtKey = key2 + "_Top";
         }
+        let shoesColor = request.additionalInfo.shoesColor !== -1 && request.additionalInfo.shoesColor < 100 ? SwitchMiiColorTableSRGB[request.additionalInfo.shoesColor] : [1, 1, 1];
+        switch (ClothesTypeList[request.additionalInfo.clothesType]) {
+          case 0 /* COLOR_MIXED */: {
+            const colorMixR = new Vector4(...shirtColor, 1), colorMixG = new Vector4(...shoesColor, 1), colorMixB = new Vector4(...pantsColor, 1), colorMixA = charModel ? charModel.facelineColor.convertSRGBToLinear() : 16711680;
+            let tex = await colorMixTexture(getClothesTextures()[shirtKey], colorMixR, colorMixG, colorMixB, colorMixA, request.textureRenderer || request.renderer, request.texResolution);
+            shirtTexture = await loadBlobTextureWorker(tex);
+            break;
+          }
+          case 1 /* TEXTURE_COLOR */: {
+            shirtTexture = getClothesTextures()[shirtKey + suffix];
+            break;
+          }
+          default:
+            alert("Something isn't right here");
+            throw "???";
+        }
+        request.renderer.initTexture(shirtTexture);
+        let nBodyMat = nBody.material;
+        let nLegsMat = nLegs.material;
+        nBodyMat.dispose();
+        nLegsMat.dispose();
+        const params = {
+          modulateType: 9,
+          modulateMode: 1,
+          map: shirtTexture,
+          color: new Color(0)
+        };
+        const newBodyMat = new (await getShaderMaterialFromShaderType(request.shaderType))(params);
+        if (getLoadedBodyModelName() !== "miitomo") {
+          nBody.material = newBodyMat;
+          nLegs.material = newBodyMat;
+        }
+        console.log("mat changed!", newBodyMat, nBody, nLegs);
       }
+      if (isTemporary) {
+        headMesh.position.set(0, bodyScale.y * 75, 0);
+      } else {
+        headModel.position.set(0, bodyScale.y * 75, 0);
+      }
+      if (isTemporary)
+        switch (request.type) {
+          case ViewType2.Face:
+          case ViewType2.MakeIcon:
+          case ViewType2.IconFovy45:
+          case ViewType2.CreditIcon: {
+            iconCamera.position.y += bodyScale.y * 76;
+          }
+        }
       if (isStreetpass()) {
         console.log("is streetpass");
         var scaleVec = new Vector3;
@@ -166242,17 +166700,30 @@ function createMiiRender(request) {
         console.log("not streetpass");
       }
     }
-    const target = createAndRenderToTarget(iconScene, iconCamera, request.renderer, request.size, request.size);
-    setTimeout(() => {
-      const dataURL = renderTargetToDataURL2(target, request.renderer);
-      target.dispose();
-      charModel.dispose();
-      if (request.drawBody) {
-        bodyModelBody.material.dispose();
-        bodyModelLegs.material.dispose();
-      }
-      resolve(dataURL);
-    }, 0);
+    if (isTemporary) {
+      const target = createAndRenderToTarget(miiGroup, iconCamera, request.renderer, request.size, request.size);
+      setTimeout(() => {
+        const dataURL = renderTargetToDataURL2(target, request.renderer);
+        target.dispose();
+        charModel.dispose();
+        if (request.drawBody) {
+          bodyModelBody.material.dispose();
+          bodyModelLegs.material.dispose();
+        }
+        resolve(dataURL);
+      }, 0);
+    } else {
+      return resolve({
+        bodyModel,
+        bodyModelBody,
+        bodyModelHands,
+        bodyModelLegs,
+        charModel,
+        headModel,
+        miiGroup,
+        bodyModelAnims
+      });
+    }
   });
 }
 
@@ -166311,7 +166782,7 @@ var updateSettings = async (force = false) => {
   if (prevSetting["shaderType"] !== await import_localforage4.default.getItem("settings_shaderType")) {
     console.log("shaderType changed!!!");
     askRefreshNotice();
-    let currentShader = await getSetting2("shaderType");
+    let currentShader = await getSetting("shaderType");
     document.dispatchEvent(new CustomEvent("library-shader-update"));
     if (Html.qsa("img[data-src]") !== null)
       Html.qsa("img[data-src]").forEach((img) => {
@@ -166335,7 +166806,7 @@ var updateSettings = async (force = false) => {
   if (prevSetting["bodyModel"] !== await import_localforage4.default.getItem("settings_bodyModel")) {
     console.log("bodyModel changed!!!");
     askRefreshNotice();
-    let bodyType2 = await getSetting2("bodyModel");
+    let bodyType2 = await getSetting("bodyModel");
     document.dispatchEvent(new CustomEvent("library-body-update"));
     if (Html.qsa("img[data-src]") !== null)
       Html.qsa("img[data-src]").forEach((img) => {
@@ -166394,7 +166865,7 @@ async function Settings() {
     const items = [...elements];
     const allSettings = {};
     for (const key2 in settingsInfo) {
-      allSettings[key2] = await getSetting2(key2);
+      allSettings[key2] = await getSetting(key2);
     }
     for (const [key2, element] of items) {
       if (settingsInfo[key2].condition) {
@@ -166613,7 +167084,8 @@ var settingsInfo = {
       { label: __4("Wii U"), value: "wiiu" /* WiiU */ },
       { label: __4("Wii U (Blinn)"), value: "wiiu_blinn" /* WiiUBlinn */ },
       { label: __4("Wii U (Bright)"), value: "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */ },
-      { label: __4("Miitomo"), value: "miitomo" /* Miitomo */ }
+      { label: __4("Miitomo"), value: "miitomo" /* Miitomo */ },
+      { label: __4("Miitomo (Basic)"), value: "miitomo_basic" /* MiitomoBasic */ }
     ]
   },
   bodyModel: {
@@ -166696,7 +167168,7 @@ var settingsInfo = {
     ]
   }
 };
-var getSetting2 = async (key2) => {
+var getSetting = async (key2) => {
   const result = await import_localforage5.default.getItem("settings_" + key2);
   if (result === null) {
     if (settingsInfo[key2])
@@ -166746,7 +167218,8 @@ async function prepareFFL() {
   console.log("We've got FFL!");
   await loadBodyModels();
   await loadHatModels();
-  let { module: module2 } = await initializeFFLWithResource(FFLModule, Config.renderer.fflResourcePath[await getSetting2("resourceType")]);
+  await loadClothesTextures();
+  let { module: module2 } = await initializeFFLWithResource(FFLModule, Config.renderer.fflResourcePath[await getSetting("resourceType")]);
   FFLModule = module2;
   if (window.Worker) {
     if (window.OffscreenCanvas) {
@@ -166773,7 +167246,7 @@ async function prepareFFL() {
       };
       FFLWorker.postMessage({
         type: "Init",
-        resourcePath: Config.renderer.fflResourcePath[await getSetting2("resourceType")],
+        resourcePath: Config.renderer.fflResourcePath[await getSetting("resourceType")],
         offscreenCanvas,
         devicePixelRatio: window.devicePixelRatio
       }, [offscreenCanvas]);
@@ -166868,7 +167341,10 @@ var QRCodeCanvas = async (mii, extendedColors = true) => {
         shirtColor: mii2.shirtColor,
         special: mii2.special,
         temporary: mii2.temporary,
-        eyeSclera: mii2.eyeSclera
+        eyeSclera: mii2.eyeSclera,
+        wigType: mii2.wigType,
+        clothesType: mii2.clothesType,
+        shoesColor: mii2.shoesColor
       },
       size: 720,
       expression: 0,
@@ -168831,104 +169307,6 @@ function streetpassHandScaling(body, scaleMul = 1) {
   body.getObjectByName("handRPs").scale.set(baseHandScaleX, adjustedHandScaleY, baseHandScaleX);
 }
 
-// src/class/3d/shader/ColorMix.ts
-function ColorMixShaderMaterial(texture, r, g3, b3) {
-  return new ShaderMaterial({
-    uniforms: {
-      u_texture: { value: texture },
-      u_const1: { value: r },
-      u_const2: { value: g3 },
-      u_const3: { value: b3 }
-    },
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform sampler2D u_texture;
-      uniform vec4 u_const1;
-      uniform vec4 u_const2;
-      uniform vec4 u_const3;
-      varying vec2 vUv;
-      
-      void main() {
-        vec4 texColor = texture2D(u_texture, vUv);
-
-        // Optionally discard low-alpha texture pixels.
-        if (texColor.a <= 0.2) {
-          discard;
-        }
-        
-// Mix RGB channels using each constant’s color (rgb)
-vec3 mixedColor = texColor.r * u_const1.rgb +
-                  texColor.g * u_const2.rgb +
-                  texColor.b * u_const3.rgb;
-
-// Use the texture's own alpha
-float mixedAlpha = texColor.a;
-
-// Premultiply the mixed color by its alpha
-gl_FragColor = vec4(mixedColor * mixedAlpha, mixedAlpha);
-      }
-    `
-  });
-}
-function colorMixTexture(tex, constR = new Vector4(0, 1, 1, 1), constG = new Vector4(1, 1, 0, 1), constB = new Vector4(1, 1, 0, 1), constA) {
-  return new Promise((resolve) => {
-    const scene = new Scene;
-    const width2 = tex.image.width;
-    const height2 = tex.image.height;
-    const camera = new OrthographicCamera(width2 / -2, width2 / 2, height2 / 2, height2 / -2, 0.1, 1000);
-    camera.position.z = 1;
-    const renderer2 = new WebGLRenderer({ preserveDrawingBuffer: true });
-    if (constA) {
-      renderer2.setClearColor(constA);
-    } else {
-      renderer2.setClearColor(16711680);
-    }
-    renderer2.setSize(width2, height2);
-    window.camera = camera;
-    const geometry = new PlaneGeometry(width2, height2);
-    const plane = new Mesh(geometry, ColorMixShaderMaterial(tex, constR, constG, constB));
-    scene.add(plane);
-    function render() {
-      renderer2.render(scene, camera);
-      renderer2.domElement.toBlob((blob) => {
-        if (blob === null)
-          return console.error("blob is null???");
-        resolve(blob);
-        renderer2.forceContextLoss();
-        renderer2.dispose();
-        geometry.dispose();
-        plane.material.dispose();
-        renderer2.domElement.remove();
-      });
-    }
-    render();
-  });
-}
-
-// src/ui/pages/library/util/3DModel.ts
-function loadBlobTexture(blob) {
-  return new Promise((resolve) => {
-    var texture = new Texture;
-    var url = URL.createObjectURL(blob);
-    var image = new Image;
-    image.src = url;
-    image.onload = function() {
-      texture.image = image;
-      texture.needsUpdate = true;
-      resolve(texture);
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 1e4);
-    };
-  });
-}
-
 // src/class/3DScene.ts
 class Mii3DScene {
   #camera;
@@ -168985,12 +169363,12 @@ class Mii3DScene {
     }
     this.getRendererElement().classList.add("scene");
     this.setupType = setupType;
-    getSetting2("bodyModel").then((type) => {
+    getSetting("bodyModel").then((type) => {
       this.bodyModel = type;
     });
-    getSetting2("shaderType").then((type) => {
+    getSetting("shaderType").then((type) => {
       this.shaderType = type;
-      getSetting2("simpleShaderLegacyColors").then((val2) => {
+      getSetting("simpleShaderLegacyColors").then((val2) => {
         this.simpleShaderLegacyColors = val2;
       });
       if (type === "lightDisabled" || type.startsWith("wiiu") || type === "switch") {
@@ -169395,7 +169773,7 @@ class Mii3DScene {
       glb.scene.rotation.set(0, 0, 0);
       console.log(`setupBody("${path}", "${type}")`);
     };
-    const bodyModel = await getSetting2("bodyModel");
+    const bodyModel = await getSetting("bodyModel");
     const loaders = [
       setupMiiBody(`./assets/models/miiBodyM_${bodyModel}.glb`, "m"),
       setupMiiBody(`./assets/models/miiBodyF_${bodyModel}.glb`, "f")
@@ -169466,8 +169844,8 @@ class Mii3DScene {
         streetpassHandScaling(body);
       }
     };
-    const shaderSetting = await getSetting2("shaderType");
-    const bodyModel = await getSetting2("bodyModel");
+    const shaderSetting = await getSetting("shaderType");
+    const bodyModel = await getSetting("bodyModel");
     const makeHeadBoneUpdate = (body2) => {
       const quaternion = new Quaternion;
       const scale2 = new Vector3;
@@ -169495,7 +169873,7 @@ class Mii3DScene {
       const hasShaderApplied = this.shaderOverride === false;
       const nBody = bodyN.getObjectByName(type).getObjectByName("body_" + type);
       const nLegs = bodyN.getObjectByName(type).getObjectByName("legs_" + type);
-      const colorHands = await getSetting2("bodyModelHands");
+      const colorHands = await getSetting("bodyModelHands");
       if (updateType === 1 /* ClothingUpdate */) {
         if (hasShaderApplied) {
           nBody.material.color = new Color(...this.getShirtColor());
@@ -169504,29 +169882,54 @@ class Mii3DScene {
           nLegs.material.color = new Color(...this.getPantsColor());
         if (this.mii.clothesType !== -1) {
           console.log("clothing update");
-          let texture;
+          let shirtTexture, pantsTexture = null;
+          const suffix = this.type == "f" ? "F" : "";
+          let key2 = `${this.bodyModel}_${ExtClothesList[this.mii.clothesType]}${suffix}`;
+          let shirtKey = key2;
+          if (this.bodyModel === "miitomo") {
+            shirtKey = key2 + "_Top";
+          }
           switch (ClothesTypeList[this.mii.clothesType]) {
             case 0 /* COLOR_MIXED */: {
-              let tex = await colorMixTexture(this.clothingTextures[ExtClothesList[this.mii.clothesType] + (this.type == "f" ? "F" : "")], new Vector4(...this.getShirtColor(), 1), new Vector4(...this.getShoesColor(), 1), new Vector4(...this.getPantsColor(), 1), this.charModel ? this.charModel.facelineColor : 16711680);
-              texture = await loadBlobTexture(tex);
+              const colorMixR = new Vector4(...this.getShirtColor(), 1), colorMixG = new Vector4(...this.getShoesColor(), 1), colorMixB = new Vector4(...this.getPantsColor(), 1), colorMixA = this.charModel ? this.charModel.facelineColor : 16711680;
+              console.log("Shirt Texture Key:", shirtKey);
+              let tex = await colorMixTexture(this.clothingTextures[shirtKey], colorMixR, colorMixG, colorMixB, colorMixA, this.#renderer);
+              shirtTexture = await loadBlobTexture(tex);
+              console.log("loaded shirt texture!");
               break;
             }
             case 1 /* TEXTURE_COLOR */: {
-              texture = this.clothingTextures[ExtClothesList[this.mii.clothesType] + (this.type == "f" ? "F" : "")];
+              shirtTexture = this.clothingTextures[shirtKey + suffix];
               break;
             }
             default:
+              alert("Something isn't right here");
               throw "???";
           }
-          this.#renderer.initTexture(texture);
+          this.#renderer.initTexture(shirtTexture);
           let nBodyMat = nBody.material;
           let nLegsMat = nLegs.material;
           nBodyMat.dispose();
           nLegsMat.dispose();
-          const params = { modulateType: 9, modulateMode: 1, map: texture };
+          const params = {
+            modulateType: 9,
+            modulateMode: 1,
+            map: shirtTexture
+          };
           const newBodyMat = new (await getShaderMaterialFromShaderType())(params);
-          nBody.material = newBodyMat;
-          nLegs.material = newBodyMat;
+          if (this.bodyModel !== "miitomo")
+            nBody.material = newBodyMat;
+          if (this.bodyModel === "miitomo" && pantsTexture !== null) {
+            const params2 = {
+              modulateType: 9,
+              modulateMode: 1,
+              map: pantsTexture
+            };
+            const newLegsMat = new (await getShaderMaterialFromShaderType())(params2);
+            nLegs.material = newLegsMat;
+          } else {
+            nLegs.material = newBodyMat;
+          }
           console.log("mat changed!", newBodyMat, nBody, nLegs);
         } else {
           nBody.material = new (await getShaderMaterialFromShaderType())({
@@ -169581,6 +169984,10 @@ class Mii3DScene {
       requestAnimationFrame(() => {
         this.focusCamera(this.currentPosition, true, true, false);
       });
+    else
+      requestAnimationFrame(() => {
+        this.resize();
+      });
   }
   debugGetScene() {
     return this.#scene;
@@ -169613,7 +170020,7 @@ class Mii3DScene {
               case 2 /* FACE_ONLY */:
                 params["modelType"] = "face_only";
                 break;
-              case 3 /* BALD */:
+              case 6 /* BALD */:
                 tmpMii.hairType = 30;
                 break;
             }
@@ -169685,13 +170092,19 @@ class Mii3DScene {
               hatModel.name = "HatScene";
               let i = 0;
               if (GLB.asset.extras.partsTransform.hatTranslate) {
-                const [x2, y3, z2] = GLB.asset.extras.partsTransform.hatTranslate;
-                console.log(GLB.asset.extras.partsTransform.hatTranslate);
-                const vec = new Vector3(x2, y3, z2);
+                const vec = GLB.asset.extras.partsTransform.hatTranslate;
                 hatModel.position.add(vec);
                 window.hatModel = hatModel;
+                switch (HatTypeList[this.mii.hatType]) {
+                  case 4 /* SIDE */:
+                    break;
+                  case 3 /* FRONT */:
+                    break;
+                  case 5 /* TOP */:
+                    break;
+                }
               }
-              let shaderSetting = await getSetting2("shaderType");
+              let shaderSetting = await getSetting("shaderType");
               hatModel.traverse((o) => {
                 if (o.name === "HatScene" || o.name === "HatRoot")
                   return;
@@ -170653,7 +171066,7 @@ function FavoriteColorTab(data2) {
           forceRender: true,
           value: k4,
           color: numToHex(MiiFavoriteColorLookupTable[k4]),
-          part: 2 /* Body */,
+          part: 0 /* Head */,
           bodyUpdateType: 1 /* ClothingUpdate */
         }))
       }
@@ -171406,7 +171819,7 @@ class MiiEditor2 {
     }
   }
   async#setupUi() {
-    const editMode = await getSetting2("editMode");
+    const editMode = await getSetting("editMode");
     if (editMode === "2d") {
       this.renderingMode = 0 /* Canvas2DRenderer */;
     } else if (editMode === "3d") {
@@ -171415,7 +171828,7 @@ class MiiEditor2 {
       else
         this.renderingMode = 0 /* Canvas2DRenderer */;
     }
-    const useAccessibility = await getSetting2("accessibilityFeature");
+    const useAccessibility = await getSetting("accessibilityFeature");
     this.useAccessibility = useAccessibility;
     this.icons = await fetch("./dist/icons.json?t=" + Date.now()).then((j2) => j2.json());
     this.ui = {};
@@ -171907,7 +172320,7 @@ async function customRender(miiData) {
     switch: 5,
     miitomo: 16
   };
-  let bodyModelSetting = await getSetting2("bodyModel");
+  let bodyModelSetting = await getSetting("bodyModel");
   let poseCount = 0;
   if (bodyModelSetting in poseListPerBodyModel) {
     poseCount = poseListPerBodyModel[bodyModelSetting] + 1;
@@ -172069,7 +172482,7 @@ If you like this site, <b>PLEASE</b> consider sharing it with others by <b>credi
   });
   controls = scene.getControls();
   window.scene = scene;
-  const useGreenScreen = await getSetting2("customRenderGreenScreen");
+  const useGreenScreen = await getSetting("customRenderGreenScreen");
   if (useGreenScreen !== "off") {
     let color = useGreenScreen;
     switch (useGreenScreen) {
@@ -172177,7 +172590,7 @@ If you like this site, <b>PLEASE</b> consider sharing it with others by <b>credi
     parentBox.append(scene.getRendererElement());
     scene.resize();
   });
-  let shouldClose = await getSetting2("autoCloseCustomRender");
+  let shouldClose = await getSetting("autoCloseCustomRender");
   const rendererElm = scene.getRendererElement();
   function finalizeRender() {
     rendererElm.toBlob((blob) => {
@@ -172219,7 +172632,10 @@ var miiRenderPresets = async (mii, miiData) => {
       shirtColor: miiData.shirtColor,
       special: miiData.special,
       temporary: miiData.temporary,
-      eyeSclera: miiData.eyeSclera
+      eyeSclera: miiData.eyeSclera,
+      wigType: miiData.wigType,
+      clothesType: miiData.clothesType,
+      shoesColor: miiData.shoesColor
     }
   };
   Modal_default.modal(__22("Render options: %1", miiData.nickname), __22("Choose a way to render this Mii"), "body", {
@@ -172292,6 +172708,7 @@ var miiExportData = async (mii, miiData) => {
     text: "Cancel"
   }, {
     text: __24("Save Mii Creator data"),
+    type: "primary",
     async callback() {
       const blob = new Blob([miiData.export()]);
       const url = URL.createObjectURL(blob);
@@ -172357,6 +172774,8 @@ var miiExportData = async (mii, miiData) => {
       }, {
         text: __24("Download .RSD (Wii)"),
         async callback() {
+          Modal_default.alert(__24("Notice"), __24("Sorry, RSD export isn't available yet."));
+          return;
           const blob = new Blob([miiData.export("rsd")]);
           const url = URL.createObjectURL(blob);
           const a2 = document.createElement("a");
@@ -175485,7 +175904,7 @@ async function startScanner(camList) {
     highlightScanRegion: true,
     highlightCodeOutline: true
   });
-  const allowCam = await getSetting2("allowQrCamera");
+  const allowCam = await getSetting("allowQrCamera");
   if (allowCam) {
     cameraScanner.start().then(() => {
       const existingCameras = document.getElementsByClassName("device-camera");
@@ -175515,7 +175934,7 @@ async function startScanner(camList) {
 }
 async function initQrCam(camList, startCamera, stopCamera, fileInput) {
   console.log("initQrCam()");
-  let allowCam = await getSetting2("allowQrCamera");
+  let allowCam = await getSetting("allowQrCamera");
   const disableCam = () => {
     camList.style.display = "none";
     startCamera.style.display = "none";
@@ -175624,7 +176043,7 @@ var newFromQRCode = async () => {
   })));
   startScanner(mb.qs("#cam-list").elm);
   initQrCam(mb.qs("#cam-list").elm, mb.qs("#start-camera").elm, mb.qs("#stop-camera").elm, mb.qs("#file-input").elm);
-  if (await getSetting2("allowQrCamera") === false) {
+  if (await getSetting("allowQrCamera") === false) {
     mb.qsa('span[for="cam-list"], #cam-list, .flex-group, video').forEach((e) => e.style({ display: "none" }));
     mb.qs("video").style({ position: "fixed" });
     mb.qs("span#file-upload").text(__26(`Camera is disabled in settings.
@@ -175632,7 +176051,7 @@ var newFromQRCode = async () => {
 Upload an image:`));
   }
   async function qrImportConfirmation(mii, source) {
-    const shouldClose = await getSetting2("autoCloseQrScan");
+    const shouldClose = await getSetting("autoCloseQrScan");
     if (shouldClose) {
       qrReturnToMenu = false;
       m.qs(".modal-header button")?.elm.click();
@@ -176258,7 +176677,10 @@ var getMiiIcon = async (mii, source = "unknown", view = "variableiconbody", size
           favorite: miiData.favorite,
           special: miiData.special,
           temporary: miiData.temporary,
-          eyeSclera: miiData.eyeSclera
+          eyeSclera: miiData.eyeSclera,
+          wigType: miiData.wigType,
+          clothesType: miiData.clothesType,
+          shoesColor: miiData.shoesColor
         },
         drawBody,
         size: size2
@@ -176305,11 +176727,11 @@ var getMiiIcon = async (mii, source = "unknown", view = "variableiconbody", size
 };
 var currentShader = "wiiu" /* WiiU */;
 document.addEventListener("library-shader-update", async () => {
-  currentShader = await getSetting2("shaderType");
+  currentShader = await getSetting("shaderType");
 });
 var currentBodyModel = "wiiu" /* WiiU */;
 document.addEventListener("library-body-update", async () => {
-  currentBodyModel = await getSetting2("bodyModel");
+  currentBodyModel = await getSetting("bodyModel");
 });
 var shutdown = () => {
   console.log("Shutdown was called but was not set yet!");
@@ -176431,8 +176853,8 @@ function confirmPersonalMii(mii, miiLocalforage, modalRef) {
   });
 }
 async function Library(highlightMiiId) {
-  currentShader = await getSetting2("shaderType");
-  currentBodyModel = await getSetting2("bodyModel");
+  currentShader = await getSetting("shaderType");
+  currentBodyModel = await getSetting("bodyModel");
   function shutdownReal() {
     return new Promise((resolve) => {
       container.class("fadeOut");
@@ -176487,7 +176909,7 @@ async function Library(highlightMiiId) {
       miiData.validate();
       console.debug("MII DATA GOT:", miiData);
       let specialMii = false;
-      if (miiData.createId[4] === 42 && miiData.createId[5] === 241 && miiData.createId[6] === 22 && miiData.createId[7] === 24 && miiData.createId[8] === 250 && miiData.createId[9] === 193) {
+      if (miiData.createId[4] === 42 && miiData.createId[5] === 241 && miiData.createId[6] === 22 && miiData.createId[7] === 24 && miiData.createId[8] === 250 && miiData.createId[9] === 191) {
         miiContainer.classOn("highlight").style({ "--selection-color": "#ffbf00" });
         specialMii = true;
       }

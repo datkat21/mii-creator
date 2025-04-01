@@ -1,12 +1,10 @@
 import { WebGLRenderer } from "three";
 import * as FFL_JS from "./external/ffl.js/ffl";
 import {
-  getMaterialOverridesFromShaderType,
-  getShaderMaterialFromShaderType
-} from "./class/3d/shader/ShaderUtils";
-import type { MiiExpression } from "./external/ffl/FFLTypes";
-import type { MiiCreatorAdditionalData } from "./util/MiiCreatorTypes";
-import { loadBodyModels, loadHatModels } from "./util/ModelLoader";
+  loadBodyModels,
+  loadClothesTextures,
+  loadHatModels
+} from "./util/ModelLoader";
 import { createMiiRender, type RenderRequest } from "./util/IconRendering";
 
 export type FFLWorkerMessage =
@@ -75,8 +73,12 @@ self.onmessage = async (e) => {
 
       log("Initialized Module!", FFLModule);
       log("Loading FFL Resource...");
+      log("Loading body models..");
       await loadBodyModels();
+      log("Loading hat models..");
       await loadHatModels();
+      log("Loading clothes textures..");
+      await loadClothesTextures();
       let { module } = await FFL_JS.initializeFFLWithResource(
         FFLModule,
         input.resourcePath
@@ -135,9 +137,9 @@ self.onmessage = async (e) => {
           if (input.useBlob) {
             if (result.type === "blob") {
               url = URL.createObjectURL(result.result as Blob);
-              setTimeout(() => {
-                URL.revokeObjectURL(url!);
-              }, 50_000);
+              // setTimeout(() => {
+              //   URL.revokeObjectURL(url!);
+              // }, 50_000);
             }
           } else {
             if (result.type === "blob") {

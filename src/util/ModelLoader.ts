@@ -10,6 +10,7 @@ export const setRoot = (newRoot: string) => {
   root = newRoot;
 };
 var gltfLoader = new GLTFLoader();
+var imageLoader = new THREE.ImageBitmapLoader();
 function makeModelPath(gender: string, modelName: string) {
   return `${root}assets/models/miiBody${gender}_${modelName}.glb`;
 }
@@ -44,6 +45,7 @@ export async function loadBodyModels(input?: string) {
   }
   bodyType =
     input || (await localforage.getItem("settings_bodyModel")) || "wiiu";
+  bodyModelName = bodyType;
 
   if (bodyType === BodyType.StreetPass) {
     isStreetpassBody = true;
@@ -91,15 +93,56 @@ export async function loadHatModels() {
   }
 }
 
+export async function loadClothesTextures() {
+  clothesTextures = {};
+  imageLoader.setOptions({ imageOrientation: "flipY" });
+
+  // Load hat models bundle
+  const data = await fetch(
+    root + "assets/images/mii_clothes_textures_bundle.zip"
+  ).then((j) => j.blob());
+  console.log("Got it");
+  const zip = await JSZip.loadAsync(data);
+  console.log("Got zip");
+  let promises = [];
+  const fileList = Object.keys(zip.files);
+  for (const file of fileList) {
+    promises.push(zip.files[file].async("blob"));
+  }
+  const resolves = await Promise.all(promises);
+  console.log("Got files");
+  for (let i = 0; i < fileList.length; i++) {
+    const url = URL.createObjectURL(resolves[i]);
+    let result: any;
+
+    console.log("Loading texture");
+    result = new THREE.CanvasTexture(await imageLoader.loadAsync(url));
+    // (result as THREE.Texture).flipY = true;
+    console.log("Loading texture done");
+
+    const fileName = fileList[i].split(".");
+    fileName.pop();
+    clothesTextures[fileName.join(".")] = result;
+    console.log("Loading " + fileName.join("."));
+
+    URL.revokeObjectURL(url);
+  }
+  console.log("Done");
+}
+
 // Cloneable models used
 let bodyModels: Record<string, GLTF | null> = {
   m: null,
   f: null
 };
+let bodyModelName: string = "wiiu";
 let hatModels: THREE.Group[] = [];
+let clothesTextures: Record<string, THREE.Texture> = {};
 
 let isStreetpassBody = false;
 
 export const isStreetpass = () => isStreetpassBody;
 export const getBodyModels = () => bodyModels as Record<"m" | "f", GLTF>;
 export const getHatModels = () => hatModels;
+export const getLoadedBodyModelName = () => bodyModelName;
+export const getClothesTextures = () => clothesTextures;

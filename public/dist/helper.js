@@ -88455,6 +88455,7 @@ var ShaderType;
   ShaderType2["Switch"] = "switch";
   ShaderType2["LightDisabled"] = "lightDisabled";
   ShaderType2["Miitomo"] = "miitomo";
+  ShaderType2["MiitomoBasic"] = "miitomo_basic";
   ShaderType2["WiiUBlinn"] = "wiiu_blinn";
   ShaderType2["WiiUFFLIconWithBody"] = "wiiu_ffliconwithbody";
   ShaderType2["WiiUToon"] = "wiiu_toon";
@@ -88486,11 +88487,12 @@ function adjustShaderQuery(params, shader) {
 
 // src/class/3d/shader/ShaderUtils.ts
 var import_FFLShaderMaterial2 = __toESM(require_FFLShaderMaterial(), 1);
-var import_LUTShaderMaterial = __toESM(require_LUTShaderMaterial(), 1);
+var import_LUTShaderMaterial2 = __toESM(require_LUTShaderMaterial(), 1);
 var import_localforage = __toESM(require_localforage(), 1);
 
 // src/class/3d/shader/FFLShaderAlternateMaterial.ts
 var import_FFLShaderMaterial = __toESM(require_FFLShaderMaterial(), 1);
+var import_LUTShaderMaterial = __toESM(require_LUTShaderMaterial(), 1);
 class FFLShaderBlinnMaterial extends import_FFLShaderMaterial.default {
   constructor(options = {}) {
     options = Object.assign({
@@ -88537,8 +88539,21 @@ class FFLShaderBrightMaterial extends import_FFLShaderMaterial.default {
   }
 }
 
+class LUTShaderPretendoMaterial extends import_LUTShaderMaterial.default {
+  constructor(options = {}) {
+    options = Object.assign({}, options);
+    super(options);
+    this.uniforms.uDirLightDirAndType0.value = new Vector4(-0.2, 0.5, 0.8, -1);
+    this.uniforms.uDirLightDirAndType1.value = new Vector4(0, -0.19612, 0.98058, -1);
+    this.uniforms.uHSLightGroundColor.value = new Color(14793111).convertLinearToSRGB();
+    this.uniforms.uHSLightSkyColor.value = new Color(14800590).convertLinearToSRGB();
+    this.uniforms.uDirLightColor0.value = new Color(5919571).convertLinearToSRGB();
+    this.uniforms.uDirLightColor1.value = new Color(1710104).convertLinearToSRGB();
+  }
+}
+
 // src/class/3d/shader/ShaderUtils.ts
-var getSetting = async (key2) => {
+var getSettingSafe = async (key2) => {
   const value2 = await import_localforage.default.getItem("settings_" + key2);
   if (value2 == null && key2 === "shaderType") {
     return "wiiu";
@@ -88554,7 +88569,7 @@ function traverseAddShader(model, mii) {
   });
 }
 async function traverseMesh(node, mpCharInfo) {
-  const shaderSetting = await getSetting("shaderType");
+  const shaderSetting = await getSettingSafe("shaderType");
   const originalMaterial = node.material;
   const userData = node.geometry.userData;
   if (userData.ignore !== undefined) {
@@ -88615,7 +88630,10 @@ async function traverseMesh(node, mpCharInfo) {
       finalMat = new FFLShaderLightDisabledMaterial(params);
       break;
     case "miitomo" /* Miitomo */:
-      finalMat = new import_LUTShaderMaterial.default(params);
+      finalMat = new import_LUTShaderMaterial2.default(params);
+      break;
+    case "miitomo_basic" /* MiitomoBasic */:
+      finalMat = new LUTShaderPretendoMaterial(params);
       break;
     case "wiiu_blinn" /* WiiUBlinn */:
       finalMat = new FFLShaderBlinnMaterial(params);
@@ -88632,7 +88650,7 @@ async function traverseMesh(node, mpCharInfo) {
   node.material = finalMat;
 }
 async function getMaterialOverridesFromShaderType(shader = undefined) {
-  let shaderType = shader || await getSetting("shaderType");
+  let shaderType = shader || await getSettingSafe("shaderType");
   switch (shaderType) {
     case "wiiu" /* WiiU */:
       return null;
@@ -88652,11 +88670,12 @@ async function getMaterialOverridesFromShaderType(shader = undefined) {
     case "switch" /* Switch */:
       return null;
     case "miitomo" /* Miitomo */:
+    case "miitomo_basic" /* MiitomoBasic */:
       return null;
   }
 }
 async function getShaderMaterialFromShaderType(type) {
-  const shaderType = type || await getSetting("shaderType");
+  const shaderType = type || await getSettingSafe("shaderType");
   switch (shaderType) {
     case "wiiu" /* WiiU */:
       return import_FFLShaderMaterial2.default;
@@ -88671,7 +88690,9 @@ async function getShaderMaterialFromShaderType(type) {
     case "switch" /* Switch */:
       return import_FFLShaderMaterial2.default;
     case "miitomo" /* Miitomo */:
-      return import_LUTShaderMaterial.default;
+      return import_LUTShaderMaterial2.default;
+    case "miitomo_basic" /* MiitomoBasic */:
+      return LUTShaderPretendoMaterial;
   }
 }
 
@@ -142173,6 +142194,178 @@ var VolumeRenderShader1 = {
 				}`
 };
 // node_modules/three/examples/jsm/utils/SkeletonUtils.js
+var exports_SkeletonUtils = {};
+__export(exports_SkeletonUtils, {
+  retargetClip: () => retargetClip,
+  retarget: () => retarget,
+  clone: () => clone
+});
+function getBoneName(bone, options) {
+  if (options.getBoneName !== undefined) {
+    return options.getBoneName(bone);
+  }
+  return options.names[bone.name];
+}
+function retarget(target, source, options = {}) {
+  const quat = new Quaternion, scale2 = new Vector3, relativeMatrix = new Matrix4, globalMatrix = new Matrix4;
+  options.preserveBoneMatrix = options.preserveBoneMatrix !== undefined ? options.preserveBoneMatrix : true;
+  options.preserveBonePositions = options.preserveBonePositions !== undefined ? options.preserveBonePositions : true;
+  options.useTargetMatrix = options.useTargetMatrix !== undefined ? options.useTargetMatrix : false;
+  options.hip = options.hip !== undefined ? options.hip : "hip";
+  options.hipInfluence = options.hipInfluence !== undefined ? options.hipInfluence : new Vector3(1, 1, 1);
+  options.scale = options.scale !== undefined ? options.scale : 1;
+  options.names = options.names || {};
+  const sourceBones = source.isObject3D ? source.skeleton.bones : getBones(source), bones = target.isObject3D ? target.skeleton.bones : getBones(target);
+  let bone, name2, boneTo, bonesPosition;
+  if (target.isObject3D) {
+    target.skeleton.pose();
+  } else {
+    options.useTargetMatrix = true;
+    options.preserveBoneMatrix = false;
+  }
+  if (options.preserveBonePositions) {
+    bonesPosition = [];
+    for (let i = 0;i < bones.length; i++) {
+      bonesPosition.push(bones[i].position.clone());
+    }
+  }
+  if (options.preserveBoneMatrix) {
+    target.updateMatrixWorld();
+    target.matrixWorld.identity();
+    for (let i = 0;i < target.children.length; ++i) {
+      target.children[i].updateMatrixWorld(true);
+    }
+  }
+  for (let i = 0;i < bones.length; ++i) {
+    bone = bones[i];
+    name2 = getBoneName(bone, options);
+    boneTo = getBoneByName(name2, sourceBones);
+    globalMatrix.copy(bone.matrixWorld);
+    if (boneTo) {
+      boneTo.updateMatrixWorld();
+      if (options.useTargetMatrix) {
+        relativeMatrix.copy(boneTo.matrixWorld);
+      } else {
+        relativeMatrix.copy(target.matrixWorld).invert();
+        relativeMatrix.multiply(boneTo.matrixWorld);
+      }
+      scale2.setFromMatrixScale(relativeMatrix);
+      relativeMatrix.scale(scale2.set(1 / scale2.x, 1 / scale2.y, 1 / scale2.z));
+      globalMatrix.makeRotationFromQuaternion(quat.setFromRotationMatrix(relativeMatrix));
+      if (target.isObject3D) {
+        if (options.localOffsets) {
+          if (options.localOffsets[bone.name]) {
+            globalMatrix.multiply(options.localOffsets[bone.name]);
+          }
+        }
+      }
+      globalMatrix.copyPosition(relativeMatrix);
+    }
+    if (name2 === options.hip) {
+      globalMatrix.elements[12] *= options.scale * options.hipInfluence.x;
+      globalMatrix.elements[13] *= options.scale * options.hipInfluence.y;
+      globalMatrix.elements[14] *= options.scale * options.hipInfluence.z;
+      if (options.hipPosition !== undefined) {
+        globalMatrix.elements[12] += options.hipPosition.x * options.scale;
+        globalMatrix.elements[13] += options.hipPosition.y * options.scale;
+        globalMatrix.elements[14] += options.hipPosition.z * options.scale;
+      }
+    }
+    if (bone.parent) {
+      bone.matrix.copy(bone.parent.matrixWorld).invert();
+      bone.matrix.multiply(globalMatrix);
+    } else {
+      bone.matrix.copy(globalMatrix);
+    }
+    bone.matrix.decompose(bone.position, bone.quaternion, bone.scale);
+    bone.updateMatrixWorld();
+  }
+  if (options.preserveBonePositions) {
+    for (let i = 0;i < bones.length; ++i) {
+      bone = bones[i];
+      name2 = getBoneName(bone, options) || bone.name;
+      if (name2 !== options.hip) {
+        bone.position.copy(bonesPosition[i]);
+      }
+    }
+  }
+  if (options.preserveBoneMatrix) {
+    target.updateMatrixWorld(true);
+  }
+}
+function retargetClip(target, source, clip, options = {}) {
+  options.useFirstFramePosition = options.useFirstFramePosition !== undefined ? options.useFirstFramePosition : false;
+  options.fps = options.fps !== undefined ? options.fps : Math.max(...clip.tracks.map((track) => track.times.length)) / clip.duration;
+  options.names = options.names || [];
+  if (!source.isObject3D) {
+    source = getHelperFromSkeleton(source);
+  }
+  const numFrames = Math.round(clip.duration * (options.fps / 1000) * 1000), delta = clip.duration / (numFrames - 1), convertedTracks = [], mixer = new AnimationMixer(source), bones = getBones(target.skeleton), boneDatas = [];
+  let positionOffset, bone, boneTo, boneData, name2;
+  mixer.clipAction(clip).play();
+  let start = 0, end = numFrames;
+  if (options.trim !== undefined) {
+    start = Math.round(options.trim[0] * options.fps);
+    end = Math.min(Math.round(options.trim[1] * options.fps), numFrames) - start;
+    mixer.update(options.trim[0]);
+  } else {
+    mixer.update(0);
+  }
+  source.updateMatrixWorld();
+  for (let frame = 0;frame < end; ++frame) {
+    const time2 = frame * delta;
+    retarget(target, source, options);
+    for (let j2 = 0;j2 < bones.length; ++j2) {
+      bone = bones[j2];
+      name2 = getBoneName(bone, options) || bone.name;
+      boneTo = getBoneByName(name2, source.skeleton);
+      if (boneTo) {
+        boneData = boneDatas[j2] = boneDatas[j2] || { bone };
+        if (options.hip === name2) {
+          if (!boneData.pos) {
+            boneData.pos = {
+              times: new Float32Array(end),
+              values: new Float32Array(end * 3)
+            };
+          }
+          if (options.useFirstFramePosition) {
+            if (frame === 0) {
+              positionOffset = bone.position.clone();
+            }
+            bone.position.sub(positionOffset);
+          }
+          boneData.pos.times[frame] = time2;
+          bone.position.toArray(boneData.pos.values, frame * 3);
+        }
+        if (!boneData.quat) {
+          boneData.quat = {
+            times: new Float32Array(end),
+            values: new Float32Array(end * 4)
+          };
+        }
+        boneData.quat.times[frame] = time2;
+        bone.quaternion.toArray(boneData.quat.values, frame * 4);
+      }
+    }
+    if (frame === end - 2) {
+      mixer.update(delta - 0.0000001);
+    } else {
+      mixer.update(delta);
+    }
+    source.updateMatrixWorld();
+  }
+  for (let i = 0;i < boneDatas.length; ++i) {
+    boneData = boneDatas[i];
+    if (boneData) {
+      if (boneData.pos) {
+        convertedTracks.push(new VectorKeyframeTrack(".bones[" + boneData.bone.name + "].position", boneData.pos.times, boneData.pos.values));
+      }
+      convertedTracks.push(new QuaternionKeyframeTrack(".bones[" + boneData.bone.name + "].quaternion", boneData.quat.times, boneData.quat.values));
+    }
+  }
+  mixer.uncacheAction(clip);
+  return new AnimationClip(clip.name, -1, convertedTracks);
+}
 function clone(source) {
   const sourceLookup = new Map;
   const cloneLookup = new Map;
@@ -142195,6 +142388,20 @@ function clone(source) {
     clonedMesh.bind(clonedMesh.skeleton, clonedMesh.bindMatrix);
   });
   return clone2;
+}
+function getBoneByName(name2, skeleton) {
+  for (let i = 0, bones = getBones(skeleton);i < bones.length; i++) {
+    if (name2 === bones[i].name)
+      return bones[i];
+  }
+}
+function getBones(skeleton) {
+  return Array.isArray(skeleton) ? skeleton : skeleton.bones;
+}
+function getHelperFromSkeleton(skeleton) {
+  const source = new SkeletonHelper(skeleton.bones[0]);
+  source.skeleton = skeleton;
+  return source;
 }
 function parallelTraverse(a2, b2, callback) {
   callback(a2, b2);
@@ -142390,6 +142597,7 @@ var setRoot = (newRoot) => {
   root = newRoot;
 };
 var gltfLoader = new GLTFLoader;
+var imageLoader = new ImageBitmapLoader;
 function makeModelPath(gender, modelName) {
   return `${root}assets/models/miiBody${gender}_${modelName}.glb`;
 }
@@ -142420,6 +142628,7 @@ async function loadBodyModels(input) {
     bodyModels = {};
   }
   bodyType = input || await import_localforage2.default.getItem("settings_bodyModel") || "wiiu";
+  bodyModelName = bodyType;
   if (bodyType === "streetpass" /* StreetPass */) {
     isStreetpassBody = true;
   }
@@ -142458,15 +142667,47 @@ async function loadHatModels() {
     URL.revokeObjectURL(url);
   }
 }
+async function loadClothesTextures() {
+  clothesTextures = {};
+  imageLoader.setOptions({ imageOrientation: "flipY" });
+  const data2 = await fetch(root + "assets/images/mii_clothes_textures_bundle.zip").then((j2) => j2.blob());
+  console.log("Got it");
+  const zip = await import_jszip.default.loadAsync(data2);
+  console.log("Got zip");
+  let promises = [];
+  const fileList = Object.keys(zip.files);
+  for (const file of fileList) {
+    promises.push(zip.files[file].async("blob"));
+  }
+  const resolves = await Promise.all(promises);
+  console.log("Got files");
+  for (let i = 0;i < fileList.length; i++) {
+    const url = URL.createObjectURL(resolves[i]);
+    let result;
+    console.log("Loading texture");
+    result = new CanvasTexture(await imageLoader.loadAsync(url));
+    console.log("Loading texture done");
+    const fileName = fileList[i].split(".");
+    fileName.pop();
+    clothesTextures[fileName.join(".")] = result;
+    console.log("Loading " + fileName.join("."));
+    URL.revokeObjectURL(url);
+  }
+  console.log("Done");
+}
 var bodyModels = {
   m: null,
   f: null
 };
+var bodyModelName = "wiiu";
 var hatModels = [];
+var clothesTextures = {};
 var isStreetpassBody = false;
 var isStreetpass = () => isStreetpassBody;
 var getBodyModels = () => bodyModels;
 var getHatModels = () => hatModels;
+var getLoadedBodyModelName = () => bodyModelName;
+var getClothesTextures = () => clothesTextures;
 
 // src/constants/Extensions.ts
 var ExtHatNameList = [
@@ -142480,21 +142721,16 @@ var ExtHatNameList = [
   "Hijab",
   "Bike Helmet"
 ];
-var ExtClothesList = [
-  "LS+Pants",
-  "SS+Shorts",
-  "TT+Shorts",
-  "empty empty"
-];
+var ExtClothesList = ["LS+Pants", "SS+Shorts", "TT+Shorts"];
 var HatTypeList = [
   1 /* HAT */,
   1 /* HAT */,
   1 /* HAT */,
-  0 /* HEAD */,
-  0 /* HEAD */,
+  4 /* SIDE */,
+  4 /* SIDE */,
   0 /* HEAD */,
   1 /* HAT */,
-  3 /* BALD */,
+  6 /* BALD */,
   1 /* HAT */
 ];
 var ClothesTypeList = [
@@ -144952,6 +145188,140 @@ async function renderTargetToDataTexture(renderTarget, renderer2, flipY = false,
   return dataTexture;
 }
 
+// src/class/3d/shader/ColorMix.ts
+function ColorMixShaderMaterial(texture, r, g3, b2) {
+  return new ShaderMaterial({
+    uniforms: {
+      u_texture: { value: texture },
+      u_const1: { value: r },
+      u_const2: { value: g3 },
+      u_const3: { value: b2 }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D u_texture;
+      uniform vec4 u_const1;
+      uniform vec4 u_const2;
+      uniform vec4 u_const3;
+      varying vec2 vUv;
+      
+      void main() {
+        vec4 texColor = texture2D(u_texture, vUv);
+
+        // Optionally discard low-alpha texture pixels.
+        if (texColor.a <= 0.2) {
+          discard;
+        }
+        
+// Mix RGB channels using each constant’s color (rgb)
+vec3 mixedColor = texColor.r * u_const1.rgb +
+                  texColor.g * u_const2.rgb +
+                  texColor.b * u_const3.rgb;
+
+// Use the texture's own alpha
+float mixedAlpha = texColor.a;
+
+// Premultiply the mixed color by its alpha
+gl_FragColor = vec4(mixedColor * mixedAlpha, mixedAlpha);
+      }
+    `
+  });
+}
+function colorMixTexture(tex, constR = new Vector4(0, 1, 1, 1), constG = new Vector4(1, 1, 0, 1), constB = new Vector4(1, 1, 0, 1), constA, rendererMain, textureResolution) {
+  return new Promise((resolve) => {
+    const scene = new Scene;
+    let width2, height2;
+    if (tex instanceof ImageBitmap) {
+      width2 = tex.width;
+      height2 = tex.height;
+    } else {
+      width2 = tex.image.width;
+      height2 = tex.image.height;
+    }
+    if (textureResolution) {
+      let aspect2 = width2 / height2;
+      width2 = textureResolution;
+      height2 = textureResolution / aspect2;
+    }
+    const renderSize = new Vector2(0, 0);
+    rendererMain.getSize(renderSize);
+    console.log("[CMT DEBUG] width, height", width2, height2);
+    const camera = new OrthographicCamera(width2 / -2, width2 / 2, height2 / 2, height2 / -2, 0.1, 1000);
+    camera.position.z = 1;
+    console.log("[CMT DEBUG] camera Created!");
+    const renderer2 = rendererMain;
+    console.log("[CMT DEBUG] renderer Created!");
+    let oldClearColor = new Color;
+    renderer2.getClearColor(oldClearColor);
+    let oldClearAlpha = renderer2.getClearAlpha();
+    renderer2.setClearColor(constA, 1);
+    console.log("[CMT DEBUG] using red for alpha.");
+    renderer2.setSize(width2, height2, false);
+    console.log("[CMT DEBUG] set renderer size OK.");
+    if (typeof window !== "undefined")
+      window.camera = camera;
+    const geometry = new PlaneGeometry(width2, height2);
+    console.log("[CMT DEBUG] create geometry OK");
+    const plane = new Mesh(geometry, ColorMixShaderMaterial(tex, constR, constG, constB));
+    console.log("[CMT DEBUG] create mesh OK");
+    scene.add(plane);
+    console.log("[CMT DEBUG] add mesh to scene");
+    function render() {
+      console.log("[CMT DEBUG] render scene OK");
+      function finalize(blob) {
+        if (blob === null)
+          return console.error("blob is null???");
+        resolve(blob);
+        renderer2.setClearColor(0);
+        renderer2.setClearAlpha(0);
+        geometry.dispose();
+        plane.material.dispose();
+        console.log("[CMT DEBUG] disposed of scene OK");
+      }
+      renderer2.render(scene, camera);
+      if (typeof document === "undefined") {
+        renderer2.domElement.convertToBlob({ type: "image/png" }).then(finalize);
+      } else {
+        renderer2.domElement.toBlob(finalize);
+      }
+    }
+    console.log("[CMT DEBUG] preparing render");
+    render();
+  });
+}
+
+// src/ui/pages/library/util/3DModel.ts
+function loadBlobTexture(blob) {
+  return new Promise((resolve) => {
+    var texture = new Texture;
+    var url = URL.createObjectURL(blob);
+    var image = new Image;
+    image.src = url;
+    image.onload = function() {
+      texture.image = image;
+      texture.needsUpdate = true;
+      resolve(texture);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1e4);
+    };
+  });
+}
+function loadBlobTextureWorker(blob, width2 = 512, height2 = 512) {
+  return new Promise((resolve) => {
+    createImageBitmap(blob, 0, 0, width2, height2).then((r) => {
+      console.log("bitmap canvas texture created");
+      return resolve(new CanvasTexture(r));
+    });
+  });
+}
+
 // src/util/IconRendering.ts
 var defaultParams = {
   type: ViewType2.Face,
@@ -144967,6 +145337,7 @@ function createMiiRender(request) {
       dataInput = parseHexOrB64ToUint8Array(request.data);
     else
       dataInput = request.data;
+    const isTemporary = request.isTemporary !== false;
     const mii = new Mii(dataInput);
     const localModule = request.module;
     if (localModule === undefined)
@@ -144980,16 +145351,16 @@ function createMiiRender(request) {
         case 2 /* FACE_ONLY */:
           modelFlag = FFLModelFlag.FACE_ONLY;
           break;
-        case 3 /* BALD */:
+        case 6 /* BALD */:
           mii.hairType = 30;
           dataInput = mii.export("studioData");
           break;
       }
     }
     console.log("miic additional info:", JSON.stringify(request.additionalInfo));
-    const shaderMaterial = await getShaderMaterialFromShaderType();
-    const shaderOverrides = await getMaterialOverridesFromShaderType();
-    let texResolution = 512;
+    const shaderMaterial = await getShaderMaterialFromShaderType(request.shaderType);
+    const shaderOverrides = await getMaterialOverridesFromShaderType(request.shaderType);
+    let texResolution = request.texResolution || 512;
     if (request.size > 512) {
       texResolution = 1024;
     } else if (request.size > 1024) {
@@ -145014,13 +145385,23 @@ function createMiiRender(request) {
     if (request.additionalInfo.eyeSclera === 1 && mii.eyeColor !== 8) {
       self.eyeScleraHack = false;
     }
-    const iconScene = new Scene;
-    iconScene.background = null;
+    let miiGroup, headModel;
+    if (isTemporary) {
+      miiGroup = new Scene;
+      miiGroup.background = null;
+    } else {
+      miiGroup = new Group;
+      headModel = new Group;
+    }
     const gender = charModel._model.charInfo.personal.gender;
     const bodyScale = charModel.getBodyScale();
     if (request.additionalInfo.hatType !== -1) {
       let hatColor = [0, 0, 0];
-      const model = getHatModels()[request.additionalInfo.hatType];
+      let hatModel;
+      if (isTemporary)
+        hatModel = getHatModels()[request.additionalInfo.hatType];
+      else
+        hatModel = getHatModels()[request.additionalInfo.hatType].clone(true);
       hatColor = MiiFavoriteColorVec3Table[mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length];
       if (request.additionalInfo.hatFavoriteColor !== -1) {
         hatColor = MiiFavoriteColorVec3Table[request.additionalInfo.hatFavoriteColor];
@@ -145028,7 +145409,7 @@ function createMiiRender(request) {
       if (request.additionalInfo.hatCommonColor !== -1) {
         hatColor = SwitchMiiColorTableSRGB[request.additionalInfo.hatCommonColor];
       }
-      model.traverse((m) => {
+      hatModel.traverse((m) => {
         if (m.isMesh) {
           const oldMat = m.material.map;
           m.material = new shaderMaterial({
@@ -145041,37 +145422,64 @@ function createMiiRender(request) {
           });
         }
       });
-      iconScene.add(model);
+      if (isTemporary) {
+        miiGroup.add(hatModel);
+      } else {
+        headModel.add(hatModel);
+      }
       const shiftPos = charModel.partsTransform.hatTranslate.y;
       if (request.drawBody) {
-        model.position.set(0, bodyScale.y * 75 + shiftPos, 0);
+        if (isTemporary) {
+          hatModel.position.set(0, bodyScale.y * 75 + shiftPos, 0);
+        } else {
+          hatModel.position.set(0, shiftPos, 0);
+        }
       } else {
         charModel.partsTransform.hatTranslate.y;
-        model.position.set(0, shiftPos, 0);
+        hatModel.position.set(0, shiftPos, 0);
       }
     }
     const headMesh = charModel.meshes.clone();
-    iconScene.add(headMesh);
-    const iconCamera = getCameraForViewType2(request.type, undefined, undefined, bodyScale.y);
-    let bodyModel, bodyModelBody, bodyModelHands, bodyModelLegs;
+    if (isTemporary) {
+      miiGroup.add(headMesh);
+    } else {
+      headModel.add(headMesh);
+    }
+    let iconCamera;
+    if (isTemporary)
+      iconCamera = getCameraForViewType2(request.type, undefined, undefined, bodyScale.y);
+    let bodyModel, bodyModelBody, bodyModelHands, bodyModelLegs, bodyModelAnims;
+    if (headModel !== undefined) {
+      miiGroup.add(headModel);
+    }
     if (request.drawBody && getBodyModels().m !== null) {
       switch (gender) {
         case 0: {
-          bodyModel = getBodyModels().m.scene;
+          if (isTemporary)
+            bodyModel = getBodyModels().m.scene;
+          else
+            bodyModel = exports_SkeletonUtils.clone(getBodyModels().m.scene);
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
           bodyModelBody = bodyModel.getObjectByName("body_m");
           bodyModelHands = bodyModel.getObjectByName("hands_m");
           bodyModelLegs = bodyModel.getObjectByName("legs_m");
+          if (!isTemporary)
+            bodyModelAnims = getBodyModels().m.animations;
           break;
         }
         case 1: {
-          bodyModel = getBodyModels().f.scene;
+          if (isTemporary)
+            bodyModel = getBodyModels().f.scene;
+          else
+            bodyModel = exports_SkeletonUtils.clone(getBodyModels().f.scene);
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
           bodyModelBody = bodyModel.getObjectByName("body_f");
           bodyModelHands = bodyModel.getObjectByName("hands_f");
           bodyModelLegs = bodyModel.getObjectByName("legs_f");
+          if (!isTemporary)
+            bodyModelAnims = getBodyModels().f.animations;
           break;
         }
         default:
@@ -145079,7 +145487,7 @@ function createMiiRender(request) {
       }
       bodyModel.scale.set(bodyScale.x * 7, bodyScale.y * 7, bodyScale.z * 7);
       bodyModel.position.set(0, 0, 0);
-      iconScene.add(bodyModel);
+      miiGroup.add(bodyModel);
       var shirtColor = MiiFavoriteColorVec3Table[mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length];
       if (request.additionalInfo.shirtColor !== -1 && !ForbiddenShirtPantColors.includes(request.additionalInfo.shirtColor)) {
         shirtColor = SwitchMiiColorTableSRGB[request.additionalInfo.shirtColor];
@@ -145111,15 +145519,65 @@ function createMiiRender(request) {
         color: new Color(...pantsColor),
         opacity: 1
       });
-      headMesh.position.set(0, bodyScale.y * 75, 0);
-      switch (request.type) {
-        case ViewType2.Face:
-        case ViewType2.MakeIcon:
-        case ViewType2.IconFovy45:
-        case ViewType2.CreditIcon: {
-          iconCamera.position.y += bodyScale.y * 76;
+      const nBody = bodyModelBody;
+      const nLegs = bodyModelLegs;
+      if (request.additionalInfo.clothesType !== undefined && request.additionalInfo.clothesType !== -1 && getLoadedBodyModelName() !== "miitomo" && request.additionalInfo.clothesType < ExtClothesList.length) {
+        console.log("clothing update");
+        let shirtTexture, pantsTexture = null;
+        const suffix = mii.gender == 1 ? "F" : "";
+        let key2 = `${getLoadedBodyModelName()}_${ExtClothesList[request.additionalInfo.clothesType]}${suffix}`;
+        let shirtKey = key2;
+        if (getLoadedBodyModelName() === "miitomo") {
+          shirtKey = key2 + "_Top";
         }
+        let shoesColor = request.additionalInfo.shoesColor !== -1 && request.additionalInfo.shoesColor < 100 ? SwitchMiiColorTableSRGB[request.additionalInfo.shoesColor] : [1, 1, 1];
+        switch (ClothesTypeList[request.additionalInfo.clothesType]) {
+          case 0 /* COLOR_MIXED */: {
+            const colorMixR = new Vector4(...shirtColor, 1), colorMixG = new Vector4(...shoesColor, 1), colorMixB = new Vector4(...pantsColor, 1), colorMixA = charModel ? charModel.facelineColor.convertSRGBToLinear() : 16711680;
+            let tex = await colorMixTexture(getClothesTextures()[shirtKey], colorMixR, colorMixG, colorMixB, colorMixA, request.textureRenderer || request.renderer, request.texResolution);
+            shirtTexture = await loadBlobTextureWorker(tex);
+            break;
+          }
+          case 1 /* TEXTURE_COLOR */: {
+            shirtTexture = getClothesTextures()[shirtKey + suffix];
+            break;
+          }
+          default:
+            alert("Something isn't right here");
+            throw "???";
+        }
+        request.renderer.initTexture(shirtTexture);
+        let nBodyMat = nBody.material;
+        let nLegsMat = nLegs.material;
+        nBodyMat.dispose();
+        nLegsMat.dispose();
+        const params = {
+          modulateType: 9,
+          modulateMode: 1,
+          map: shirtTexture,
+          color: new Color(0)
+        };
+        const newBodyMat = new (await getShaderMaterialFromShaderType(request.shaderType))(params);
+        if (getLoadedBodyModelName() !== "miitomo") {
+          nBody.material = newBodyMat;
+          nLegs.material = newBodyMat;
+        }
+        console.log("mat changed!", newBodyMat, nBody, nLegs);
       }
+      if (isTemporary) {
+        headMesh.position.set(0, bodyScale.y * 75, 0);
+      } else {
+        headModel.position.set(0, bodyScale.y * 75, 0);
+      }
+      if (isTemporary)
+        switch (request.type) {
+          case ViewType2.Face:
+          case ViewType2.MakeIcon:
+          case ViewType2.IconFovy45:
+          case ViewType2.CreditIcon: {
+            iconCamera.position.y += bodyScale.y * 76;
+          }
+        }
       if (isStreetpass()) {
         console.log("is streetpass");
         var scaleVec = new Vector3;
@@ -145133,17 +145591,30 @@ function createMiiRender(request) {
         console.log("not streetpass");
       }
     }
-    const target = createAndRenderToTarget(iconScene, iconCamera, request.renderer, request.size, request.size);
-    setTimeout(() => {
-      const dataURL = renderTargetToDataURL2(target, request.renderer);
-      target.dispose();
-      charModel.dispose();
-      if (request.drawBody) {
-        bodyModelBody.material.dispose();
-        bodyModelLegs.material.dispose();
-      }
-      resolve(dataURL);
-    }, 0);
+    if (isTemporary) {
+      const target = createAndRenderToTarget(miiGroup, iconCamera, request.renderer, request.size, request.size);
+      setTimeout(() => {
+        const dataURL = renderTargetToDataURL2(target, request.renderer);
+        target.dispose();
+        charModel.dispose();
+        if (request.drawBody) {
+          bodyModelBody.material.dispose();
+          bodyModelLegs.material.dispose();
+        }
+        resolve(dataURL);
+      }, 0);
+    } else {
+      return resolve({
+        bodyModel,
+        bodyModelBody,
+        bodyModelHands,
+        bodyModelLegs,
+        charModel,
+        headModel,
+        miiGroup,
+        bodyModelAnims
+      });
+    }
   });
 }
 
@@ -145328,12 +145799,9 @@ class Html {
 }
 
 // src/helper.ts
-if (false) {
-} else {
-  console.log("Running in script scope");
-}
 var FFLModule;
 var userData;
+var helperRenderer = new WebGLRenderer;
 var GUEST_MII_DATA = [
   "BAM5i2G9mwPpOoAAAADs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEEAAAAAAAAACAAAAAAAQAMDCAYEBgIKCAQEAgIMBAAAAP8ABAAACAQACggARP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
   "BAOFdPR8ZsuhdoAAAAHs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEIAAAAAAAAACAAAAAAAQAMDBgYEBgIKDAQEAgIMAAAAAP8ABQAACAQACgYAN////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
@@ -145360,7 +145828,10 @@ var getAdditionalInfoFromMii = (miiData) => ({
   favorite: miiData.favorite,
   special: miiData.special,
   temporary: miiData.temporary,
-  eyeSclera: miiData.eyeSclera
+  eyeSclera: miiData.eyeSclera,
+  clothesType: miiData.clothesType,
+  shoesColor: miiData.shoesColor,
+  wigType: miiData.wigType
 });
 var root2;
 try {
@@ -145378,6 +145849,8 @@ async function loadAssets(resourcePath, bodyType2 = "wiiu") {
   await loadBodyModels(bodyType2);
   console.debug("Loading hat models..");
   await loadHatModels();
+  console.debug("Loading clothing textures..");
+  await loadClothesTextures();
   console.debug("Loaded all extra models.");
   FFLModule = (await Promise.resolve().then(() => __toESM(require_ffl_emscripten(), 1))).default;
   FFLModule = await FFLModule({
@@ -145403,180 +145876,53 @@ class MiiCreatorCharModel {
   constructor() {
   }
   async init(request) {
-    let dataInput;
-    if (typeof request.data === "string")
-      dataInput = parseHexOrB64ToUint8Array(request.data);
-    else
-      dataInput = request.data;
-    const mii = new Mii(dataInput);
-    const localModule = FFLModule;
-    if (localModule === undefined)
-      throw new Error("Module NOT ready.");
-    let modelFlag = FFLModelFlag.NORMAL;
-    if (request.additionalInfo.hatType !== -1) {
-      switch (HatTypeList[request.additionalInfo.hatType]) {
-        case 1 /* HAT */:
-          modelFlag = FFLModelFlag.HAT;
-          break;
-        case 2 /* FACE_ONLY */:
-          modelFlag = FFLModelFlag.FACE_ONLY;
-          break;
-        case 3 /* BALD */:
-          mii.hairType = 30;
-          dataInput = mii.export("studioData");
-          break;
-      }
-    }
-    console.log("miic additional info:", JSON.stringify(request.additionalInfo));
-    const shaderMaterial = await getShaderMaterialFromShaderType(request.shaderType);
-    const shaderOverrides = await getMaterialOverridesFromShaderType(request.shaderType);
-    let texResolution = 512;
-    if (request.size > 512) {
-      texResolution = 1024;
-    } else if (request.size > 1024) {
-      texResolution = 2048;
-    }
-    if (request.texResolution) {
-      texResolution = request.texResolution;
-    }
-    let expressions = [];
-    if (Array.isArray(request.expression)) {
-      expressions.push(...request.expression);
-    } else {
-      expressions.push(isNaN(request.expression) ? FFLExpression.NORMAL : request.expression);
-    }
-    const charModel = createCharModel(dataInput, {
-      resolution: texResolution,
-      resourceType: FFLResourceType.HIGH,
-      allExpressionFlag: makeExpressionFlag(expressions),
-      modelFlag
-    }, shaderMaterial, localModule, false);
+    const {
+      bodyModel,
+      bodyModelAnims,
+      bodyModelBody,
+      bodyModelHands,
+      bodyModelLegs,
+      charModel,
+      headModel,
+      miiGroup
+    } = await createMiiRender({
+      ...request,
+      module: FFLModule,
+      isTemporary: false,
+      renderer: request.renderer,
+      textureRenderer: helperRenderer
+    });
+    this.bodyModel = bodyModel;
+    this.bodyModelBody = bodyModelBody;
+    this.bodyModelHands = bodyModelHands;
+    this.bodyModelLegs = bodyModelLegs;
     this.charModel = charModel;
-    if (request.additionalInfo.eyeSclera === 1 && mii.eyeColor !== 8) {
-      self.eyeScleraHack = true;
-    }
-    initCharModelTextures(charModel, request.renderer);
-    if (request.additionalInfo.eyeSclera === 1 && mii.eyeColor !== 8) {
-      self.eyeScleraHack = false;
-    }
-    this.miiGroup = new Group;
-    this.headModel = new Group;
-    const gender = charModel._model.charInfo.personal.gender;
-    const bodyScale = charModel.getBodyScale();
-    if (request.additionalInfo.hatType !== -1) {
-      let hatColor = [0, 0, 0];
-      const hatModel = getHatModels()[request.additionalInfo.hatType].clone(true);
-      hatColor = MiiFavoriteColorVec3Table[mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length];
-      if (request.additionalInfo.hatFavoriteColor !== -1) {
-        hatColor = MiiFavoriteColorVec3Table[request.additionalInfo.hatFavoriteColor];
-      }
-      if (request.additionalInfo.hatCommonColor !== -1) {
-        hatColor = SwitchMiiColorTableSRGB[request.additionalInfo.hatCommonColor];
-      }
-      hatModel.traverse((m) => {
-        if (m.isMesh) {
-          const oldMat = m.material.map;
-          m.material = new shaderMaterial({
-            modulateType: 5 /* FFL_MODULATE_TYPE_SHAPE_CAP */,
-            modulateMode: 2,
-            ...shaderOverrides,
-            color: new Color(...hatColor),
-            opacity: 1,
-            map: oldMat
-          });
-        }
-      });
-      this.headModel.add(hatModel);
-      const shiftPos = charModel.partsTransform.hatTranslate.y;
-      if (request.drawBody) {
-        hatModel.position.set(0, bodyScale.y * 75 + shiftPos, 0);
-      } else {
-        charModel.partsTransform.hatTranslate.y;
-        hatModel.position.set(0, shiftPos, 0);
-      }
-    }
-    const headMesh = charModel.meshes.clone();
-    this.headModel.add(headMesh);
-    let bodyModel, bodyModelBody, bodyModelHands, bodyModelLegs, bodyModelAnims;
-    this.miiGroup.add(this.headModel);
-    if (request.drawBody && getBodyModels().m !== null) {
-      switch (gender) {
-        case 0: {
-          bodyModel = clone(getBodyModels().m.scene);
-          if (bodyModel === null)
-            throw "Tried to make an icon before body models were loaded.";
-          bodyModelBody = bodyModel.getObjectByName("body_m");
-          bodyModelHands = bodyModel.getObjectByName("hands_m");
-          bodyModelLegs = bodyModel.getObjectByName("legs_m");
-          if (request.useAnimation) {
-            bodyModelAnims = getBodyModels().m.animations;
-          }
-          break;
-        }
-        case 1: {
-          bodyModel = clone(getBodyModels().f.scene);
-          if (bodyModel === null)
-            throw "Tried to make an icon before body models were loaded.";
-          bodyModelBody = bodyModel.getObjectByName("body_f");
-          bodyModelHands = bodyModel.getObjectByName("hands_f");
-          bodyModelLegs = bodyModel.getObjectByName("legs_f");
-          if (request.useAnimation) {
-            bodyModelAnims = getBodyModels().f.animations;
-          }
-          break;
-        }
-        default:
-          throw new Error(`Gender ${gender} is outisde range 0, 1`);
-      }
-      bodyModel.scale.set(bodyScale.x * 7, bodyScale.y * 7, bodyScale.z * 7);
-      this.miiGroup.add(bodyModel);
-      bodyModel.position.set(0, 0, 0);
-      var shirtColor = MiiFavoriteColorVec3Table[mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length];
-      if (request.additionalInfo.shirtColor !== -1 && !ForbiddenShirtPantColors.includes(request.additionalInfo.shirtColor) && request.respectBodyColors !== false) {
-        shirtColor = SwitchMiiColorTableSRGB[request.additionalInfo.shirtColor];
-      }
-      bodyModelBody.material = new charModel._materialClass({
-        modulateType: 9 /* FFL_MODULATE_TYPE_SHAPE_BODY */,
-        modulateMode: 0,
-        color: new Color(...shirtColor),
-        opacity: 1
-      });
-      if (bodyModelHands)
-        bodyModelHands.material = bodyModelBody.material;
-      var pantsColor = cPantsColorGray;
-      if (request.additionalInfo.favorite === 1) {
-        pantsColor = cPantsColorRed;
-      }
-      if (request.additionalInfo.special === 1) {
-        pantsColor = cPantsColorGold;
-      }
-      if (request.additionalInfo.temporary === 1) {
-        pantsColor = cPantsColorBlue;
-      }
-      if (request.additionalInfo.pantsColor !== -1 && !ForbiddenShirtPantColors.includes(request.additionalInfo.pantsColor) && request.respectBodyColors !== false) {
-        pantsColor = SwitchMiiColorTableSRGB[request.additionalInfo.pantsColor];
-      }
-      bodyModelLegs.material = new charModel._materialClass({
-        modulateType: 10 /* FFL_MODULATE_TYPE_SHAPE_PANTS */,
-        modulateMode: 0,
-        color: new Color(...pantsColor),
-        opacity: 1
-      });
-      headMesh.position.set(0, bodyScale.y * 75, 0);
-      this.bodyModel = bodyModel;
-      this.bodyModelBody = bodyModelBody;
-      this.bodyModelHands = bodyModelHands;
-      this.bodyModelLegs = bodyModelLegs;
-      if (request.useAnimation) {
-        this.mixer = new AnimationMixer(bodyModel);
-        this.clips = new Map;
-        for (const clip of bodyModelAnims) {
-          this.clips.set(clip.name, this.mixer.clipAction(clip));
-        }
+    this.headModel = headModel;
+    this.miiGroup = miiGroup;
+    if (request.useAnimation) {
+      this.mixer = new AnimationMixer(bodyModel);
+      this.clips = new Map;
+      for (const clip of bodyModelAnims) {
+        this.clips.set(clip.name, this.mixer.clipAction(clip));
       }
     }
   }
+  subPosition;
+  subScale;
+  position;
+  quaternion;
+  scale;
   mixerUpdate(delta) {
+    if (!this.subPosition)
+      this.subPosition = new Vector3;
+    if (!this.subScale)
+      this.subScale = new Vector3;
+    if (!this.position)
+      this.position = new Vector3;
+    if (!this.quaternion)
+      this.quaternion = new Quaternion;
+    if (!this.scale)
+      this.scale = new Vector3;
     this.mixer.update(delta);
     let headBone = this.bodyModel.getObjectByName("head");
     if (headBone === undefined)
@@ -145584,13 +145930,61 @@ class MiiCreatorCharModel {
     if (!headBone)
       return alert("???");
     headBone.updateMatrixWorld(true);
-    const position2 = new Vector3;
-    const quaternion = new Quaternion;
-    const scale2 = new Vector3;
-    headBone.matrixWorld.decompose(position2, quaternion, scale2);
+    this.miiGroup.getWorldPosition(this.subPosition);
+    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
     if (this.headModel) {
-      this.headModel.position.copy(position2);
-      this.headModel.setRotationFromQuaternion(quaternion);
+      this.headModel.position.copy(this.position);
+      this.miiGroup.worldToLocal(this.headModel.position);
+      this.headModel.setRotationFromQuaternion(this.quaternion);
+    }
+    this.miiGroup.getWorldPosition(this.subPosition);
+    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
+    if (this.headModel) {
+      this.headModel.position.copy(this.position);
+      this.miiGroup.worldToLocal(this.headModel.position);
+      this.headModel.setRotationFromQuaternion(this.quaternion);
+    }
+    this.miiGroup.getWorldPosition(this.subPosition);
+    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
+    if (this.headModel) {
+      this.headModel.position.copy(this.position);
+      this.miiGroup.worldToLocal(this.headModel.position);
+      this.headModel.setRotationFromQuaternion(this.quaternion);
+    }
+    this.miiGroup.getWorldPosition(this.subPosition);
+    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
+    if (this.headModel) {
+      this.headModel.position.copy(this.position);
+      this.miiGroup.worldToLocal(this.headModel.position);
+      this.headModel.setRotationFromQuaternion(this.quaternion);
+    }
+    this.miiGroup.getWorldPosition(this.subPosition);
+    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
+    if (this.headModel) {
+      this.headModel.position.copy(this.position);
+      this.miiGroup.worldToLocal(this.headModel.position);
+      this.headModel.setRotationFromQuaternion(this.quaternion);
+    }
+    this.miiGroup.getWorldPosition(this.subPosition);
+    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
+    if (this.headModel) {
+      this.headModel.position.copy(this.position);
+      this.miiGroup.worldToLocal(this.headModel.position);
+      this.headModel.setRotationFromQuaternion(this.quaternion);
+    }
+    this.miiGroup.getWorldPosition(this.subPosition);
+    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
+    if (this.headModel) {
+      this.headModel.position.copy(this.position);
+      this.miiGroup.worldToLocal(this.headModel.position);
+      this.headModel.setRotationFromQuaternion(this.quaternion);
+    }
+    this.miiGroup.getWorldPosition(this.subPosition);
+    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
+    if (this.headModel) {
+      this.headModel.position.copy(this.position);
+      this.miiGroup.worldToLocal(this.headModel.position);
+      this.headModel.setRotationFromQuaternion(this.quaternion);
     }
   }
   setExpression(expression) {

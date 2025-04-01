@@ -9,5 +9,8 @@ export type MiiCreatorAdditionalData =
       special: number;
       temporary: number;
       eyeSclera: number;
+      wigType: number;
+      clothesType: number;
+      shoesColor: number;
     }
   | undefined;

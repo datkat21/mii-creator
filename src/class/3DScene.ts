@@ -943,36 +943,62 @@ export class Mii3DScene {
 
         if (this.mii.clothesType !== -1) {
           console.log("clothing update");
-          let texture: THREE.Texture;
+          let shirtTexture: THREE.Texture,
+            pantsTexture: THREE.Texture | null = null;
+
+          const suffix = this.type == "f" ? "F" : "";
+          let key = `${this.bodyModel}_${
+            ExtClothesList[this.mii.clothesType]
+          }${suffix}`;
+          let shirtKey = key;
+          if (this.bodyModel === "miitomo") {
+            shirtKey = key + "_Top";
+          }
 
           switch (ClothesTypeList[this.mii.clothesType]) {
             case ClothesType.COLOR_MIXED: {
+              const colorMixR = new THREE.Vector4(...this.getShirtColor(), 1),
+                colorMixG = new THREE.Vector4(...this.getShoesColor(), 1),
+                colorMixB = new THREE.Vector4(...this.getPantsColor(), 1),
+                colorMixA = this.charModel
+                  ? this.charModel!.facelineColor
+                  : 0xff0000;
+
+              console.log("Shirt Texture Key:", shirtKey);
               let tex = await colorMixTexture(
-                this.clothingTextures[
-                  ExtClothesList[this.mii.clothesType] +
-                    (this.type == "f" ? "F" : "")
-                ],
-                // this.clothingTextures["LS+Pants" + (this.type == "f" ? "F" : "")],
-                new THREE.Vector4(...this.getShirtColor(), 1),
-                new THREE.Vector4(...this.getShoesColor(), 1),
-                new THREE.Vector4(...this.getPantsColor(), 1),
-                this.charModel ? this.charModel!.facelineColor : 0xff0000
+                this.clothingTextures[shirtKey],
+                colorMixR,
+                colorMixG,
+                colorMixB,
+                colorMixA,
+                this.#renderer
               );
-              texture = await loadBlobTexture(tex);
+              shirtTexture = await loadBlobTexture(tex);
+
+              console.log("loaded shirt texture!");
+
+              // if (this.bodyModel === "miitomo") {
+              //   const pantsKey = key + "_Bot";
+              //   let tex = await colorMixTexture(
+              //     this.clothingTextures[pantsKey],
+              //     colorMixR,
+              //     colorMixG,
+              //     colorMixB,
+              //     colorMixA
+              //   );
+              //   pantsTexture = await loadBlobTexture(tex);
+              // }
               break;
             }
             case ClothesType.TEXTURE_COLOR: {
-              texture =
-                this.clothingTextures[
-                  ExtClothesList[this.mii.clothesType] +
-                    (this.type == "f" ? "F" : "")
-                ];
+              shirtTexture = this.clothingTextures[shirtKey + suffix];
               break;
             }
             default:
+              alert("Something isn't right here");
               throw "???";
           }
-          this.#renderer.initTexture(texture);
+          this.#renderer.initTexture(shirtTexture);
 
           let nBodyMat = nBody.material as any;
           let nLegsMat = nLegs.material as any;
@@ -980,14 +1006,29 @@ export class Mii3DScene {
           nBodyMat.dispose();
           nLegsMat.dispose();
 
-          const params = { modulateType: 9, modulateMode: 1, map: texture };
+          const params = {
+            modulateType: 9,
+            modulateMode: 1,
+            map: shirtTexture
+          };
           const newBodyMat = new (await getShaderMaterialFromShaderType())(
             params
           );
-          // const newBodyMat = new THREE.MeshBasicMaterial(params);
+          if (this.bodyModel !== "miitomo") nBody.material = newBodyMat as any;
 
-          nBody.material = newBodyMat as any;
-          nLegs.material = newBodyMat as any;
+          if (this.bodyModel === "miitomo" && pantsTexture !== null) {
+            const params = {
+              modulateType: 9,
+              modulateMode: 1,
+              map: pantsTexture
+            };
+            const newLegsMat = new (await getShaderMaterialFromShaderType())(
+              params
+            );
+            nLegs.material = newLegsMat as any;
+          } else {
+            nLegs.material = newBodyMat as any;
+          }
 
           console.log("mat changed!", newBodyMat, nBody, nLegs);
         } else {
@@ -1080,6 +1121,10 @@ export class Mii3DScene {
     if (updateType === BodyUpdateType.RepositionCamera)
       requestAnimationFrame(() => {
         this.focusCamera(this.currentPosition, true, true, false);
+      });
+    else
+      requestAnimationFrame(() => {
+        this.resize();
       });
   }
   debugGetScene() {
@@ -1244,12 +1289,28 @@ export class Mii3DScene {
               // hatModel.scene.renderOrder = -1;
               let i = 0;
               if (GLB.asset.extras.partsTransform.hatTranslate) {
-                const [x, y, z] = GLB.asset.extras.partsTransform.hatTranslate;
-                console.log(GLB.asset.extras.partsTransform.hatTranslate);
-                const vec = new THREE.Vector3(x, y, z);
+                const vec = GLB.asset.extras.partsTransform.hatTranslate;
                 hatModel.position.add(vec);
                 //@ts-expect-error
                 window.hatModel = hatModel;
+
+                // TODO: Hats
+                switch (HatTypeList[this.mii.hatType]) {
+                  case HatType.SIDE:
+                    // const pos =
+                    //   GLB.asset.extras.partsTransform.headSideTranslate;
+                    // hatModel.position.set(0, 0, 0);
+                    // hatModel.position.copy(pos);
+                    // const [rx, ry, rz] =
+                    //   GLB.asset.extras.partsTransform.headSideRotate;
+                    // const rot = new THREE.Vector3(rx, ry, rz);
+                    // hatModel.rotation.setFromVector3(rot);
+                    break;
+                  case HatType.FRONT:
+                    break;
+                  case HatType.TOP:
+                    break;
+                }
               }
               let shaderSetting = await getSetting("shaderType");
               hatModel.traverse((o: any) => {

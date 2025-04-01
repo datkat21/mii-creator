@@ -32,11 +32,12 @@ import {
   FFLShaderBlinnMaterial,
   FFLShaderBrightMaterial,
   FFLShaderLightDisabledMaterial,
-  FFLShaderToonMaterial
+  FFLShaderToonMaterial,
+  LUTShaderPretendoMaterial
 } from "./FFLShaderAlternateMaterial";
 
 // Worker-friendly copy of getSetting
-const getSetting = async (key: string) => {
+export const getSettingSafe = async (key: string) => {
   const value = (await localforage.getItem("settings_" + key)) as any;
 
   // hack?
@@ -59,7 +60,7 @@ export function traverseAddShader(
   });
 }
 export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
-  const shaderSetting = (await getSetting("shaderType")) as ShaderType;
+  const shaderSetting = (await getSettingSafe("shaderType")) as ShaderType;
   const originalMaterial = node.material as THREE.MeshBasicMaterial;
 
   // Access userData from geometry
@@ -155,6 +156,9 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     case ShaderType.Miitomo:
       finalMat = new LUTShaderMaterial(params) as any;
       break;
+    case ShaderType.MiitomoBasic:
+      finalMat = new LUTShaderPretendoMaterial(params) as any;
+      break;
     case ShaderType.WiiUBlinn:
       finalMat = new FFLShaderBlinnMaterial(params) as any;
       break;
@@ -175,7 +179,8 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
 export async function getMaterialOverridesFromShaderType(
   shader: string | undefined = undefined
 ): Promise<Partial<any> | null> {
-  let shaderType = (shader || (await getSetting("shaderType"))) as ShaderType;
+  let shaderType = (shader ||
+    (await getSettingSafe("shaderType"))) as ShaderType;
   switch (shaderType) {
     case ShaderType.WiiU:
       return null;
@@ -195,11 +200,13 @@ export async function getMaterialOverridesFromShaderType(
     case ShaderType.Switch:
       return null;
     case ShaderType.Miitomo:
+    case ShaderType.MiitomoBasic:
       return null;
   }
 }
 export async function getShaderMaterialFromShaderType(type?: string) {
-  const shaderType = (type || (await getSetting("shaderType"))) as ShaderType;
+  const shaderType = (type ||
+    (await getSettingSafe("shaderType"))) as ShaderType;
   switch (shaderType) {
     case ShaderType.WiiU:
       return FFLShaderMaterial;
@@ -215,6 +222,9 @@ export async function getShaderMaterialFromShaderType(type?: string) {
       // todo: switch should have its own material class?
       return FFLShaderMaterial;
     case ShaderType.Miitomo:
+      // return LUTShaderMaterial;
       return LUTShaderMaterial;
+    case ShaderType.MiitomoBasic:
+      return LUTShaderPretendoMaterial;
   }
 }

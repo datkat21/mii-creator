@@ -1,6 +1,10 @@
 import Modal, { buttonsOkCancel, closeModal } from "../ui/components/Modal";
 import Notify from "../ui/components/Notify";
-import { loadBodyModels, loadHatModels } from "../util/ModelLoader";
+import {
+  loadBodyModels,
+  loadClothesTextures,
+  loadHatModels
+} from "../util/ModelLoader";
 import { defaultParams, type RenderRequest } from "../util/IconRendering";
 
 import { _, loadLang } from "./Lang";
@@ -67,6 +71,8 @@ export async function prepareFFL() {
   // Import FFL.JS (c) 2025 Arian K. macOS Edition
   await loadBodyModels();
   await loadHatModels();
+  // for some reason
+  await loadClothesTextures();
   let { module } = await initializeFFLWithResource(
     FFLModule,
     Config.renderer.fflResourcePath[await getSetting("resourceType")]

@@ -8,24 +8,17 @@ import {
   type Texture
 } from "three";
 import type { Mii3DScene } from "../../../../class/3DScene";
-import { getSetting } from "../../../../util/SettingsHelper";
-import { sRGB } from "../../../../util/Color";
-import { cMaterialName } from "../../../../class/3d/shader/fflShaderConst";
+// import { getSetting } from "../../../../util/SettingsHelper";
 import * as THREE from "three";
 import { ShaderType } from "../../../../constants/BodyShaderTypes";
-import { colorMixTexture } from "../../../../class/3d/shader/ColorMix";
-import {
-  SwitchMiiColorTable,
-  SwitchMiiColorTableSRGB
-} from "../../../../constants/ColorTables";
-import FFLShaderMaterial from "../../../../external/ffl.js/FFLShaderMaterial";
 import { renderTargetToDataTexture } from "../../../../util/rendertarget";
+import { getSettingSafe } from "../../../../class/3d/shader/ShaderUtils";
 
 export async function traverse3DMaterialFix(
   scene: Mii3DScene
 ): Promise<Map<number, any>> {
-  const shaderSetting = await getSetting("shaderType");
-  const bodyModelHands = await getSetting("bodyModelHands");
+  const shaderSetting = await getSettingSafe("shaderType");
+  const bodyModelHands = await getSettingSafe("bodyModelHands");
   return new Promise((resolve) => {
     let mats = new Map<number, any>();
     let count = 0;
@@ -288,65 +281,65 @@ export async function traverse3DMaterialFix(
         side: THREE.FrontSide
       });
 
-      switch (userData.modulateType) {
-        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_MASK:
-          mat.side = THREE.FrontSide;
-          mat.transparent = true;
-          break;
-        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSELINE: {
-          mat.side = THREE.FrontSide;
-          mat.transparent = true;
-          const tex = (m.material as MeshBasicMaterial).map!;
-          mat.map = tex;
+      // switch (userData.modulateType) {
+      //   case cMaterialName.FFL_MODULATE_TYPE_SHAPE_MASK:
+      //     mat.side = THREE.FrontSide;
+      //     mat.transparent = true;
+      //     break;
+      //   case cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSELINE: {
+      //     mat.side = THREE.FrontSide;
+      //     mat.transparent = true;
+      //     const tex = (m.material as MeshBasicMaterial).map!;
+      //     mat.map = tex;
 
-          const newTexture = await colorMixTexture(tex, {
-            x: 0,
-            y: 0,
-            z: 0,
-            w: 1
-          });
+      //     const newTexture = await colorMixTexture(tex, {
+      //       x: 0,
+      //       y: 0,
+      //       z: 0,
+      //       w: 1
+      //     });
 
-          mat.map = await loadBlobTexture(newTexture);
-          mat.map!.wrapS = tex.wrapS;
-          mat.map!.wrapT = tex.wrapT;
-          break;
-        }
-        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_GLASS: {
-          mat.side = THREE.DoubleSide;
-          mat.transparent = true;
-          const tex = (m.material as MeshBasicMaterial).map!;
+      //     mat.map = await loadBlobTexture(newTexture);
+      //     mat.map!.wrapS = tex.wrapS;
+      //     mat.map!.wrapT = tex.wrapT;
+      //     break;
+      //   }
+      //   case cMaterialName.FFL_MODULATE_TYPE_SHAPE_GLASS: {
+      //     mat.side = THREE.DoubleSide;
+      //     mat.transparent = true;
+      //     const tex = (m.material as MeshBasicMaterial).map!;
 
-          // Fix the texture
-          const newTexture = await colorMixTexture(
-            tex,
-            new THREE.Vector4(...SwitchMiiColorTableSRGB[scene.mii.glassColor]),
-            new THREE.Vector4(0, 0, 0, 0)
-          );
+      //     // Fix the texture
+      //     const newTexture = await colorMixTexture(
+      //       tex,
+      //       new THREE.Vector4(...SwitchMiiColorTableSRGB[scene.mii.glassColor]),
+      //       new THREE.Vector4(0, 0, 0, 0)
+      //     );
 
-          mat.map = await loadBlobTexture(newTexture);
-          mat.map!.wrapS = tex.wrapS;
-          mat.map!.wrapT = tex.wrapT;
-          break;
-        }
-        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY:
-          // get pants color from the scene
-          const shirtColor = scene.getShirtColor();
-          mat.color = new THREE.Color(
-            shirtColor[0],
-            shirtColor[1],
-            shirtColor[2]
-          );
-          break;
-        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS:
-          // get pants color from the scene
-          const pantsColor = scene.getPantsColor();
-          mat.color = new THREE.Color(
-            pantsColor[0],
-            pantsColor[1],
-            pantsColor[2]
-          );
-          break;
-      }
+      //     mat.map = await loadBlobTexture(newTexture);
+      //     mat.map!.wrapS = tex.wrapS;
+      //     mat.map!.wrapT = tex.wrapT;
+      //     break;
+      //   }
+      //   case cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY:
+      //     // get pants color from the scene
+      //     const shirtColor = scene.getShirtColor();
+      //     mat.color = new THREE.Color(
+      //       shirtColor[0],
+      //       shirtColor[1],
+      //       shirtColor[2]
+      //     );
+      //     break;
+      //   case cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS:
+      //     // get pants color from the scene
+      //     const pantsColor = scene.getPantsColor();
+      //     mat.color = new THREE.Color(
+      //       pantsColor[0],
+      //       pantsColor[1],
+      //       pantsColor[2]
+      //     );
+      //     break;
+      // }
 
       if (mat !== undefined) m.material = mat;
       else console.warn(`WARNING: ${m.name}'s material is empty.`);
@@ -386,5 +379,17 @@ export function loadBlobTexture(blob: Blob): Promise<THREE.Texture> {
         URL.revokeObjectURL(url);
       }, 10000);
     };
+  });
+}
+export function loadBlobTextureWorker(
+  blob: Blob,
+  width: number = 512,
+  height: number = 512
+): Promise<THREE.Texture> {
+  return new Promise((resolve) => {
+    createImageBitmap(blob, 0, 0, width, height).then((r) => {
+      console.log("bitmap canvas texture created");
+      return resolve(new THREE.CanvasTexture(r));
+    });
   });
 }

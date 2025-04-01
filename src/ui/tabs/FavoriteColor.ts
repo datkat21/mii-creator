@@ -34,7 +34,7 @@ export function FavoriteColorTab(data: TabRenderInit) {
             forceRender: true,
             value: k,
             color: numToHex(MiiFavoriteColorLookupTable[k]),
-            part: RenderPart.Body,
+            part: RenderPart.Head,
             bodyUpdateType: BodyUpdateType.ClothingUpdate
           }))
         }

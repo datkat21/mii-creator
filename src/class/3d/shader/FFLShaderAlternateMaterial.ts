@@ -1,4 +1,6 @@
+import { Color, Vector3, Vector4 } from "three";
 import FFLShaderMaterial from "../../../external/ffl.js/FFLShaderMaterial";
+import LUTShaderMaterial from "../../../external/ffl.js/LUTShaderMaterial";
 import {
   cLightAmbientFFLIconWithBody,
   cLightDiffuseFFLIconWithBody,
@@ -81,9 +83,62 @@ class FFLShaderBrightMaterial extends FFLShaderMaterial {
   }
 }
 
+class LUTShaderPretendoMaterial extends LUTShaderMaterial {
+  constructor(options: any = {}) {
+    options = Object.assign({}, options);
+    super(options);
+    // Adjust material
+
+    // (this as any).lightDirection
+    // (this as any).lightDirection = new Vector3(0, 1, 1);
+    // (this as any).uniforms.uDirLightDirAndType0.value = new Vector4(
+    //   0,
+    //   0.5,
+    //   1,
+    //   -1
+    // );
+    // (this as any).uniforms.uDirLightDirAndType1.value = new Vector4(
+    //   0,
+    //   -0.7,
+    //   1,
+    //   -1
+    // );
+    // (this as any).uniforms.uHSLightGroundColor.value = new Color(0.5, 0.5, 0.5);
+    // (this as any).uniforms.uHSLightSkyColor.value = new Color(0.5, 0.5, 0.5);
+    // (this as any).uniforms.uDirLightColor0.value = new Color(0.4, 0.4, 0.4);
+    // (this as any).uniforms.uDirLightColor1.value = new Color(0.4, 0.4, 0.4);
+    // (this as any).lightDirection = new Vector3(0, 1, 1);
+    (this as any).uniforms.uDirLightDirAndType0.value = new Vector4(
+      -0.2,
+      0.5,
+      0.8,
+      -1.0
+    );
+    (this as any).uniforms.uDirLightDirAndType1.value = new Vector4(
+      0.0,
+      -0.19612,
+      0.98058,
+      -1.0
+    );
+    (this as any).uniforms.uHSLightGroundColor.value = new Color(
+      0xe1b997
+    ).convertLinearToSRGB();
+    (this as any).uniforms.uHSLightSkyColor.value = new Color(
+      0xe1d6ce
+    ).convertLinearToSRGB();
+    (this as any).uniforms.uDirLightColor0.value = new Color(
+      0x5a5353
+    ).convertLinearToSRGB();
+    (this as any).uniforms.uDirLightColor1.value = new Color(
+      0x1a1818
+    ).convertLinearToSRGB();
+  }
+}
+
 export {
   FFLShaderBlinnMaterial,
   FFLShaderLightDisabledMaterial,
   FFLShaderBrightMaterial,
-  FFLShaderToonMaterial
+  FFLShaderToonMaterial,
+  LUTShaderPretendoMaterial
 };
