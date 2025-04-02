@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun build.ts",
-    "serve": "bunx serve -l 3000 -C ./public"
+    "serve": "bunx serve -l 3000 -C ./public",
+    "server": "cd mii-creator-server && bun ."
   },
   "devDependencies": {
     "@namchee/bun-plugin-strip-debug": "^1.0.4",

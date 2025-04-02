@@ -88042,8 +88042,10 @@ function _drawMaskTextures(charModel, textureTempObject, renderer2, module2, mat
     const rawMaskDrawParam = FFLiRawMaskDrawParam.unpack(module2.HEAPU8.subarray(rawMaskDrawParamPtr, rawMaskDrawParamPtr + FFLiRawMaskDrawParam.size));
     module2._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
     const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer2, module2, materialClass);
+    renderer2.initTexture(target.texture);
     console.debug(`Creating target ${target.texture.id} for mask ${i}`);
     charModel._maskTargets[i] = target;
+    renderer2.initTexture(target.texture);
     scenes.push(scene);
   }
   scenes.forEach((scene) => {
@@ -142374,31 +142376,35 @@ async function loadBodyModel(modelPath) {
   return model;
 }
 var bodyType = "wiiu";
-async function loadBodyModels(input) {
+async function loadBodyModels(input, alsoLoadStreetPass = false) {
   if (Object.keys(bodyModels).length > 0) {
     bodyModels = {};
   }
   bodyType = input || await import_localforage.default.getItem("settings_bodyModel") || "wiiu";
   bodyModelName = bodyType;
   if (bodyType === "streetpass" /* StreetPass */) {
-    isStreetpassBody = true;
+    isStreetPassBody = true;
   }
-  if (bodyModels.m) {
-    bodyModels.m.scene.traverse((o) => {
+  if (bodyModels.highM) {
+    bodyModels.highM.scene.traverse((o) => {
       if (o.isMesh) {
         o.dispose();
       }
     });
   }
-  if (bodyModels.f) {
-    bodyModels.f.scene.traverse((o) => {
+  if (bodyModels.highF) {
+    bodyModels.highF.scene.traverse((o) => {
       if (o.isMesh) {
         o.dispose();
       }
     });
   }
-  bodyModels.m = await loadBodyModel(makeModelPath("M", bodyType));
-  bodyModels.f = await loadBodyModel(makeModelPath("F", bodyType));
+  bodyModels.highM = await loadBodyModel(makeModelPath("M", bodyType));
+  bodyModels.highF = await loadBodyModel(makeModelPath("F", bodyType));
+  if (alsoLoadStreetPass) {
+    bodyModels.lowM = await loadBodyModel(makeModelPath("M", "streetpass"));
+    bodyModels.lowF = await loadBodyModel(makeModelPath("F", "streetpass"));
+  }
 }
 async function loadHatModels() {
   hatModels = [];
@@ -142447,14 +142453,16 @@ async function loadClothesTextures() {
   console.log("Done");
 }
 var bodyModels = {
-  m: null,
-  f: null
+  highM: null,
+  highF: null,
+  lowM: null,
+  lowF: null
 };
 var bodyModelName = "wiiu";
 var hatModels = [];
 var clothesTextures = {};
-var isStreetpassBody = false;
-var isStreetpass = () => isStreetpassBody;
+var isStreetPassBody = false;
+var isStreetPass = () => isStreetPassBody;
 var getBodyModels = () => bodyModels;
 var getHatModels = () => hatModels;
 var getLoadedBodyModelName = () => bodyModelName;
@@ -145249,6 +145257,7 @@ function colorMixTexture(tex, constR = new Vector4(0, 1, 1, 1), constG = new Vec
       width2 = textureResolution;
       height2 = textureResolution / aspect2;
     }
+    console.log("HI ITS ME CLOTHING TEX RENDERER, IDK WTF I DID", width2, height2);
     const renderSize = new Vector2(0, 0);
     rendererMain.getSize(renderSize);
     console.log("[CMT DEBUG] width, height", width2, height2);
@@ -145284,7 +145293,9 @@ function colorMixTexture(tex, constR = new Vector4(0, 1, 1, 1), constG = new Vec
         plane.material.dispose();
         console.log("[CMT DEBUG] disposed of scene OK");
       }
+      renderer2.setSize(width2, height2, false);
       renderer2.render(scene, camera);
+      renderer2.setClearAlpha(0);
       if (typeof document === "undefined") {
         renderer2.domElement.convertToBlob({ type: "image/png" }).then(finalize);
       } else {
@@ -145395,11 +145406,11 @@ function createMiiRender(request) {
     }
     const gender = charModel._model.charInfo.personal.gender;
     const bodyScale = charModel.getBodyScale();
+    let hatModel;
     if (request.additionalInfo.hatType !== -1) {
       let hatColor = [0, 0, 0];
-      let hatModel;
       if (isTemporary)
-        hatModel = getHatModels()[request.additionalInfo.hatType];
+        hatModel = getHatModels()[request.additionalInfo.hatType].clone(true);
       else
         hatModel = getHatModels()[request.additionalInfo.hatType].clone(true);
       hatColor = MiiFavoriteColorVec3Table[mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length];
@@ -145409,6 +145420,7 @@ function createMiiRender(request) {
       if (request.additionalInfo.hatCommonColor !== -1) {
         hatColor = SwitchMiiColorTableSRGB[request.additionalInfo.hatCommonColor];
       }
+      console.log("additional info:", request.additionalInfo, "hat model:", hatModel);
       hatModel.traverse((m) => {
         if (m.isMesh) {
           const oldMat = m.material.map;
@@ -145452,34 +145464,38 @@ function createMiiRender(request) {
     if (headModel !== undefined) {
       miiGroup.add(headModel);
     }
-    if (request.drawBody && getBodyModels().m !== null) {
+    let prefix = "high";
+    if (request.bodyModelType !== undefined) {
+      prefix = request.bodyModelType;
+    }
+    if (request.drawBody && getBodyModels()[prefix + "M"] !== null) {
       switch (gender) {
         case 0: {
           if (isTemporary)
-            bodyModel = getBodyModels().m.scene;
+            bodyModel = getBodyModels()[prefix + "M"].scene;
           else
-            bodyModel = exports_SkeletonUtils.clone(getBodyModels().m.scene);
+            bodyModel = exports_SkeletonUtils.clone(getBodyModels()[prefix + "M"].scene);
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
           bodyModelBody = bodyModel.getObjectByName("body_m");
           bodyModelHands = bodyModel.getObjectByName("hands_m");
           bodyModelLegs = bodyModel.getObjectByName("legs_m");
           if (!isTemporary)
-            bodyModelAnims = getBodyModels().m.animations;
+            bodyModelAnims = getBodyModels()[prefix + "M"].animations;
           break;
         }
         case 1: {
           if (isTemporary)
-            bodyModel = getBodyModels().f.scene;
+            bodyModel = getBodyModels()[prefix + "F"].scene;
           else
-            bodyModel = exports_SkeletonUtils.clone(getBodyModels().f.scene);
+            bodyModel = exports_SkeletonUtils.clone(getBodyModels()[prefix + "F"].scene);
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
           bodyModelBody = bodyModel.getObjectByName("body_f");
           bodyModelHands = bodyModel.getObjectByName("hands_f");
           bodyModelLegs = bodyModel.getObjectByName("legs_f");
           if (!isTemporary)
-            bodyModelAnims = getBodyModels().f.animations;
+            bodyModelAnims = getBodyModels()[prefix + "F"].animations;
           break;
         }
         default:
@@ -145521,7 +145537,8 @@ function createMiiRender(request) {
       });
       const nBody = bodyModelBody;
       const nLegs = bodyModelLegs;
-      if (request.additionalInfo.clothesType !== undefined && request.additionalInfo.clothesType !== -1 && getLoadedBodyModelName() !== "miitomo" && request.additionalInfo.clothesType < ExtClothesList.length) {
+      ColorManagement.enabled = false;
+      if (request.additionalInfo.clothesType !== undefined && request.additionalInfo.clothesType !== -1 && request.bodyModelType !== "low" /* low */ && getLoadedBodyModelName() === "wiiu" && request.additionalInfo.clothesType < ExtClothesList.length) {
         console.log("clothing update");
         let shirtTexture, pantsTexture = null;
         const suffix = mii.gender == 1 ? "F" : "";
@@ -145533,9 +145550,9 @@ function createMiiRender(request) {
         let shoesColor = request.additionalInfo.shoesColor !== -1 && request.additionalInfo.shoesColor < 100 ? SwitchMiiColorTableSRGB[request.additionalInfo.shoesColor] : [1, 1, 1];
         switch (ClothesTypeList[request.additionalInfo.clothesType]) {
           case 0 /* COLOR_MIXED */: {
-            const colorMixR = new Vector4(...shirtColor, 1), colorMixG = new Vector4(...shoesColor, 1), colorMixB = new Vector4(...pantsColor, 1), colorMixA = charModel ? charModel.facelineColor.convertSRGBToLinear() : 16711680;
+            const colorMixR = new Vector4(...shirtColor, 1), colorMixG = new Vector4(...shoesColor, 1), colorMixB = new Vector4(...pantsColor, 1), colorMixA = charModel ? request.clothingLinearColors !== true ? charModel.facelineColor : charModel.facelineColor.convertSRGBToLinear() : 16711680;
             let tex = await colorMixTexture(getClothesTextures()[shirtKey], colorMixR, colorMixG, colorMixB, colorMixA, request.textureRenderer || request.renderer, request.texResolution);
-            shirtTexture = await loadBlobTextureWorker(tex);
+            shirtTexture = await loadBlobTextureWorker(tex, request.texResolution, request.texResolution);
             break;
           }
           case 1 /* TEXTURE_COLOR */: {
@@ -145578,7 +145595,10 @@ function createMiiRender(request) {
             iconCamera.position.y += bodyScale.y * 76;
           }
         }
-      if (isStreetpass()) {
+      if (request.bodyModelType === "low" /* low */) {
+        bodyModelHands.visible = false;
+      }
+      if (isStreetPass()) {
         console.log("is streetpass");
         var scaleVec = new Vector3;
         bodyModel.getWorldScale(scaleVec);
@@ -145600,6 +145620,14 @@ function createMiiRender(request) {
         if (request.drawBody) {
           bodyModelBody.material.dispose();
           bodyModelLegs.material.dispose();
+        }
+        if (hatModel) {
+          hatModel.traverse((n2) => {
+            if (!n2.isMesh)
+              return;
+            n2.geometry.dispose();
+            n2.material.dispose();
+          });
         }
         resolve(dataURL);
       }, 0);

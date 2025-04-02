@@ -79,6 +79,12 @@ export function colorMixTexture(
       height = textureResolution / aspect;
     }
 
+    console.log(
+      "HI ITS ME CLOTHING TEX RENDERER, IDK WTF I DID",
+      width,
+      height
+    );
+
     // be nice and save the current renderer's stuff
     const renderSize = new THREE.Vector2(0, 0);
     rendererMain.getSize(renderSize);
@@ -135,10 +141,6 @@ export function colorMixTexture(
     console.log("[CMT DEBUG] add mesh to scene");
 
     function render() {
-      // renderer.setClearAlpha(0);
-
-      // renderer.setClearColor(oldClearColor);
-      // renderer.setClearAlpha(oldClearAlpha);
       // renderer.setSize(renderSize.x, renderSize.y, false);
       console.log("[CMT DEBUG] render scene OK");
 
@@ -154,7 +156,12 @@ export function colorMixTexture(
         console.log("[CMT DEBUG] disposed of scene OK");
       }
 
+      renderer.setSize(width, height, false);
       renderer.render(scene, camera);
+
+      // renderer.setClearAlpha(0);
+      // renderer.setClearColor(0xff0000);
+      renderer.setClearAlpha(0);
 
       if (typeof document === "undefined") {
         (renderer.domElement as any as OffscreenCanvas)

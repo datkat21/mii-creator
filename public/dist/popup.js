@@ -263,6 +263,8 @@ class Html {
           infoJson = await fetch("/api/me").then((r) => r.json());
           if (infoJson.personal_mii.error)
             infoJson.personal_mii = null;
+          if (infoJson.library)
+            infoJson.library = JSON.parse(infoJson.library);
           break;
         case "personal_mii_only" /* PersonalMiiOnly */:
           let personal_mii = await fetch("/api/personal_mii").then((r) => r.json());

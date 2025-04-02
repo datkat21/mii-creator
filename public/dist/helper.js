@@ -88042,8 +88042,10 @@ function _drawMaskTextures(charModel, textureTempObject, renderer2, module2, mat
     const rawMaskDrawParam = FFLiRawMaskDrawParam.unpack(module2.HEAPU8.subarray(rawMaskDrawParamPtr, rawMaskDrawParamPtr + FFLiRawMaskDrawParam.size));
     module2._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
     const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer2, module2, materialClass);
+    renderer2.initTexture(target.texture);
     console.debug(`Creating target ${target.texture.id} for mask ${i}`);
     charModel._maskTargets[i] = target;
+    renderer2.initTexture(target.texture);
     scenes.push(scene);
   }
   scenes.forEach((scene) => {
@@ -142623,31 +142625,35 @@ async function loadBodyModel(modelPath) {
   return model;
 }
 var bodyType = "wiiu";
-async function loadBodyModels(input) {
+async function loadBodyModels(input, alsoLoadStreetPass = false) {
   if (Object.keys(bodyModels).length > 0) {
     bodyModels = {};
   }
   bodyType = input || await import_localforage2.default.getItem("settings_bodyModel") || "wiiu";
   bodyModelName = bodyType;
   if (bodyType === "streetpass" /* StreetPass */) {
-    isStreetpassBody = true;
+    isStreetPassBody = true;
   }
-  if (bodyModels.m) {
-    bodyModels.m.scene.traverse((o) => {
+  if (bodyModels.highM) {
+    bodyModels.highM.scene.traverse((o) => {
       if (o.isMesh) {
         o.dispose();
       }
     });
   }
-  if (bodyModels.f) {
-    bodyModels.f.scene.traverse((o) => {
+  if (bodyModels.highF) {
+    bodyModels.highF.scene.traverse((o) => {
       if (o.isMesh) {
         o.dispose();
       }
     });
   }
-  bodyModels.m = await loadBodyModel(makeModelPath("M", bodyType));
-  bodyModels.f = await loadBodyModel(makeModelPath("F", bodyType));
+  bodyModels.highM = await loadBodyModel(makeModelPath("M", bodyType));
+  bodyModels.highF = await loadBodyModel(makeModelPath("F", bodyType));
+  if (alsoLoadStreetPass) {
+    bodyModels.lowM = await loadBodyModel(makeModelPath("M", "streetpass"));
+    bodyModels.lowF = await loadBodyModel(makeModelPath("F", "streetpass"));
+  }
 }
 async function loadHatModels() {
   hatModels = [];
@@ -142696,14 +142702,16 @@ async function loadClothesTextures() {
   console.log("Done");
 }
 var bodyModels = {
-  m: null,
-  f: null
+  highM: null,
+  highF: null,
+  lowM: null,
+  lowF: null
 };
 var bodyModelName = "wiiu";
 var hatModels = [];
 var clothesTextures = {};
-var isStreetpassBody = false;
-var isStreetpass = () => isStreetpassBody;
+var isStreetPassBody = false;
+var isStreetPass = () => isStreetPassBody;
 var getBodyModels = () => bodyModels;
 var getHatModels = () => hatModels;
 var getLoadedBodyModelName = () => bodyModelName;
@@ -145249,6 +145257,7 @@ function colorMixTexture(tex, constR = new Vector4(0, 1, 1, 1), constG = new Vec
       width2 = textureResolution;
       height2 = textureResolution / aspect2;
     }
+    console.log("HI ITS ME CLOTHING TEX RENDERER, IDK WTF I DID", width2, height2);
     const renderSize = new Vector2(0, 0);
     rendererMain.getSize(renderSize);
     console.log("[CMT DEBUG] width, height", width2, height2);
@@ -145284,7 +145293,9 @@ function colorMixTexture(tex, constR = new Vector4(0, 1, 1, 1), constG = new Vec
         plane.material.dispose();
         console.log("[CMT DEBUG] disposed of scene OK");
       }
+      renderer2.setSize(width2, height2, false);
       renderer2.render(scene, camera);
+      renderer2.setClearAlpha(0);
       if (typeof document === "undefined") {
         renderer2.domElement.convertToBlob({ type: "image/png" }).then(finalize);
       } else {
@@ -145395,11 +145406,11 @@ function createMiiRender(request) {
     }
     const gender = charModel._model.charInfo.personal.gender;
     const bodyScale = charModel.getBodyScale();
+    let hatModel;
     if (request.additionalInfo.hatType !== -1) {
       let hatColor = [0, 0, 0];
-      let hatModel;
       if (isTemporary)
-        hatModel = getHatModels()[request.additionalInfo.hatType];
+        hatModel = getHatModels()[request.additionalInfo.hatType].clone(true);
       else
         hatModel = getHatModels()[request.additionalInfo.hatType].clone(true);
       hatColor = MiiFavoriteColorVec3Table[mii.favoriteColor % Object.keys(MiiFavoriteColorVec3Table).length];
@@ -145409,6 +145420,7 @@ function createMiiRender(request) {
       if (request.additionalInfo.hatCommonColor !== -1) {
         hatColor = SwitchMiiColorTableSRGB[request.additionalInfo.hatCommonColor];
       }
+      console.log("additional info:", request.additionalInfo, "hat model:", hatModel);
       hatModel.traverse((m) => {
         if (m.isMesh) {
           const oldMat = m.material.map;
@@ -145452,34 +145464,38 @@ function createMiiRender(request) {
     if (headModel !== undefined) {
       miiGroup.add(headModel);
     }
-    if (request.drawBody && getBodyModels().m !== null) {
+    let prefix = "high";
+    if (request.bodyModelType !== undefined) {
+      prefix = request.bodyModelType;
+    }
+    if (request.drawBody && getBodyModels()[prefix + "M"] !== null) {
       switch (gender) {
         case 0: {
           if (isTemporary)
-            bodyModel = getBodyModels().m.scene;
+            bodyModel = getBodyModels()[prefix + "M"].scene;
           else
-            bodyModel = exports_SkeletonUtils.clone(getBodyModels().m.scene);
+            bodyModel = exports_SkeletonUtils.clone(getBodyModels()[prefix + "M"].scene);
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
           bodyModelBody = bodyModel.getObjectByName("body_m");
           bodyModelHands = bodyModel.getObjectByName("hands_m");
           bodyModelLegs = bodyModel.getObjectByName("legs_m");
           if (!isTemporary)
-            bodyModelAnims = getBodyModels().m.animations;
+            bodyModelAnims = getBodyModels()[prefix + "M"].animations;
           break;
         }
         case 1: {
           if (isTemporary)
-            bodyModel = getBodyModels().f.scene;
+            bodyModel = getBodyModels()[prefix + "F"].scene;
           else
-            bodyModel = exports_SkeletonUtils.clone(getBodyModels().f.scene);
+            bodyModel = exports_SkeletonUtils.clone(getBodyModels()[prefix + "F"].scene);
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
           bodyModelBody = bodyModel.getObjectByName("body_f");
           bodyModelHands = bodyModel.getObjectByName("hands_f");
           bodyModelLegs = bodyModel.getObjectByName("legs_f");
           if (!isTemporary)
-            bodyModelAnims = getBodyModels().f.animations;
+            bodyModelAnims = getBodyModels()[prefix + "F"].animations;
           break;
         }
         default:
@@ -145521,7 +145537,8 @@ function createMiiRender(request) {
       });
       const nBody = bodyModelBody;
       const nLegs = bodyModelLegs;
-      if (request.additionalInfo.clothesType !== undefined && request.additionalInfo.clothesType !== -1 && getLoadedBodyModelName() !== "miitomo" && request.additionalInfo.clothesType < ExtClothesList.length) {
+      ColorManagement.enabled = false;
+      if (request.additionalInfo.clothesType !== undefined && request.additionalInfo.clothesType !== -1 && request.bodyModelType !== "low" /* low */ && getLoadedBodyModelName() === "wiiu" && request.additionalInfo.clothesType < ExtClothesList.length) {
         console.log("clothing update");
         let shirtTexture, pantsTexture = null;
         const suffix = mii.gender == 1 ? "F" : "";
@@ -145533,9 +145550,9 @@ function createMiiRender(request) {
         let shoesColor = request.additionalInfo.shoesColor !== -1 && request.additionalInfo.shoesColor < 100 ? SwitchMiiColorTableSRGB[request.additionalInfo.shoesColor] : [1, 1, 1];
         switch (ClothesTypeList[request.additionalInfo.clothesType]) {
           case 0 /* COLOR_MIXED */: {
-            const colorMixR = new Vector4(...shirtColor, 1), colorMixG = new Vector4(...shoesColor, 1), colorMixB = new Vector4(...pantsColor, 1), colorMixA = charModel ? charModel.facelineColor.convertSRGBToLinear() : 16711680;
+            const colorMixR = new Vector4(...shirtColor, 1), colorMixG = new Vector4(...shoesColor, 1), colorMixB = new Vector4(...pantsColor, 1), colorMixA = charModel ? request.clothingLinearColors !== true ? charModel.facelineColor : charModel.facelineColor.convertSRGBToLinear() : 16711680;
             let tex = await colorMixTexture(getClothesTextures()[shirtKey], colorMixR, colorMixG, colorMixB, colorMixA, request.textureRenderer || request.renderer, request.texResolution);
-            shirtTexture = await loadBlobTextureWorker(tex);
+            shirtTexture = await loadBlobTextureWorker(tex, request.texResolution, request.texResolution);
             break;
           }
           case 1 /* TEXTURE_COLOR */: {
@@ -145578,7 +145595,10 @@ function createMiiRender(request) {
             iconCamera.position.y += bodyScale.y * 76;
           }
         }
-      if (isStreetpass()) {
+      if (request.bodyModelType === "low" /* low */) {
+        bodyModelHands.visible = false;
+      }
+      if (isStreetPass()) {
         console.log("is streetpass");
         var scaleVec = new Vector3;
         bodyModel.getWorldScale(scaleVec);
@@ -145600,6 +145620,14 @@ function createMiiRender(request) {
         if (request.drawBody) {
           bodyModelBody.material.dispose();
           bodyModelLegs.material.dispose();
+        }
+        if (hatModel) {
+          hatModel.traverse((n2) => {
+            if (!n2.isMesh)
+              return;
+            n2.geometry.dispose();
+            n2.material.dispose();
+          });
         }
         resolve(dataURL);
       }, 0);
@@ -145798,10 +145826,919 @@ class Html {
   }
 }
 
+// src/external/mii-selector/selector.js
+var lang = "en";
+var MiiSelector = {
+  loc: {
+    en: [
+      "Select a Mii.",
+      "Guests",
+      "Cancel",
+      "Confirm",
+      "Search",
+      "Matches for:",
+      "results",
+      "No matches found."
+    ],
+    es: [
+      "Selecciona un Mii.",
+      "Invitados",
+      "Cancelar",
+      "Confirmar",
+      "Buscar",
+      "Resultados para:",
+      "resultados",
+      "No hay resultados."
+    ]
+  },
+  open: async function(miiArray, selectorParam) {
+    return new Promise((resolve, reject2) => {
+      function getLoc(index2) {
+        return MiiSelector.loc[lang][index2];
+      }
+      var check2 = document.querySelector("#mii-creator-selector-modal");
+      if (check2 != null || check2 != null) {
+        check2.remove();
+      }
+      var pages = 0;
+      var currentPage = 1;
+      var canPreloadCharIcon = miiArray.length <= 100;
+      console.log("canPreloadCharIcon: " + canPreloadCharIcon);
+      var selectedMii = null;
+      if (selectorParam) {
+        if (selectorParam.preload === false) {
+          canPreloadCharIcon = false;
+        }
+      }
+      miiArray.forEach((mii, index2) => {
+        if (index2 % 10 === 0) {
+          pages++;
+        }
+      });
+      const container = '<div id="mii-creator-selector-modal">' + '<div class="selector" style="display: none;">' + "<h1>" + getLoc(0) + "</h1>" + '<div class="mii-container guest" style="display: none;">' + '<div class="guest-label">' + getLoc(1) + "</div>" + "</div>" + '<div class="mii-container">' + "</div>" + ' <div class="mii-container transition" style="display: none;">' + '<div class="mii" tabindex="-1"></div>'.repeat(10) + "</div>" + '<div class="mii-page-counter">' + "<span><b>1</b><span>/10</span></span>" + "</div>" + '<div class="button-navi">' + '<button class="prev" style="display:none;">◀</button>' + '<button class="next" style="display:none;">▶</button>' + "</div>" + '<div class="button-container">' + '<button class="cancel">Cancel</button>' + '<button disabled class="confirm">Confirm</button>' + "</div>" + "</div>" + "</div>";
+      document.body.insertAdjacentHTML("beforeend", container);
+      check2 = document.querySelector("#mii-creator-selector-modal");
+      var selCont = check2.querySelector(".selector");
+      var pagesEl = check2.querySelector(".mii-page-counter span>span");
+      var pagesCurEl = check2.querySelector(".mii-page-counter span>b");
+      pagesEl.innerText = "/ " + pages;
+      var arrowLeft = check2.querySelector(".prev");
+      var arrowRight = check2.querySelector(".next");
+      var confirmButton = check2.querySelector(".confirm");
+      var cancelButton = check2.querySelector(".cancel");
+      var miiCoUser = check2.querySelector(".mii-container:not(.transition):not(.guest)");
+      var miiTrs = check2.querySelector(".mii-container.transition");
+      if (pages > 1) {
+        arrowRight.style.display = "block";
+      }
+      const dataArray = [];
+      if (canPreloadCharIcon) {
+        const iconPromises = miiArray.map((mii, index2) => {
+          return new Promise(async (resolve2) => {
+            const miiData = new Mii(mii.miiData);
+            const data2 = miiData.export("studioData");
+            const icon = await createMiiRender({
+              data: data2,
+              drawBody: true,
+              size: 124,
+              module: fflModule,
+              additionalInfo: getAdditionalInfoFromMii(miiData),
+              shaderType: "wiiu_blinn",
+              renderer: renderer2,
+              bodyModelType: "low",
+              texResolution: 128,
+              type: 0
+            });
+            var iconURL = URL.createObjectURL(icon.result);
+            resolve2({ img: iconURL, name: miiData.nickname });
+          });
+        });
+        Promise.all(iconPromises).then(async (icons) => {
+          console.log("REAL");
+          icons.forEach((e) => dataArray.push(e));
+          fillMiiContainer(miiArray, currentPage).then((data2) => {
+            miiCoUser.innerHTML = data2;
+            selCont.style.display = "block";
+            updateMiiListener();
+            initButtonListener();
+          });
+        });
+      } else {
+        fillMiiContainer(miiArray, currentPage).then((data2) => {
+          miiCoUser.innerHTML = data2;
+          selCont.style.display = "block";
+          updateMiiListener();
+          initButtonListener();
+        });
+      }
+      async function fillMiiContainer(miiArray2, page) {
+        console.log(page);
+        const miisPerPage = 10;
+        const startIndex = (page - 1) * miisPerPage;
+        const selectedMiis = miiArray2.slice(startIndex, startIndex + miisPerPage);
+        if (canPreloadCharIcon) {
+          var pageData = dataArray.slice(startIndex, startIndex + miisPerPage);
+        } else {
+          dataArray.length = 0;
+          var pageDataPromises = selectedMiis.map((mii) => {
+            return new Promise(async (resolve2) => {
+              const miiData = new Mii(mii.miiData);
+              const data2 = miiData.export("studioData");
+              const icon = await createMiiRender({
+                data: data2,
+                drawBody: true,
+                size: 124,
+                module: fflModule,
+                additionalInfo: getAdditionalInfoFromMii(miiData),
+                shaderType: "wiiu_blinn",
+                renderer: renderer2,
+                bodyModelType: "low",
+                texResolution: 128,
+                type: 0
+              });
+              var iconURL = URL.createObjectURL(icon.result);
+              const miiPageData = { img: iconURL, name: miiData.nickname };
+              dataArray.push(miiPageData);
+              return resolve2(miiPageData);
+            });
+          });
+          console.log("page data promises list", pageDataPromises);
+          pageData = await Promise.all(pageDataPromises);
+          console.log("page data overwrite promises", pageData);
+        }
+        while (pageData.length < miisPerPage) {
+          pageData.push({ img: "", name: "" });
+        }
+        return pageData.map((mii, i) => {
+          const overallIndex = startIndex + i;
+          const dataAttr = mii.img && mii.name ? ` data-mii-index="${overallIndex}"` : "";
+          return `<div tabindex="0" class="mii"${dataAttr}>` + (mii.img ? `<img draggable="false" src="${mii.img}">` : "") + (mii.name ? `<p style="display: none;">${mii.name}</p>` : "") + `</div>`;
+        }).join("");
+      }
+      function miiSelect(el) {
+        var target = el;
+        if (el.classList.contains("selected")) {
+          return;
+        }
+        check2.querySelectorAll(".mii").forEach((mii) => {
+          mii.classList.remove("selected");
+          mii.querySelectorAll("p").forEach((m) => {
+            m.style.display = "none";
+          });
+        });
+        target.classList.add("selected");
+        if (target.hasAttribute("data-mii-index")) {
+          selectedMii = {
+            index: target.getAttribute("data-mii-index"),
+            data: miiArray[parseInt(target.getAttribute("data-mii-index"))]
+          };
+          console.log(selectedMii);
+          target.querySelector("p").style.display = "";
+          confirmButton.disabled = false;
+        } else {
+          selectedMii = null;
+          confirmButton.disabled = true;
+        }
+        if (selectorParam.soundManager) {
+          selectorParam.soundManager.playSound("3ds_mii_selector_select");
+        }
+      }
+      function updateMiiListener() {
+        check2.querySelectorAll(".mii").forEach(function(mii) {
+          mii.addEventListener("click", function(event) {
+            miiSelect(this);
+          });
+          mii.addEventListener("focus", function(event) {
+            miiSelect(this);
+          });
+        });
+      }
+      function initButtonListener() {
+        arrowRight.addEventListener("click", function() {
+          lockArrowsForNation();
+          miiCoUser.classList.add("slideleft");
+          miiTrs.style.display = "";
+          miiTrs.classList.add("slideleftb");
+          miiTrs.addEventListener("animationend", function onAnimationEnd() {
+            miiTrs.removeEventListener("animationend", onAnimationEnd);
+            setTimeout(function() {
+              miiCoUser.classList.remove("slideleft");
+              miiTrs.classList.remove("slideleftb");
+              miiTrs.style.display = "none";
+              miiCoUser.innerHTML = "";
+              currentPage++;
+              fillMiiContainer(miiArray, currentPage).then((data2) => {
+                miiCoUser.innerHTML = data2;
+                updateMiiListener();
+                pagesCurEl.innerText = currentPage;
+                doTrioAtPaginEnd();
+              });
+            }, 0);
+          }, { once: true });
+        });
+        arrowLeft.addEventListener("click", function() {
+          lockArrowsForNation();
+          miiCoUser.classList.add("slideright");
+          miiTrs.style.display = "";
+          miiTrs.classList.add("sliderightb");
+          miiTrs.addEventListener("animationend", function onAnimationEnd() {
+            miiTrs.removeEventListener("animationend", onAnimationEnd);
+            setTimeout(function() {
+              miiCoUser.classList.remove("slideright");
+              miiTrs.classList.remove("sliderightb");
+              miiTrs.style.display = "none";
+              miiCoUser.innerHTML = "";
+              currentPage--;
+              fillMiiContainer(miiArray, currentPage).then((data2) => {
+                miiCoUser.innerHTML = data2;
+                updateMiiListener();
+                pagesCurEl.innerText = currentPage;
+                doTrioAtPaginEnd();
+              });
+            }, 0);
+          }, { once: true });
+        });
+        confirmButton.addEventListener("click", function onConfirm() {
+          console.log("Confirm");
+          if (selectorParam.soundManager) {
+            selectorParam.soundManager.playSound("3ds_mii_selector_confirm");
+          }
+          check2.style.pointerEvents = "none";
+          confirmButton.removeEventListener("click", onConfirm);
+          selCont.classList.add("finish");
+          selCont.addEventListener("animationend", function onAnimationEnd() {
+            selCont.removeEventListener("animationend", onAnimationEnd);
+            setTimeout(function() {
+              check2.remove();
+              document.removeEventListener("keydown", MiiSelector.onKeyDown);
+              document.removeEventListener("keyup", MiiSelector.onKeyUp);
+              if (selectedMii != null) {
+                resolve({ mii: selectedMii.data });
+              } else {
+                reject2("User hasnt selected Mii");
+              }
+            }, 0);
+          }, { once: true });
+        });
+        cancelButton.addEventListener("click", function onCancel() {
+          check2.style.pointerEvents = "none";
+          cancelButton.removeEventListener("click", onCancel);
+          selCont.classList.add("finish");
+          if (selectorParam.soundManager) {
+            selectorParam.soundManager.playSound("3ds_mii_selector_cancel");
+          }
+          selCont.addEventListener("animationend", function onAnimationEnd() {
+            selCont.removeEventListener("animationend", onAnimationEnd);
+            setTimeout(function() {
+              check2.remove();
+              document.removeEventListener("keydown", MiiSelector.onKeyDown);
+              document.removeEventListener("keyup", MiiSelector.onKeyUp);
+              reject2("No Mii data selected by user.");
+            }, 0);
+          }, { once: true });
+        });
+      }
+      function doTrioAtPaginEnd() {
+        ifSelectedMiiRestore();
+        updateArrowsForNation();
+        unlockArrowsForNation();
+      }
+      function updateArrowsForNation() {
+        if (currentPage === pages) {
+          arrowRight.style.display = "none";
+          arrowLeft.style.display = "";
+        } else if (currentPage === 1) {
+          arrowLeft.style.display = "none";
+          arrowRight.style.display = "";
+        } else {
+          arrowLeft.style.display = "";
+          arrowRight.style.display = "";
+        }
+      }
+      function ifSelectedMiiRestore() {
+        if (selectedMii != null && check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]') && selectedMii.index) {
+          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').classList.add("selected");
+          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').querySelector("p").style.display = "";
+          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').focus();
+        }
+      }
+      function lockArrowsForNation() {
+        if (selectorParam.soundManager) {
+          selectorParam.soundManager.playSound("3ds_mii_selector_page");
+        }
+        arrowRight.disabled = true;
+        arrowLeft.disabled = true;
+        arrowLeft.style.opacity = "0.5";
+        arrowLeft.style.filter = "grayscale(100%)";
+        arrowRight.style.opacity = "0.5";
+        arrowRight.style.filter = "grayscale(100%)";
+      }
+      function unlockArrowsForNation() {
+        arrowLeft.style.opacity = "1";
+        arrowLeft.style.filter = "none";
+        arrowRight.style.opacity = "1";
+        arrowRight.style.filter = "none";
+        arrowRight.disabled = false;
+        arrowLeft.disabled = false;
+      }
+    });
+  }
+};
+function miiSelectorSetFflModule(module2) {
+  fflModule = module2;
+}
+function miiSelectorSetRenderer(r) {
+  renderer2 = r;
+}
+var fflModule;
+var renderer2;
+
+// src/external/mii-selector/selector.css.ts
+var selector_css_default = `* {
+    font-family: 'nintendo_NTLG-DB_001' !important;
+    --default-selector-width: 750px;
+    --default-selector-height: 520px;
+}
+
+body {
+    position: relative;
+    font-size: 28px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    color: #323232;
+    background: #fff;
+    background-size: 10px;
+    background-attachment: fixed;
+    overflow-y: scroll;
+}
+
+#mii-creator-selector-modal *:focus-visible:not(.mii.selected:focus-visible){
+    outline: none;
+    box-shadow: 0px 0px 0px 3px #00c6f6 !important;
+}
+
+#mii-creator-selector-modal {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+@keyframes slideUp {
+    0% {
+        top: 100%;
+    }
+    85% {
+        top: -3%; /* Slight overshoot */
+    }
+    95% {
+        top: 1%; /* Small bounce back */
+    }
+    100% {
+        top: 0%; /* Settle at final position */
+    }
+}
+
+@keyframes slideDown {
+    0% {
+      top: 0%;
+    }
+    85% {
+      top: 103%; /* Slight overshoot downward */
+    }
+    95% {
+      top: 99%; /* Small bounce back upward */
+    }
+    100% {
+      top: 100%; /* Settle at final position */
+    }
+  }
+  
+
+
+#mii-creator-selector-modal .selector {
+    width: var(--default-selector-width);
+    height: var(--default-selector-height);
+    background: #ecf8f0;
+    border-radius: 20px;
+    box-shadow: inset 0px 0px 8px 1px #00000063;
+    border: 2px solid #ecf8f0;
+    box-sizing: border-box;
+    position: relative;
+    animation: slideUp 0.55s ease-in-out;
+    overflow: hidden;
+}
+
+#mii-creator-selector-modal .selector.finish {
+    animation: slideDown 0.55s ease-in-out forwards !important;
+}
+
+#mii-creator-selector-modal .button-navi {
+    position: absolute;
+    margin-top: 135px;
+    top: 0;
+    width: 100%;
+    left: 0;
+}
+
+#mii-creator-selector-modal .button-navi button {
+    height: 180px;
+    font-size: 40px;
+    text-shadow: 1px 2px #fff;
+    color: #141914;
+    width: 55px;
+    border: 1.5px solid #68776d;
+    cursor: pointer;
+    transition: 0.02s;
+    background: linear-gradient(#d3e1d3, #95aa95);
+}
+
+#mii-creator-selector-modal .button-navi button:active:not(:disabled) {
+    text-shadow: 1px 2px #141914;
+    background: linear-gradient(#24402f, #7d937f);
+    color: #fff;
+    border-color: #3e5846;
+    width: 50px;
+}
+
+#mii-creator-selector-modal .button-navi button.prev{
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-shadow: 2px 0px 3px 1px rgba(0, 0, 0, 0.30);
+    border-top-right-radius: 13px;
+    border-bottom-right-radius: 13px;
+    border-left: none;
+}
+
+#mii-creator-selector-modal .button-navi button.next{
+    position: absolute;
+    top: 0;
+    right: 0;
+    box-shadow: -2px 1px 3px 1px rgba(0, 0, 0, 0.30);
+    border-top-left-radius: 13px;
+    border-bottom-left-radius: 13px;
+    border-right: none;
+}
+
+#mii-creator-selector-modal .selector>h1 {
+    text-align: center;
+    margin: 5px;
+    font-weight: normal;
+    font-size: 32px;
+}
+
+
+#mii-creator-selector-modal .selector .mii-container {
+    height: 60%;
+    background: #fff;
+    width: 90%;
+    box-shadow: 0px 0px 3px 1px #d5dbd6;
+    border-radius: 10px;
+    margin: auto;
+    margin-top: 25px;
+    display: flex;
+    align-content: center;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+    left: 0px;
+    position: relative;
+}
+
+#mii-creator-selector-modal .selector .mii-container.slideleft {
+    animation: slideLeft 0.25s ease-in forwards;
+}
+
+#mii-creator-selector-modal .selector .mii-container.slideright {
+    animation: slideRight 0.25s ease-in forwards;
+}
+
+#mii-creator-selector-modal .selector .mii-container.slideleftb {
+    animation: slideLeftB 0.25s ease-in forwards;
+}
+
+#mii-creator-selector-modal .selector .mii-container.sliderightb {
+    animation: slideRightB 0.25s ease-in forwards;
+}
+
+@keyframes slideLeft {
+    from {
+        left: 0%;
+    }
+    to {
+        left: -100%;
+    }
+}
+
+@keyframes slideRight {
+    from {
+        left: 0%;
+    }
+    to {
+        left: 100%;
+    }
+}
+
+@keyframes slideLeftB {
+    from {
+        left: 100%;
+    }
+    to {
+        left: 0%;
+    }
+}
+
+@keyframes slideRightB {
+    from {
+        left: -100%;
+    }
+    to {
+        left: 0%;
+    }
+}
+
+#mii-creator-selector-modal .selector .mii-container.guest {
+    padding-left: 32%;
+    box-sizing: border-box;
+}
+
+#mii-creator-selector-modal .selector .mii-container.transition {
+    top: -60%;
+    left: 100%;
+    margin-top: 0;
+}
+
+#mii-creator-selector-modal .selector .mii-container.guest .guest-label{
+    width: 230px;
+    height: 280px;
+    text-align: center;
+    display: flex
+;
+    background: #e2f3e0;
+    border-radius: 10px;
+    position: absolute;
+    left: 0;
+    top: auto;
+    margin-top: 15px;
+    margin-left: 55px;
+    color: #505050;
+    justify-content: center;
+    font-size: 30px;
+    align-items: center;
+}
+
+#mii-creator-selector-modal .selector .mii-page-counter {
+    margin-top: 15px;
+    margin-right: 30px;
+    position: absolute;
+    right: 0;
+    top: 75%;
+    z-index: 5;
+    width: auto;
+    padding: 0px 20px;
+    border-radius: 8px;
+    font-size: 28px;
+    box-shadow: -2px -2px 3px 1px rgba(255, 255, 255, 0.80) inset, 1px 1px 3px 1px rgb(0 0 0 / 22%) inset, 0px 0px 0px 1px rgb(0 0 0 / 33%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.10);
+}
+
+#mii-creator-selector-modal .selector .mii-page-counter>span>b{
+    color: #0096ff;
+    font-weight: normal;
+    padding: 0px 12px;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii {
+    width: 110px;
+    margin: 5px;
+    background: #e6f0e8;
+    height: 130px;
+    border: 3.5px solid #a0ad9e;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii:focus-visible {
+    outline: none;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii.selected {
+    border-color: #ffaf31;
+    animation: glow 0.1s forwards ease-in-out;
+    background: #fbbeaa;
+}
+
+@keyframes glow{
+    0% {
+        box-shadow: 1px 1px 4px #ffaf31 inset, 0px 0px 2px 0px #e5910f, inset 0px 0px 2px 2px #f2980a;
+    }
+    50% {
+        box-shadow: 1px 1px 4px #ffaf31 inset, 0px 0px 6px 2px #e5910f, inset 0px 0px 2px 2px #f2980a;
+    }
+    100% {
+        box-shadow: 1px 1px 4px #ffaf31 inset, 0px 0px 4px 1px #e5910f, inset 0px 0px 2px 2px #f2980a, inset 0px 0px 6px 2px #00000043;
+    }
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii>img {
+    /* width: 120px; */
+    position: absolute;
+    /* left: -5px; */
+    bottom: 0;
+    pointer-events: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-drag: none;
+    user-select: none;
+    outline: none;
+    animation: fadeIn 0.15s ease-in-out forwards;
+    transform: translate(-50%, 0);
+    width: 100%;
+    height: 100%;
+    left: 50%;
+    object-fit: cover;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii>p {
+    display: block;
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: auto;
+    border-radius: 5px;
+    width: auto;
+    white-space: nowrap;
+    font-size: 28px;
+    min-width: 100px;
+    padding: 3px 16px;
+    text-align: center;
+    z-index: 10;
+    box-shadow: 0px 0px 1px 1.5px #9e9e9e, inset 0px 0px 5px 0px #afafaf;
+    background: #fff;
+    -webkit-user-drag: none;
+    user-select: none;
+    z-index: 10;
+
+    color:#233f2e;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii>p::before {
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg width='9' height='11' viewBox='0 0 9 11' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0.5 11L4.5 2L8.5 11H0.5Z' fill='url(%23paint0_linear_1939_2)'/%3E%3Cpath d='M4.49997 3.23111L8 11H9L4.49997 0.76889L0 11H1L4.49997 3.23111Z' fill='%23A0A0A0'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_1939_2' x1='4.5' y1='2' x2='4.5' y2='11' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0.865385' stop-color='white'/%3E%3Cstop offset='1' stop-color='%23AFAFAF'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E");
+  position: absolute;
+  width: 20px;
+  height: 24px;
+  background-size: cover;
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg);
+  top: 100%;
+  z-index: -1;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(1)>p,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(6)>p {
+    left: -10%;
+    transform: none;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(5)>p,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(10)>p {
+    right: -10%;
+    left: auto;
+    transform: none;
+}
+
+
+/*
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(1)>p::before,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(6)>p::before {
+    top: -100% !important;
+    left: -10% !important;
+    width: 100%;
+    transform: translateY(100%) rotate(0deg) !important;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(5)>p::before,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(10)>p::before {
+    top: -100% !important;
+    left: -9% !important;
+    width: 100%;
+    transform: translateY(100%) rotate(0deg) !important;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(5)>p::before {
+    top: 100% !important;
+  left: 50% !important;
+    transform: translateX(-57%) rotate(180deg) !important;
+}
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(1)>p::before {
+    top: 100% !important;
+  left: 50% !important;
+    transform: translateX(-57%) rotate(180deg) !important;
+}
+*/
+
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(6)>p,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(7)>p,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(8)>p,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(9)>p,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(10)>p {
+    top: auto;
+    bottom: -33px;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(6)>p::before,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(7)>p::before,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(8)>p::before,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(9)>p::before,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(10)>p::before {
+    transform: translateX(-50%) translateY(100%);
+    top: -100%;
+}
+
+#mii-creator-selector-modal .selector .button-container {
+    width: 100%;
+    position: absolute;
+    display: flex;
+    bottom: 0;
+    left: 0;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    background: linear-gradient(#cfddcf, #889488);
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+#mii-creator-selector-modal .selector .button-container button{
+    width: 50%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-shadow: 0px 2px #fff;
+    font-size: 29px;
+    height: 55px;
+    border-top: 2px solid #44524b;
+    box-sizing: border-box;
+    transition: 0.02s;
+    cursor: pointer;
+
+    color: #141914;
+}
+
+#mii-creator-selector-modal .selector .button-container button:active:not(:disabled){ 
+    text-shadow: 0px -2px #fff;
+    background: linear-gradient(#879287, #bfd2bf);
+}
+
+#mii-creator-selector-modal .selector .button-container button.cancel{
+    border-right: 1.5px solid #54625a;
+    border-bottom-left-radius: 20px;
+}
+
+#mii-creator-selector-modal .selector .button-container button.confirm{
+    border-left: 1.5px solid #54625a;
+    border-bottom-right-radius: 20px;
+}
+
+#mii-creator-selector-modal .selector .button-container button.confirm:disabled{
+    pointer-events: none;
+    border-color: #aaaaaa;
+    background: #bebebe;
+    color: #adadad;
+    text-shadow: none;
+}
+
+@media only screen and (max-width: 600px) {
+    #mii-creator-selector-modal .selector {
+        width: 90%;
+    }
+}`;
+
+// src/class/audio/SoundManager.ts
+var import_jszip2 = __toESM(require_lib(), 1);
+var getSoundManager = () => sm;
+var playSound = (sound) => getSoundManager().playSound(sound);
+
+class SoundManager {
+  soundBufs;
+  audioContext;
+  gainNode;
+  muted;
+  previousVolume;
+  constructor() {
+    this.soundBufs = {};
+    this.audioContext = new (window.AudioContext || window.webkitAudioContext);
+    this.gainNode = this.audioContext.createGain();
+    this.gainNode.connect(this.audioContext.destination);
+    this.muted = false;
+    this.previousVolume = 0.28;
+    this.queue = new Set;
+    const theme = document.documentElement.dataset.theme;
+    let currentTheme = theme;
+    document.addEventListener("theme-change", () => {
+      const theme2 = document.documentElement.dataset.theme;
+      if (theme2 !== currentTheme) {
+        loadBaseSounds("./assets/audio/miiMakerSwitch.zip");
+        this.previousVolume = 0.28;
+        this.setVolume(0.28);
+        this.previousVolume = 0.28;
+      }
+      currentTheme = theme2;
+    });
+  }
+  async loadSound(url, name2) {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+    this.soundBufs[name2] = audioBuffer;
+  }
+  async loadSoundBuffer(arrayBuffer, name2) {
+    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+    this.soundBufs[name2] = audioBuffer;
+  }
+  queue;
+  playSound(name2) {
+    const soundBuffer = this.soundBufs[name2];
+    if (!soundBuffer) {
+      console.error(`Sound "${name2}" not found.`);
+      return;
+    }
+    if (this.queue.has(name2))
+      return;
+    const source = this.audioContext.createBufferSource();
+    source.buffer = soundBuffer;
+    source.connect(this.gainNode);
+    source.start();
+    this.queue.add(name2);
+    setTimeout(() => {
+      this.queue.delete(name2);
+    }, 50);
+  }
+  setVolume(volume) {
+    if (this.muted)
+      return;
+    this.gainNode.gain.value = volume;
+  }
+  mute() {
+    if (this.muted)
+      return;
+    this.previousVolume = this.gainNode.gain.value;
+    this.setVolume(0);
+    this.muted = true;
+  }
+  unmute() {
+    if (this.muted === false)
+      return;
+    this.muted = false;
+    this.setVolume(this.previousVolume);
+  }
+}
+var sm = new SoundManager;
+var loadBaseSounds = async (path = "./assets/audio/miiMakerSwitch.zip", smRef = sm) => {
+  const data2 = await fetch(path).then((j2) => j2.blob());
+  const zip = await import_jszip2.default.loadAsync(data2);
+  let promises = [];
+  const fileList = Object.keys(zip.files);
+  for (const file of fileList) {
+    promises.push(zip.files[file].async("arraybuffer"));
+  }
+  const resolves = await Promise.all(promises);
+  for (let i = 0;i < fileList.length; i++) {
+    const fileName = fileList[i].split(".");
+    fileName.pop();
+    await smRef.loadSoundBuffer(resolves[i], fileName.join("."));
+  }
+};
+
 // src/helper.ts
 var FFLModule;
 var userData;
-var helperRenderer = new WebGLRenderer;
+var helperRenderer = new WebGLRenderer({ alpha: true });
 var GUEST_MII_DATA = [
   "BAM5i2G9mwPpOoAAAADs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEEAAAAAAAAACAAAAAAAQAMDCAYEBgIKCAQEAgIMBAAAAP8ABAAACAQACggARP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
   "BAOFdPR8ZsuhdoAAAAHs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEIAAAAAAAAACAAAAAAAQAMDBgYEBgIKDAQEAgIMAAAAAP8ABQAACAQACgYAN////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
@@ -145843,15 +146780,19 @@ try {
 } catch (e) {
   alert("SCRIPT SCOPE");
 }
+var soundManager;
 async function loadAssets(resourcePath, bodyType2 = "wiiu") {
   setRoot(root2.origin + "/");
   console.debug("Loading body models..");
-  await loadBodyModels(bodyType2);
+  await loadBodyModels(bodyType2, true);
   console.debug("Loading hat models..");
   await loadHatModels();
   console.debug("Loading clothing textures..");
   await loadClothesTextures();
-  console.debug("Loaded all extra models.");
+  soundManager = new SoundManager;
+  console.debug("Loading sounds.");
+  await loadBaseSounds(root2.origin + "/assets/audio/miiSelector.zip", soundManager);
+  console.debug("Loaded all resources.");
   FFLModule = (await Promise.resolve().then(() => __toESM(require_ffl_emscripten(), 1))).default;
   FFLModule = await FFLModule({
     locateFile: (path) => {
@@ -145875,37 +146816,43 @@ class MiiCreatorCharModel {
   clips;
   constructor() {
   }
-  async init(request) {
-    const {
-      bodyModel,
-      bodyModelAnims,
-      bodyModelBody,
-      bodyModelHands,
-      bodyModelLegs,
-      charModel,
-      headModel,
-      miiGroup
-    } = await createMiiRender({
-      ...request,
-      module: FFLModule,
-      isTemporary: false,
-      renderer: request.renderer,
-      textureRenderer: helperRenderer
+  init(request) {
+    return new Promise((resolve) => {
+      setTimeout(async () => {
+        const {
+          bodyModel,
+          bodyModelAnims,
+          bodyModelBody,
+          bodyModelHands,
+          bodyModelLegs,
+          charModel,
+          headModel,
+          miiGroup
+        } = await createMiiRender({
+          ...request,
+          module: FFLModule,
+          isTemporary: false,
+          renderer: request.renderer,
+          textureRenderer: helperRenderer,
+          clothingLinearColors: request.clothingLinearColors === undefined ? true : request.clothingLinearColors
+        });
+        this.bodyModel = bodyModel;
+        this.bodyModelBody = bodyModelBody;
+        this.bodyModelHands = bodyModelHands;
+        this.bodyModelLegs = bodyModelLegs;
+        this.charModel = charModel;
+        this.headModel = headModel;
+        this.miiGroup = miiGroup;
+        if (request.useAnimation) {
+          this.mixer = new AnimationMixer(bodyModel);
+          this.clips = new Map;
+          for (const clip of bodyModelAnims) {
+            this.clips.set(clip.name, this.mixer.clipAction(clip));
+          }
+        }
+        resolve();
+      }, 0);
     });
-    this.bodyModel = bodyModel;
-    this.bodyModelBody = bodyModelBody;
-    this.bodyModelHands = bodyModelHands;
-    this.bodyModelLegs = bodyModelLegs;
-    this.charModel = charModel;
-    this.headModel = headModel;
-    this.miiGroup = miiGroup;
-    if (request.useAnimation) {
-      this.mixer = new AnimationMixer(bodyModel);
-      this.clips = new Map;
-      for (const clip of bodyModelAnims) {
-        this.clips.set(clip.name, this.mixer.clipAction(clip));
-      }
-    }
   }
   subPosition;
   subScale;
@@ -145937,58 +146884,20 @@ class MiiCreatorCharModel {
       this.miiGroup.worldToLocal(this.headModel.position);
       this.headModel.setRotationFromQuaternion(this.quaternion);
     }
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-    if (this.headModel) {
-      this.headModel.position.copy(this.position);
-      this.miiGroup.worldToLocal(this.headModel.position);
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-    if (this.headModel) {
-      this.headModel.position.copy(this.position);
-      this.miiGroup.worldToLocal(this.headModel.position);
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-    if (this.headModel) {
-      this.headModel.position.copy(this.position);
-      this.miiGroup.worldToLocal(this.headModel.position);
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-    if (this.headModel) {
-      this.headModel.position.copy(this.position);
-      this.miiGroup.worldToLocal(this.headModel.position);
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-    if (this.headModel) {
-      this.headModel.position.copy(this.position);
-      this.miiGroup.worldToLocal(this.headModel.position);
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-    if (this.headModel) {
-      this.headModel.position.copy(this.position);
-      this.miiGroup.worldToLocal(this.headModel.position);
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-    if (this.headModel) {
-      this.headModel.position.copy(this.position);
-      this.miiGroup.worldToLocal(this.headModel.position);
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
   }
-  setExpression(expression) {
-    this.charModel.setExpression(expression);
+  setExpression(expression, force = true) {
+    if (force) {
+      this.headModel.traverse((n2) => {
+        const m = n2;
+        if (!m.isMesh)
+          return;
+        if (m.geometry.userData.modulateType !== FFLiShapeType.XLU_MASK)
+          return;
+        m.material.map = this.charModel._maskTargets[expression].texture;
+      });
+    } else {
+      this.charModel.setExpression(expression);
+    }
   }
 }
 function centerPopupWindow(url, title, w, h) {
@@ -146035,29 +146944,33 @@ function requestUserData(type, pageTitle = document.title) {
 }
 function injectCss() {
   if (Html.qs("head>#mii-creator-helper-styles") === null) {
-    new Html("style").id("mii-creator-helper-styles").html(`
-.mch-select-modal {
-  background: #0007;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-`).appendTo("head");
+    new Html("style").id("mii-creator-helper-styles").html(selector_css_default).appendTo("head");
   }
 }
 function requestMiiSelection() {
+  console.log("userData:", userData);
   return new Promise((resolve) => {
+    if (userData === undefined)
+      return resolve(false);
+    if (userData.library === null)
+      return resolve(false);
     injectCss();
-    const container = new Html("div").class("mch-select-modal").appendTo("body");
-    new Html("div").text("Select a Mii.").appendTo(container);
-    setTimeout(() => {
-      resolve(true);
+    const container = new Html("div").id("mii-creator-selector-modal").appendTo("body");
+    miiSelectorSetFflModule(FFLModule);
+    miiSelectorSetRenderer(helperRenderer);
+    MiiSelector.open([
+      { miiData: userData.personal_mii.data, type: "personal" },
+      ...userData.library.map((n2) => ({ miiData: n2.mii }))
+    ], {
+      allowGuest: true,
+      soundManager
+    }).then((MiiResult) => {
+      resolve(MiiResult);
     });
   });
 }
 export {
+  soundManager,
   requestUserData,
   parseHexOrB64ToUint8Array,
   requestMiiSelection as miiSelect,

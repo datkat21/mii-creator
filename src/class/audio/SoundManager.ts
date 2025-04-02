@@ -99,7 +99,8 @@ export class SoundManager {
 let sm: SoundManager = new SoundManager();
 
 export const loadBaseSounds = async (
-  path: string = "./assets/audio/miiMakerSwitch.zip"
+  path: string = "./assets/audio/miiMakerSwitch.zip",
+  smRef: SoundManager = sm
 ) => {
   const data = await fetch(path).then((j) => j.blob());
   const zip = await JSZip.loadAsync(data);
@@ -113,6 +114,6 @@ export const loadBaseSounds = async (
   for (let i = 0; i < fileList.length; i++) {
     const fileName = fileList[i].split(".");
     fileName.pop();
-    await sm.loadSoundBuffer(resolves[i], fileName.join("."));
+    await smRef.loadSoundBuffer(resolves[i], fileName.join("."));
   }
 };

@@ -22,7 +22,7 @@ import {
   getClothesTextures,
   getHatModels,
   getLoadedBodyModelName,
-  isStreetpass
+  isStreetPass
 } from "./ModelLoader";
 import {
   cMaterialName,
@@ -81,6 +81,13 @@ export interface RenderRequest {
    */
   isTemporary?: boolean;
   shaderType?: ShaderType;
+  clothingLinearColors?: boolean;
+  bodyModelType?: IconBodyModelType;
+}
+
+export enum IconBodyModelType {
+  low = "low",
+  high = "high"
 }
 
 export const isWorker = () => typeof window === "undefined";
@@ -202,12 +209,12 @@ export function createMiiRender(
     const gender = charModel._model.charInfo.personal.gender;
     const bodyScale = charModel.getBodyScale();
 
+    let hatModel: THREE.Group;
     if (request.additionalInfo!.hatType !== -1) {
       let hatColor = [0, 0, 0];
 
-      let hatModel: THREE.Group;
       if (isTemporary)
-        hatModel = getHatModels()[request.additionalInfo!.hatType];
+        hatModel = getHatModels()[request.additionalInfo!.hatType].clone(true);
       else
         hatModel = getHatModels()[request.additionalInfo!.hatType].clone(true);
 
@@ -229,6 +236,12 @@ export function createMiiRender(
           SwitchMiiColorTableSRGB[request.additionalInfo!.hatCommonColor];
       }
 
+      console.log(
+        "additional info:",
+        request.additionalInfo,
+        "hat model:",
+        hatModel
+      );
       hatModel.traverse((m) => {
         if ((m as THREE.Mesh).isMesh) {
           const oldMat = ((m as THREE.Mesh).material as THREE.MeshBasicMaterial)
@@ -295,11 +308,20 @@ export function createMiiRender(
       miiGroup.add(headModel);
     }
 
-    if (request.drawBody && getBodyModels().m !== null) {
+    let prefix = "high";
+
+    if (request.bodyModelType !== undefined) {
+      prefix = request.bodyModelType;
+    }
+
+    if (request.drawBody && getBodyModels()[prefix + "M"] !== null) {
       switch (gender) {
         case 0: {
-          if (isTemporary) bodyModel = getBodyModels().m.scene;
-          else bodyModel = SkeletonUtils.clone(getBodyModels().m.scene) as any;
+          if (isTemporary) bodyModel = getBodyModels()[prefix + "M"].scene;
+          else
+            bodyModel = SkeletonUtils.clone(
+              getBodyModels()[prefix + "M"].scene
+            ) as any;
 
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
@@ -307,12 +329,16 @@ export function createMiiRender(
           bodyModelBody = bodyModel.getObjectByName("body_m") as THREE.Mesh;
           bodyModelHands = bodyModel.getObjectByName("hands_m") as THREE.Mesh;
           bodyModelLegs = bodyModel.getObjectByName("legs_m") as THREE.Mesh;
-          if (!isTemporary) bodyModelAnims = getBodyModels().m.animations;
+          if (!isTemporary)
+            bodyModelAnims = getBodyModels()[prefix + "M"].animations;
           break;
         }
         case 1: {
-          if (isTemporary) bodyModel = getBodyModels().f.scene;
-          else bodyModel = SkeletonUtils.clone(getBodyModels().f.scene) as any;
+          if (isTemporary) bodyModel = getBodyModels()[prefix + "F"].scene;
+          else
+            bodyModel = SkeletonUtils.clone(
+              getBodyModels()[prefix + "F"].scene
+            ) as any;
 
           if (bodyModel === null)
             throw "Tried to make an icon before body models were loaded.";
@@ -320,7 +346,8 @@ export function createMiiRender(
           bodyModelBody = bodyModel.getObjectByName("body_f") as THREE.Mesh;
           bodyModelHands = bodyModel.getObjectByName("hands_f") as THREE.Mesh;
           bodyModelLegs = bodyModel.getObjectByName("legs_f") as THREE.Mesh;
-          if (!isTemporary) bodyModelAnims = getBodyModels().f.animations;
+          if (!isTemporary)
+            bodyModelAnims = getBodyModels()[prefix + "F"].animations;
           break;
         }
         default:
@@ -387,11 +414,14 @@ export function createMiiRender(
       const nBody = bodyModelBody;
       const nLegs = bodyModelLegs;
 
+      THREE.ColorManagement.enabled = false;
+
       // CLOTHESSS
       if (
         request.additionalInfo!.clothesType !== undefined &&
         request.additionalInfo!.clothesType !== -1 &&
-        getLoadedBodyModelName() !== "miitomo" &&
+        request.bodyModelType !== IconBodyModelType.low &&
+        getLoadedBodyModelName() === "wiiu" &&
         request.additionalInfo!.clothesType < ExtClothesList.length
       ) {
         console.log("clothing update");
@@ -418,7 +448,9 @@ export function createMiiRender(
               colorMixG = new THREE.Vector4(...shoesColor, 1),
               colorMixB = new THREE.Vector4(...pantsColor, 1),
               colorMixA = charModel
-                ? charModel!.facelineColor.convertSRGBToLinear()
+                ? request.clothingLinearColors !== true
+                  ? charModel!.facelineColor
+                  : charModel!.facelineColor.convertSRGBToLinear()
                 : 0xff0000;
 
             // console.log("Shirt Texture Key:", shirtKey);
@@ -432,7 +464,11 @@ export function createMiiRender(
               request.texResolution
             );
             // console.log("omg i got the shirt texture");
-            shirtTexture = await loadBlobTextureWorker(tex);
+            shirtTexture = await loadBlobTextureWorker(
+              tex,
+              request.texResolution,
+              request.texResolution
+            );
 
             // console.log("loaded shirt texture!");
 
@@ -474,6 +510,7 @@ export function createMiiRender(
         const newBodyMat = new (await getShaderMaterialFromShaderType(
           request.shaderType
         ))(params);
+        // const newBodyMat = new THREE.MeshBasicMaterial(params);
         if (getLoadedBodyModelName() !== "miitomo") {
           nBody.material = newBodyMat as any;
           nLegs.material = newBodyMat as any;
@@ -512,7 +549,11 @@ export function createMiiRender(
           }
         }
 
-      if (isStreetpass()) {
+      if (request.bodyModelType === IconBodyModelType.low) {
+        bodyModelHands.visible = false;
+      }
+
+      if (isStreetPass()) {
         console.log("is streetpass");
 
         var scaleVec = new THREE.Vector3();
@@ -556,6 +597,13 @@ export function createMiiRender(
         }
 
         // TODO: dispose hat material
+        if (hatModel!) {
+          hatModel.traverse((n) => {
+            if (!(n as THREE.Mesh).isMesh) return;
+            (n as THREE.Mesh).geometry.dispose();
+            ((n as THREE.Mesh).material as THREE.MeshBasicMaterial).dispose();
+          });
+        }
 
         resolve(dataURL);
       }, 0);

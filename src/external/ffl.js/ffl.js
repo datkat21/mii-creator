@@ -3205,8 +3205,10 @@ function _drawMaskTextures(charModel, textureTempObject, renderer, module, mater
 		module._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
 
 		const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer, module, materialClass);
+		renderer.initTexture(target.texture);
 		console.debug(`Creating target ${target.texture.id} for mask ${i}`);
 		charModel._maskTargets[i] = target;
+		renderer.initTexture(target.texture);
 
 		scenes.push(scene);
 	}
@@ -3987,5 +3989,6 @@ export {
 	getCameraForViewType,
 	FFLResourceType,
 	createAndRenderToTarget,
-	getIdentCamera
+	getIdentCamera,
+	FFLiShapeType
 };

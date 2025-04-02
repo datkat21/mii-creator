@@ -5,8 +5,6 @@ import {
   type RenderRequestNonTemporaryResult
 } from "./util/IconRendering";
 import {
-  getBodyModels,
-  getHatModels,
   loadBodyModels,
   loadClothesTextures,
   loadHatModels,
@@ -14,38 +12,23 @@ import {
 } from "./util/ModelLoader";
 import {
   CharModel,
-  FFLExpression,
-  FFLModelFlag,
-  FFLResourceType,
   initializeFFLWithResource,
-  createCharModel,
-  initCharModelTextures,
-  makeExpressionFlag,
-  parseHexOrB64ToUint8Array
+  parseHexOrB64ToUint8Array,
+  FFLiShapeType
 } from "./external/ffl.js/ffl";
 import Mii from "./class/MiiData";
 import { dataToBase64, dataToHex } from "./util/dataConvert";
-import {
-  ForbiddenShirtPantColors,
-  MiiFavoriteColorVec3Table,
-  SwitchMiiColorTableSRGB
-} from "./constants/ColorTables";
-import {
-  cMaterialName,
-  cPantsColorBlue,
-  cPantsColorGold,
-  cPantsColorGray,
-  cPantsColorRed
-} from "./class/3d/shader/fflShaderConst";
-import { ExtHatNameList, HatType, HatTypeList } from "./constants/Extensions";
-import {
-  getMaterialOverridesFromShaderType,
-  getShaderMaterialFromShaderType
-} from "./class/3d/shader/ShaderUtils";
+import { ForbiddenShirtPantColors } from "./constants/ColorTables";
+import { ExtHatNameList } from "./constants/Extensions";
 import { BodyType, ShaderType } from "./constants/BodyShaderTypes";
 import Html from "@datkat21/html";
-import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import type { MiiCreatorAdditionalData } from "./util/MiiCreatorTypes.js";
+import {
+  MiiExampleArray,
+  MiiSelector,
+  miiSelectorSetFflModule,
+  miiSelectorSetRenderer
+} from "./external/mii-selector/selector.js";
 
 // if (this === undefined) {
 //   console.log("Running in module scope");
@@ -56,7 +39,7 @@ import type { MiiCreatorAdditionalData } from "./util/MiiCreatorTypes.js";
 let FFLModule: any,
   FFLWorker: Worker | undefined,
   userData: any,
-  helperRenderer = new THREE.WebGLRenderer();
+  helperRenderer = new THREE.WebGLRenderer({ alpha: true });
 
 // function log(...content: string[]) {
 //   console.debug("[miic helper]", ...content);
@@ -109,15 +92,23 @@ try {
   alert("SCRIPT SCOPE");
 }
 
+let soundManager: SoundManager;
+
 async function loadAssets(resourcePath: string, bodyType: string = "wiiu") {
   setRoot(root.origin + "/");
   console.debug("Loading body models..");
-  await loadBodyModels(bodyType);
+  await loadBodyModels(bodyType, true);
   console.debug("Loading hat models..");
   await loadHatModels();
   console.debug("Loading clothing textures..");
   await loadClothesTextures();
-  console.debug("Loaded all extra models.");
+  soundManager = new SoundManager();
+  console.debug("Loading sounds.");
+  await loadBaseSounds(
+    root.origin + "/assets/audio/miiSelector.zip",
+    soundManager
+  );
+  console.debug("Loaded all resources.");
 
   FFLModule = (await import("./external/ffl.js/ffl-emscripten.js")).default;
 
@@ -157,40 +148,50 @@ class MiiCreatorCharModel {
 
   constructor() {}
 
-  async init(request: CharModelRequest) {
-    const {
-      bodyModel,
-      bodyModelAnims,
-      bodyModelBody,
-      bodyModelHands,
-      bodyModelLegs,
-      charModel,
-      headModel,
-      miiGroup
-    } = (await createMiiRender({
-      ...request,
-      module: FFLModule,
-      isTemporary: false,
-      renderer: request.renderer,
-      textureRenderer: helperRenderer
-    })) as any as RenderRequestNonTemporaryResult;
+  init(request: CharModelRequest): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(async () => {
+        const {
+          bodyModel,
+          bodyModelAnims,
+          bodyModelBody,
+          bodyModelHands,
+          bodyModelLegs,
+          charModel,
+          headModel,
+          miiGroup
+        } = (await createMiiRender({
+          ...request,
+          module: FFLModule,
+          isTemporary: false,
+          renderer: request.renderer,
+          textureRenderer: helperRenderer,
+          clothingLinearColors:
+            request.clothingLinearColors === undefined
+              ? true
+              : request.clothingLinearColors
+        })) as any as RenderRequestNonTemporaryResult;
 
-    this.bodyModel = bodyModel;
-    this.bodyModelBody = bodyModelBody;
-    this.bodyModelHands = bodyModelHands;
-    this.bodyModelLegs = bodyModelLegs;
-    this.charModel = charModel;
-    this.headModel = headModel;
-    this.miiGroup = miiGroup;
+        this.bodyModel = bodyModel;
+        this.bodyModelBody = bodyModelBody;
+        this.bodyModelHands = bodyModelHands;
+        this.bodyModelLegs = bodyModelLegs;
+        this.charModel = charModel;
+        this.headModel = headModel;
+        this.miiGroup = miiGroup;
 
-    if (request.useAnimation) {
-      this.mixer = new THREE.AnimationMixer(bodyModel);
-      this.clips = new Map();
+        if (request.useAnimation) {
+          this.mixer = new THREE.AnimationMixer(bodyModel);
+          this.clips = new Map();
 
-      for (const clip of bodyModelAnims!) {
-        this.clips.set(clip.name, this.mixer.clipAction(clip));
-      }
-    }
+          for (const clip of bodyModelAnims!) {
+            this.clips.set(clip.name, this.mixer.clipAction(clip));
+          }
+        }
+
+        resolve();
+      }, 0);
+    });
   }
 
   subPosition!: THREE.Vector3;
@@ -231,129 +232,20 @@ class MiiCreatorCharModel {
       // Set the head model's rotation from the head bone's quaternion
       this.headModel.setRotationFromQuaternion(this.quaternion);
     }
-
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-
-    if (this.headModel) {
-      // Instead of subtracting the group's position manually:
-      // this.headModel.position.copy(this.position);
-      // this.headModel.position.sub(this.subPosition);
-
-      // Copy the head bone's world position
-      this.headModel.position.copy(this.position);
-      // Convert the head bone's world position to the group's local space
-      this.miiGroup.worldToLocal(this.headModel.position);
-
-      // Set the head model's rotation from the head bone's quaternion
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-
-    if (this.headModel) {
-      // Instead of subtracting the group's position manually:
-      // this.headModel.position.copy(this.position);
-      // this.headModel.position.sub(this.subPosition);
-
-      // Copy the head bone's world position
-      this.headModel.position.copy(this.position);
-      // Convert the head bone's world position to the group's local space
-      this.miiGroup.worldToLocal(this.headModel.position);
-
-      // Set the head model's rotation from the head bone's quaternion
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-
-    if (this.headModel) {
-      // Instead of subtracting the group's position manually:
-      // this.headModel.position.copy(this.position);
-      // this.headModel.position.sub(this.subPosition);
-
-      // Copy the head bone's world position
-      this.headModel.position.copy(this.position);
-      // Convert the head bone's world position to the group's local space
-      this.miiGroup.worldToLocal(this.headModel.position);
-
-      // Set the head model's rotation from the head bone's quaternion
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-
-    if (this.headModel) {
-      // Instead of subtracting the group's position manually:
-      // this.headModel.position.copy(this.position);
-      // this.headModel.position.sub(this.subPosition);
-
-      // Copy the head bone's world position
-      this.headModel.position.copy(this.position);
-      // Convert the head bone's world position to the group's local space
-      this.miiGroup.worldToLocal(this.headModel.position);
-
-      // Set the head model's rotation from the head bone's quaternion
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-
-    if (this.headModel) {
-      // Instead of subtracting the group's position manually:
-      // this.headModel.position.copy(this.position);
-      // this.headModel.position.sub(this.subPosition);
-
-      // Copy the head bone's world position
-      this.headModel.position.copy(this.position);
-      // Convert the head bone's world position to the group's local space
-      this.miiGroup.worldToLocal(this.headModel.position);
-
-      // Set the head model's rotation from the head bone's quaternion
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-
-    if (this.headModel) {
-      // Instead of subtracting the group's position manually:
-      // this.headModel.position.copy(this.position);
-      // this.headModel.position.sub(this.subPosition);
-
-      // Copy the head bone's world position
-      this.headModel.position.copy(this.position);
-      // Convert the head bone's world position to the group's local space
-      this.miiGroup.worldToLocal(this.headModel.position);
-
-      // Set the head model's rotation from the head bone's quaternion
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
-
-    this.miiGroup.getWorldPosition(this.subPosition);
-    headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
-
-    if (this.headModel) {
-      // Instead of subtracting the group's position manually:
-      // this.headModel.position.copy(this.position);
-      // this.headModel.position.sub(this.subPosition);
-
-      // Copy the head bone's world position
-      this.headModel.position.copy(this.position);
-      // Convert the head bone's world position to the group's local space
-      this.miiGroup.worldToLocal(this.headModel.position);
-
-      // Set the head model's rotation from the head bone's quaternion
-      this.headModel.setRotationFromQuaternion(this.quaternion);
-    }
   }
 
-  setExpression(expression: number) {
-    this.charModel.setExpression(expression);
+  setExpression(expression: number, force: boolean = true) {
+    if (force) {
+      this.headModel.traverse((n) => {
+        const m = n as THREE.Mesh;
+        if (!m.isMesh) return;
+        if (m.geometry.userData.modulateType !== FFLiShapeType.XLU_MASK) return;
+        (m.material as THREE.MeshBasicMaterial).map =
+          this.charModel._maskTargets[expression]!.texture;
+      });
+    } else {
+      this.charModel.setExpression(expression);
+    }
   }
 
   // TODO: multiple expressionFlag, setExpression, dispose
@@ -419,33 +311,43 @@ function injectCss() {
   if (Html.qs("head>#mii-creator-helper-styles") === null) {
     new Html("style")
       .id("mii-creator-helper-styles")
-      .html(
-        /*css*/ `
-.mch-select-modal {
-  background: #0007;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-`
-      )
+      .html(css)
       .appendTo("head");
   }
 }
 
+import css from "./external/mii-selector/selector.css";
+import { loadBaseSounds, SoundManager } from "./class/audio/SoundManager.js";
+
 function requestMiiSelection() {
+  console.log("userData:", userData);
   return new Promise((resolve) => {
+    if (userData === undefined) return resolve(false);
+    if (userData.library === null) return resolve(false);
+
     injectCss();
     const container = new Html("div")
-      .class("mch-select-modal")
+      .id("mii-creator-selector-modal")
       .appendTo("body");
-    new Html("div").text("Select a Mii.").appendTo(container);
 
-    setTimeout(() => {
-      resolve(true);
+    miiSelectorSetFflModule(FFLModule);
+    miiSelectorSetRenderer(helperRenderer);
+    MiiSelector.open(
+      [
+        { miiData: userData.personal_mii.data, type: "personal" },
+        ...userData.library.map((n: any) => ({ miiData: n.mii }))
+      ],
+      {
+        allowGuest: true,
+        soundManager
+      }
+    ).then((MiiResult) => {
+      resolve(MiiResult);
     });
+
+    // setTimeout(() => {
+    //   resolve(true);
+    // });
 
     // if (userData === undefined) return resolve(false);
     // if (userData.personal_mii === null) return resolve(false);
@@ -470,5 +372,6 @@ export {
   parseHexOrB64ToUint8Array,
   RequestType,
   requestUserData,
-  ShaderType
+  ShaderType,
+  soundManager
 };

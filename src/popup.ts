@@ -41,6 +41,7 @@ enum RequestType {
         case RequestType.Library:
           infoJson = await fetch("/api/me").then((r) => r.json());
           if (infoJson.personal_mii.error) infoJson.personal_mii = null;
+          if (infoJson.library) infoJson.library = JSON.parse(infoJson.library);
           break;
         case RequestType.PersonalMiiOnly:
           let personal_mii = await fetch("/api/personal_mii").then((r) =>

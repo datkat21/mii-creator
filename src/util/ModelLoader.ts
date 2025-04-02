@@ -38,7 +38,10 @@ async function loadBodyModel(modelPath: string) {
 }
 
 let bodyType = "wiiu";
-export async function loadBodyModels(input?: string) {
+export async function loadBodyModels(
+  input?: string,
+  alsoLoadStreetPass: boolean = false
+) {
   if (Object.keys(bodyModels).length > 0) {
     // todo: dispose them? idk
     bodyModels = {};
@@ -48,26 +51,31 @@ export async function loadBodyModels(input?: string) {
   bodyModelName = bodyType;
 
   if (bodyType === BodyType.StreetPass) {
-    isStreetpassBody = true;
+    isStreetPassBody = true;
   }
 
-  if (bodyModels.m) {
-    bodyModels.m.scene.traverse((o: any) => {
+  if (bodyModels.highM) {
+    bodyModels.highM.scene.traverse((o: any) => {
       if (o.isMesh) {
         o.dispose();
       }
     });
   }
-  if (bodyModels.f) {
-    bodyModels.f.scene.traverse((o: any) => {
+  if (bodyModels.highF) {
+    bodyModels.highF.scene.traverse((o: any) => {
       if (o.isMesh) {
         o.dispose();
       }
     });
   }
 
-  bodyModels.m = await loadBodyModel(makeModelPath("M", bodyType));
-  bodyModels.f = await loadBodyModel(makeModelPath("F", bodyType));
+  bodyModels.highM = await loadBodyModel(makeModelPath("M", bodyType));
+  bodyModels.highF = await loadBodyModel(makeModelPath("F", bodyType));
+
+  if (alsoLoadStreetPass) {
+    bodyModels.lowM = await loadBodyModel(makeModelPath("M", "streetpass"));
+    bodyModels.lowF = await loadBodyModel(makeModelPath("F", "streetpass"));
+  }
 }
 
 export async function loadHatModels() {
@@ -132,17 +140,19 @@ export async function loadClothesTextures() {
 
 // Cloneable models used
 let bodyModels: Record<string, GLTF | null> = {
-  m: null,
-  f: null
+  highM: null,
+  highF: null,
+  lowM: null,
+  lowF: null
 };
 let bodyModelName: string = "wiiu";
 let hatModels: THREE.Group[] = [];
 let clothesTextures: Record<string, THREE.Texture> = {};
 
-let isStreetpassBody = false;
+let isStreetPassBody = false;
 
-export const isStreetpass = () => isStreetpassBody;
-export const getBodyModels = () => bodyModels as Record<"m" | "f", GLTF>;
+export const isStreetPass = () => isStreetPassBody;
+export const getBodyModels = () => bodyModels as Record<string, GLTF>;
 export const getHatModels = () => hatModels;
 export const getLoadedBodyModelName = () => bodyModelName;
 export const getClothesTextures = () => clothesTextures;
