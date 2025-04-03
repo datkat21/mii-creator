@@ -110713,6 +110713,7 @@ class Mii {
     switch (outputFormat) {
       case "rsd":
         throw new Error("RSD format is not yet supported.");
+      default:
       case "miic":
         return MiiCreatorV4Data.pack(this.#getObject());
       case "studioData":

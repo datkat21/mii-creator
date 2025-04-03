@@ -145014,6 +145014,7 @@ class Mii {
     switch (outputFormat) {
       case "rsd":
         throw new Error("RSD format is not yet supported.");
+      default:
       case "miic":
         return MiiCreatorV4Data.pack(this.#getObject());
       case "studioData":
@@ -145826,351 +145827,11 @@ class Html {
   }
 }
 
-// src/external/mii-selector/selector.js
-var lang = "en";
-var MiiSelector = {
-  loc: {
-    en: [
-      "Select a Mii.",
-      "Guests",
-      "Cancel",
-      "Confirm",
-      "Search",
-      "Matches for:",
-      "results",
-      "No matches found."
-    ],
-    es: [
-      "Selecciona un Mii.",
-      "Invitados",
-      "Cancelar",
-      "Confirmar",
-      "Buscar",
-      "Resultados para:",
-      "resultados",
-      "No hay resultados."
-    ]
-  },
-  open: async function(miiArray, selectorParam) {
-    return new Promise((resolve, reject2) => {
-      function getLoc(index2) {
-        return MiiSelector.loc[lang][index2];
-      }
-      var check2 = document.querySelector("#mii-creator-selector-modal");
-      if (check2 != null || check2 != null) {
-        check2.remove();
-      }
-      var pages = 0;
-      var currentPage = 1;
-      var canPreloadCharIcon = miiArray.length <= 100;
-      console.log("canPreloadCharIcon: " + canPreloadCharIcon);
-      var selectedMii = null;
-      if (selectorParam) {
-        if (selectorParam.preload === false) {
-          canPreloadCharIcon = false;
-        }
-      }
-      miiArray.forEach((mii, index2) => {
-        if (index2 % 10 === 0) {
-          pages++;
-        }
-      });
-      const container = '<div id="mii-creator-selector-modal">' + '<div class="selector" style="display: none;">' + "<h1>" + getLoc(0) + "</h1>" + '<div class="mii-container guest" style="display: none;">' + '<div class="guest-label">' + getLoc(1) + "</div>" + "</div>" + '<div class="mii-container">' + "</div>" + ' <div class="mii-container transition" style="display: none;">' + '<div class="mii" tabindex="-1"></div>'.repeat(10) + "</div>" + '<div class="mii-page-counter">' + "<span><b>1</b><span>/10</span></span>" + "</div>" + '<div class="button-navi">' + '<button class="prev" style="display:none;">◀</button>' + '<button class="next" style="display:none;">▶</button>' + "</div>" + '<div class="button-container">' + '<button class="cancel">Cancel</button>' + '<button disabled class="confirm">Confirm</button>' + "</div>" + "</div>" + "</div>";
-      document.body.insertAdjacentHTML("beforeend", container);
-      check2 = document.querySelector("#mii-creator-selector-modal");
-      var selCont = check2.querySelector(".selector");
-      var pagesEl = check2.querySelector(".mii-page-counter span>span");
-      var pagesCurEl = check2.querySelector(".mii-page-counter span>b");
-      pagesEl.innerText = "/ " + pages;
-      var arrowLeft = check2.querySelector(".prev");
-      var arrowRight = check2.querySelector(".next");
-      var confirmButton = check2.querySelector(".confirm");
-      var cancelButton = check2.querySelector(".cancel");
-      var miiCoUser = check2.querySelector(".mii-container:not(.transition):not(.guest)");
-      var miiTrs = check2.querySelector(".mii-container.transition");
-      if (pages > 1) {
-        arrowRight.style.display = "block";
-      }
-      const dataArray = [];
-      if (canPreloadCharIcon) {
-        const iconPromises = miiArray.map((mii, index2) => {
-          return new Promise(async (resolve2) => {
-            const miiData = new Mii(mii.miiData);
-            const data2 = miiData.export("studioData");
-            const icon = await createMiiRender({
-              data: data2,
-              drawBody: true,
-              size: 124,
-              module: fflModule,
-              additionalInfo: getAdditionalInfoFromMii(miiData),
-              shaderType: "wiiu_blinn",
-              renderer: renderer2,
-              bodyModelType: "low",
-              texResolution: 128,
-              type: 0
-            });
-            var iconURL = URL.createObjectURL(icon.result);
-            resolve2({ img: iconURL, name: miiData.nickname });
-          });
-        });
-        Promise.all(iconPromises).then(async (icons) => {
-          console.log("REAL");
-          icons.forEach((e) => dataArray.push(e));
-          fillMiiContainer(miiArray, currentPage).then((data2) => {
-            miiCoUser.innerHTML = data2;
-            selCont.style.display = "block";
-            updateMiiListener();
-            initButtonListener();
-          });
-        });
-      } else {
-        fillMiiContainer(miiArray, currentPage).then((data2) => {
-          miiCoUser.innerHTML = data2;
-          selCont.style.display = "block";
-          updateMiiListener();
-          initButtonListener();
-        });
-      }
-      async function fillMiiContainer(miiArray2, page) {
-        console.log(page);
-        const miisPerPage = 10;
-        const startIndex = (page - 1) * miisPerPage;
-        const selectedMiis = miiArray2.slice(startIndex, startIndex + miisPerPage);
-        if (canPreloadCharIcon) {
-          var pageData = dataArray.slice(startIndex, startIndex + miisPerPage);
-        } else {
-          dataArray.length = 0;
-          var pageDataPromises = selectedMiis.map((mii) => {
-            return new Promise(async (resolve2) => {
-              const miiData = new Mii(mii.miiData);
-              const data2 = miiData.export("studioData");
-              const icon = await createMiiRender({
-                data: data2,
-                drawBody: true,
-                size: 124,
-                module: fflModule,
-                additionalInfo: getAdditionalInfoFromMii(miiData),
-                shaderType: "wiiu_blinn",
-                renderer: renderer2,
-                bodyModelType: "low",
-                texResolution: 128,
-                type: 0
-              });
-              var iconURL = URL.createObjectURL(icon.result);
-              const miiPageData = { img: iconURL, name: miiData.nickname };
-              dataArray.push(miiPageData);
-              return resolve2(miiPageData);
-            });
-          });
-          console.log("page data promises list", pageDataPromises);
-          pageData = await Promise.all(pageDataPromises);
-          console.log("page data overwrite promises", pageData);
-        }
-        while (pageData.length < miisPerPage) {
-          pageData.push({ img: "", name: "" });
-        }
-        return pageData.map((mii, i) => {
-          const overallIndex = startIndex + i;
-          const dataAttr = mii.img && mii.name ? ` data-mii-index="${overallIndex}"` : "";
-          return `<div tabindex="0" class="mii"${dataAttr}>` + (mii.img ? `<img draggable="false" src="${mii.img}">` : "") + (mii.name ? `<p style="display: none;">${mii.name}</p>` : "") + `</div>`;
-        }).join("");
-      }
-      function miiSelect(el) {
-        var target = el;
-        if (el.classList.contains("selected")) {
-          return;
-        }
-        check2.querySelectorAll(".mii").forEach((mii) => {
-          mii.classList.remove("selected");
-          mii.querySelectorAll("p").forEach((m) => {
-            m.style.display = "none";
-          });
-        });
-        target.classList.add("selected");
-        if (target.hasAttribute("data-mii-index")) {
-          selectedMii = {
-            index: target.getAttribute("data-mii-index"),
-            data: miiArray[parseInt(target.getAttribute("data-mii-index"))]
-          };
-          console.log(selectedMii);
-          target.querySelector("p").style.display = "";
-          confirmButton.disabled = false;
-        } else {
-          selectedMii = null;
-          confirmButton.disabled = true;
-        }
-        if (selectorParam.soundManager) {
-          selectorParam.soundManager.playSound("3ds_mii_selector_select");
-        }
-      }
-      function updateMiiListener() {
-        check2.querySelectorAll(".mii").forEach(function(mii) {
-          mii.addEventListener("click", function(event) {
-            miiSelect(this);
-          });
-          mii.addEventListener("focus", function(event) {
-            miiSelect(this);
-          });
-        });
-      }
-      function initButtonListener() {
-        arrowRight.addEventListener("click", function() {
-          lockArrowsForNation();
-          miiCoUser.classList.add("slideleft");
-          miiTrs.style.display = "";
-          miiTrs.classList.add("slideleftb");
-          miiTrs.addEventListener("animationend", function onAnimationEnd() {
-            miiTrs.removeEventListener("animationend", onAnimationEnd);
-            setTimeout(function() {
-              miiCoUser.classList.remove("slideleft");
-              miiTrs.classList.remove("slideleftb");
-              miiTrs.style.display = "none";
-              miiCoUser.innerHTML = "";
-              currentPage++;
-              fillMiiContainer(miiArray, currentPage).then((data2) => {
-                miiCoUser.innerHTML = data2;
-                updateMiiListener();
-                pagesCurEl.innerText = currentPage;
-                doTrioAtPaginEnd();
-              });
-            }, 0);
-          }, { once: true });
-        });
-        arrowLeft.addEventListener("click", function() {
-          lockArrowsForNation();
-          miiCoUser.classList.add("slideright");
-          miiTrs.style.display = "";
-          miiTrs.classList.add("sliderightb");
-          miiTrs.addEventListener("animationend", function onAnimationEnd() {
-            miiTrs.removeEventListener("animationend", onAnimationEnd);
-            setTimeout(function() {
-              miiCoUser.classList.remove("slideright");
-              miiTrs.classList.remove("sliderightb");
-              miiTrs.style.display = "none";
-              miiCoUser.innerHTML = "";
-              currentPage--;
-              fillMiiContainer(miiArray, currentPage).then((data2) => {
-                miiCoUser.innerHTML = data2;
-                updateMiiListener();
-                pagesCurEl.innerText = currentPage;
-                doTrioAtPaginEnd();
-              });
-            }, 0);
-          }, { once: true });
-        });
-        confirmButton.addEventListener("click", function onConfirm() {
-          console.log("Confirm");
-          if (selectorParam.soundManager) {
-            selectorParam.soundManager.playSound("3ds_mii_selector_confirm");
-          }
-          check2.style.pointerEvents = "none";
-          confirmButton.removeEventListener("click", onConfirm);
-          selCont.classList.add("finish");
-          selCont.addEventListener("animationend", function onAnimationEnd() {
-            selCont.removeEventListener("animationend", onAnimationEnd);
-            setTimeout(function() {
-              check2.remove();
-              document.removeEventListener("keydown", MiiSelector.onKeyDown);
-              document.removeEventListener("keyup", MiiSelector.onKeyUp);
-              if (selectedMii != null) {
-                resolve({ mii: selectedMii.data });
-              } else {
-                reject2("User hasnt selected Mii");
-              }
-            }, 0);
-          }, { once: true });
-        });
-        cancelButton.addEventListener("click", function onCancel() {
-          check2.style.pointerEvents = "none";
-          cancelButton.removeEventListener("click", onCancel);
-          selCont.classList.add("finish");
-          if (selectorParam.soundManager) {
-            selectorParam.soundManager.playSound("3ds_mii_selector_cancel");
-          }
-          selCont.addEventListener("animationend", function onAnimationEnd() {
-            selCont.removeEventListener("animationend", onAnimationEnd);
-            setTimeout(function() {
-              check2.remove();
-              document.removeEventListener("keydown", MiiSelector.onKeyDown);
-              document.removeEventListener("keyup", MiiSelector.onKeyUp);
-              reject2("No Mii data selected by user.");
-            }, 0);
-          }, { once: true });
-        });
-      }
-      function doTrioAtPaginEnd() {
-        ifSelectedMiiRestore();
-        updateArrowsForNation();
-        unlockArrowsForNation();
-      }
-      function updateArrowsForNation() {
-        if (currentPage === pages) {
-          arrowRight.style.display = "none";
-          arrowLeft.style.display = "";
-        } else if (currentPage === 1) {
-          arrowLeft.style.display = "none";
-          arrowRight.style.display = "";
-        } else {
-          arrowLeft.style.display = "";
-          arrowRight.style.display = "";
-        }
-      }
-      function ifSelectedMiiRestore() {
-        if (selectedMii != null && check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]') && selectedMii.index) {
-          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').classList.add("selected");
-          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').querySelector("p").style.display = "";
-          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').focus();
-        }
-      }
-      function lockArrowsForNation() {
-        if (selectorParam.soundManager) {
-          selectorParam.soundManager.playSound("3ds_mii_selector_page");
-        }
-        arrowRight.disabled = true;
-        arrowLeft.disabled = true;
-        arrowLeft.style.opacity = "0.5";
-        arrowLeft.style.filter = "grayscale(100%)";
-        arrowRight.style.opacity = "0.5";
-        arrowRight.style.filter = "grayscale(100%)";
-      }
-      function unlockArrowsForNation() {
-        arrowLeft.style.opacity = "1";
-        arrowLeft.style.filter = "none";
-        arrowRight.style.opacity = "1";
-        arrowRight.style.filter = "none";
-        arrowRight.disabled = false;
-        arrowLeft.disabled = false;
-      }
-    });
-  }
-};
-function miiSelectorSetFflModule(module2) {
-  fflModule = module2;
-}
-function miiSelectorSetRenderer(r) {
-  renderer2 = r;
-}
-var fflModule;
-var renderer2;
-
-// src/external/mii-selector/selector.css.ts
-var selector_css_default = `* {
+// src/external/mii-selector/selector_misc.ts
+var css = `* {
     font-family: 'nintendo_NTLG-DB_001' !important;
     --default-selector-width: 750px;
     --default-selector-height: 520px;
-}
-
-body {
-    position: relative;
-    font-size: 28px;
-    line-height: 1.5;
-    margin: 0;
-    padding: 0;
-    color: #323232;
-    background: #fff;
-    background-size: 10px;
-    background-attachment: fixed;
-    overflow-y: scroll;
 }
 
 #mii-creator-selector-modal *:focus-visible:not(.mii.selected:focus-visible){
@@ -146189,6 +145850,7 @@ body {
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    line-height: 1.5;
 }
 
 @keyframes slideUp {
@@ -146477,8 +146139,15 @@ body {
     }
 }
 
+#mii-creator-selector-modal .selector .mii-container .mii>p svg {
+    width: 36px;
+    height: 36px;
+}
 #mii-creator-selector-modal .selector .mii-container .mii>p {
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
     position: absolute;
     top: -35px;
     left: 50%;
@@ -146490,7 +146159,6 @@ body {
     font-size: 28px;
     min-width: 100px;
     padding: 3px 16px;
-    text-align: center;
     z-index: 10;
     box-shadow: 0px 0px 1px 1.5px #9e9e9e, inset 0px 0px 5px 0px #afafaf;
     background: #fff;
@@ -146638,6 +146306,357 @@ body {
         width: 90%;
     }
 }`;
+var miiIconFavorite = `<svg width="49" height="48" viewBox="0 0 49 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.87914 15.4237L8.93213 14.88L9.17184 15.9453L11.3207 25.4956C11.3414 26.5901 11.9723 27.4324 12.8675 28.0586C13.7703 28.6899 14.991 29.1411 16.3056 29.4641C18.9374 30.1108 22.0979 30.2798 24.2801 30.24C26.4624 30.2798 29.6229 30.1108 32.2547 29.4641C33.5692 29.1411 34.79 28.6899 35.6927 28.0586C36.588 27.4324 37.2189 26.5901 37.2396 25.4956L39.3884 15.9453L39.636 14.8448L38.6714 15.4295L31.0959 20.0206L24.6414 12.6439L24.2677 12.2169L23.9086 12.6561L17.8861 20.021L9.87914 15.4237ZM36.2778 29.0877L36.3668 28.1968L35.5756 28.6157C31.6139 30.7131 27.4083 30.72 24.2801 30.72C21.1482 30.72 16.7051 30.7124 12.7447 28.6157L11.9534 28.1968L12.0425 29.0877L12.2804 31.4661C12.2944 32.3073 12.9852 32.9508 13.7746 33.4207C14.6088 33.9172 15.7367 34.3315 16.9561 34.6577C19.3834 35.307 22.2989 35.6395 24.2801 35.5209C26.2612 35.6396 29.1178 35.3069 31.4871 34.6569C32.6773 34.3303 33.7761 33.9153 34.5885 33.4175C35.3606 32.9443 36.0263 32.3002 36.0399 31.466L36.2778 29.0877Z" fill="url(#paint0_linear_1196_50)" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1196_50" x1="24.2801" y1="12.96" x2="39.1601" y2="35.04" gradientUnits="userSpaceOnUse"><stop stop-color="#EC0000"/><stop offset="0.955263" stop-color="#B50400"/></linearGradient></defs></svg>`;
+var miiIconSpecial = `<svg width="49" height="48" viewBox="0 0 49 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.3304 19.7505L9.36289 19.1592L9.61179 20.2654L11.7606 29.8157C11.7813 30.9102 12.4123 31.7525 13.3075 32.3786C14.2102 33.01 15.431 33.4611 16.7455 33.7842C19.3774 34.4309 22.5378 34.5999 24.7201 34.5601C26.9023 34.5999 30.0628 34.4309 32.6946 33.7842C34.0092 33.4611 35.2299 33.01 36.1327 32.3786C37.0279 31.7525 37.6588 30.9102 37.6796 29.8157L39.8284 20.2654L40.0693 19.1948L39.1196 19.7446L31.1139 24.3794L25.0924 16.9771L24.7325 16.5347L24.358 16.9649L17.9042 24.3789L10.3304 19.7505ZM36.7177 33.4078L36.8068 32.5169L36.0155 32.9358C32.0538 35.0332 27.8483 35.04 24.7201 35.04C21.5882 35.04 17.1451 35.0325 13.1847 32.9358L12.3934 32.5169L12.4825 33.4078L12.7203 35.7861C12.7343 36.6274 13.4252 37.2709 14.2146 37.7407C15.0488 38.2372 16.1766 38.6515 17.396 38.9777C19.8234 39.627 22.7389 39.9596 24.7201 39.8409C26.7011 39.9596 29.5578 39.627 31.9271 38.9769C33.1173 38.6504 34.216 38.2354 35.0284 37.7375C35.8005 37.2643 36.4663 36.6203 36.4799 35.7861L36.7177 33.4078Z" fill="url(#paint0_linear_1196_45)" stroke="white" stroke-width="0.96"/><circle cx="9.36001" cy="15.12" r="4.08" fill="#F48700" stroke="white" stroke-width="0.96"/><circle cx="24.7199" cy="12.2399" r="4.08" fill="#F79400" stroke="white" stroke-width="0.96"/><circle cx="40.08" cy="15.12" r="4.08" fill="#FCC000" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1196_45" x1="20.1601" y1="24" x2="37.9201" y2="41.76" gradientUnits="userSpaceOnUse"><stop stop-color="#F78E00"/><stop offset="0.11" stop-color="#FCBA00"/><stop offset="0.42" stop-color="#FCBA00"/><stop offset="0.63" stop-color="#EF4D00"/></linearGradient></defs></svg>`;
+var miiIconPersonal = `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.5392 21.4997L22.6353 21.1837L22.3747 20.981L13.7347 14.261L13.0734 13.7467L12.9641 14.5773L11.8588 22.9773L11.8133 23.3233L12.1284 23.4733L20.1936 27.3133L20.6969 27.5529L20.8592 27.0196L22.5392 21.4997ZM24.6653 20.981L24.4046 21.1837L24.5008 21.4997L26.1808 27.0196L26.3431 27.5529L26.8463 27.3133L34.9116 23.4733L35.2267 23.3233L35.1812 22.9773L34.0759 14.5773L33.9666 13.7467L33.3053 14.261L24.6653 20.981Z" fill="url(#paint0_linear_1966_21)" stroke="white" stroke-width="0.96"/><path d="M6.98724 18.5683L5.90574 17.8433L6.25786 19.0968L9.57319 30.899C9.599 32.0679 10.2815 32.9687 11.254 33.641C12.2385 34.3217 13.5725 34.8096 15.0136 35.1597C17.8986 35.8605 21.3655 36.0439 23.76 36.0007C26.1544 36.0439 29.6213 35.8605 32.5064 35.1597C33.9475 34.8096 35.2815 34.3217 36.2659 33.641C37.2384 32.9687 37.9209 32.0679 37.9468 30.899L41.2621 19.0968L41.6142 17.8433L40.5327 18.5683L30.7313 25.1386H30.3405L24.1568 16.0501L23.76 15.4668L23.3631 16.0501L17.1794 25.1386H16.7886L6.98724 18.5683ZM36.8906 34.7872L36.9804 33.9002L36.1905 34.3136C31.8267 36.5973 27.1951 36.6041 23.76 36.6041C20.3211 36.6041 15.4284 36.5966 11.0658 34.3136L10.276 33.9002L10.3657 34.7872L10.6271 37.3709C10.6414 38.2643 11.3834 38.9527 12.2474 39.4611C13.1581 39.9969 14.3919 40.4452 15.7291 40.7988C18.3922 41.503 21.5906 41.8632 23.76 41.7342C25.9292 41.8632 29.0628 41.503 31.662 40.798C32.967 40.4441 34.1688 39.9951 35.0554 39.4579C35.9 38.9462 36.6154 38.2572 36.6293 37.3709L36.8906 34.7872Z" fill="url(#paint1_linear_1966_21)" stroke="white" stroke-width="0.96"/><circle cx="5.5199" cy="14.64" r="3.6" fill="#F48700" stroke="white" stroke-width="0.96"/><circle cx="23.7599" cy="12.2401" r="3.6" fill="#F79400" stroke="white" stroke-width="0.96"/><circle cx="13.68" cy="12.7201" r="2.64" fill="#EF9600" stroke="white" stroke-width="0.96"/><circle cx="34.3199" cy="12.7201" r="2.64" fill="#EF9600" stroke="white" stroke-width="0.96"/><circle cx="41.9999" cy="15.12" r="3.6" fill="#EF9600" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1966_21" x1="20.2045" y1="18.6886" x2="29.2193" y2="30.9992" gradientUnits="userSpaceOnUse"><stop stop-color="#EF9600"/><stop offset="0.63" stop-color="#EF9600"/></linearGradient><linearGradient id="paint1_linear_1966_21" x1="16.32" y1="22.0801" x2="32.4548" y2="38.1065" gradientUnits="userSpaceOnUse"><stop stop-color="#F4AD00"/><stop offset="0.29" stop-color="#FADF00"/><stop offset="0.665" stop-color="#FCE200"/><stop offset="1" stop-color="#EC7900"/></linearGradient></defs></svg>`;
+
+// src/external/mii-selector/selector.js
+function escapeHTML(str) {
+  return new Option(str).innerHTML;
+}
+var lang = "en";
+var MiiSelector = {
+  loc: {
+    en: [
+      "Select a Mii.",
+      "Guests",
+      "Cancel",
+      "Confirm",
+      "Search",
+      "Matches for:",
+      "results",
+      "No matches found."
+    ],
+    es: [
+      "Selecciona un Mii.",
+      "Invitados",
+      "Cancelar",
+      "Confirmar",
+      "Buscar",
+      "Resultados para:",
+      "resultados",
+      "No hay resultados."
+    ]
+  },
+  open: async function(miiArray, selectorParam) {
+    return new Promise((resolve, reject2) => {
+      if (selectorParam.personalMii) {
+        miiArray.unshift({
+          miiData: selectorParam.personalMii,
+          type: 3 /* Personal */
+        });
+      }
+      function getLoc(index2) {
+        return MiiSelector.loc[lang][index2];
+      }
+      var check2 = document.querySelector("#mii-creator-selector-modal");
+      if (check2 != null || check2 != null) {
+        check2.remove();
+      }
+      var pages = 0;
+      var currentPage = 1;
+      var canPreloadCharIcon = miiArray.length <= 100;
+      console.log("canPreloadCharIcon: " + canPreloadCharIcon);
+      var selectedMii = null;
+      if (selectorParam) {
+        if (selectorParam.preload === false) {
+          canPreloadCharIcon = false;
+        }
+      }
+      miiArray.forEach((mii, index2) => {
+        if (index2 % 10 === 0) {
+          pages++;
+        }
+      });
+      const container = '<div id="mii-creator-selector-modal">' + '<div class="selector" style="display: none;">' + "<h1>" + getLoc(0) + "</h1>" + '<div class="mii-container guest" style="display: none;">' + '<div class="guest-label">' + getLoc(1) + "</div>" + "</div>" + '<div class="mii-container">' + "</div>" + ' <div class="mii-container transition" style="display: none;">' + '<div class="mii" tabindex="-1"></div>'.repeat(10) + "</div>" + '<div class="mii-page-counter">' + "<span><b>1</b><span>/10</span></span>" + "</div>" + '<div class="button-navi">' + '<button class="prev" style="display:none;">◀</button>' + '<button class="next" style="display:none;">▶</button>' + "</div>" + '<div class="button-container">' + '<button class="cancel">Cancel</button>' + '<button disabled class="confirm">Confirm</button>' + "</div>" + "</div>" + "</div>";
+      document.body.insertAdjacentHTML("beforeend", container);
+      check2 = document.querySelector("#mii-creator-selector-modal");
+      var selCont = check2.querySelector(".selector");
+      var pagesEl = check2.querySelector(".mii-page-counter span>span");
+      var pagesCurEl = check2.querySelector(".mii-page-counter span>b");
+      pagesEl.innerText = "/ " + pages;
+      var arrowLeft = check2.querySelector(".prev");
+      var arrowRight = check2.querySelector(".next");
+      var confirmButton = check2.querySelector(".confirm");
+      var cancelButton = check2.querySelector(".cancel");
+      var miiCoUser = check2.querySelector(".mii-container:not(.transition):not(.guest)");
+      var miiTrs = check2.querySelector(".mii-container.transition");
+      if (pages > 1) {
+        arrowRight.style.display = "block";
+      }
+      const dataArray = [];
+      if (canPreloadCharIcon) {
+        const iconPromises = miiArray.map((mii, index2) => {
+          return new Promise(async (resolve2) => {
+            const miiData = new Mii(mii.miiData);
+            const data2 = miiData.export("studioData");
+            const icon = await createMiiRender({
+              data: data2,
+              drawBody: true,
+              size: 124,
+              module: fflModule,
+              additionalInfo: getAdditionalInfoFromMii(miiData),
+              shaderType: "wiiu_blinn",
+              renderer: renderer2,
+              bodyModelType: "low",
+              texResolution: 128,
+              type: 0
+            });
+            var iconURL = URL.createObjectURL(icon.result);
+            resolve2({ img: iconURL, name: miiData.nickname, type: mii.type });
+          });
+        });
+        Promise.all(iconPromises).then(async (icons) => {
+          console.log("REAL");
+          icons.forEach((e) => dataArray.push(e));
+          fillMiiContainer(miiArray, currentPage).then((data2) => {
+            miiCoUser.innerHTML = data2;
+            selCont.style.display = "block";
+            updateMiiListener();
+            initButtonListener();
+          });
+        });
+      } else {
+        fillMiiContainer(miiArray, currentPage).then((data2) => {
+          miiCoUser.innerHTML = data2;
+          selCont.style.display = "block";
+          updateMiiListener();
+          initButtonListener();
+        });
+      }
+      async function fillMiiContainer(miiArray2, page) {
+        console.log(page);
+        const miisPerPage = 10;
+        const startIndex = (page - 1) * miisPerPage;
+        const selectedMiis = miiArray2.slice(startIndex, startIndex + miisPerPage);
+        if (canPreloadCharIcon) {
+          var pageData = dataArray.slice(startIndex, startIndex + miisPerPage);
+        } else {
+          dataArray.length = 0;
+          var pageDataPromises = selectedMiis.map((mii) => {
+            return new Promise(async (resolve2) => {
+              const miiData = new Mii(mii.miiData);
+              const data2 = miiData.export("studioData");
+              const icon = await createMiiRender({
+                data: data2,
+                drawBody: true,
+                size: 124,
+                module: fflModule,
+                additionalInfo: getAdditionalInfoFromMii(miiData),
+                shaderType: "wiiu_blinn",
+                renderer: renderer2,
+                bodyModelType: "low",
+                texResolution: 128,
+                type: 0
+              });
+              var iconURL = URL.createObjectURL(icon.result);
+              const miiPageData = {
+                img: iconURL,
+                name: miiData.nickname,
+                type: mii.type
+              };
+              dataArray.push(miiPageData);
+              return resolve2(miiPageData);
+            });
+          });
+          console.log("page data promises list", pageDataPromises);
+          pageData = await Promise.all(pageDataPromises);
+          console.log("page data overwrite promises", pageData);
+        }
+        while (pageData.length < miisPerPage) {
+          pageData.push({ img: "", name: "" });
+        }
+        return pageData.map((mii, i) => {
+          const overallIndex = startIndex + i;
+          const dataAttr = mii.img && mii.name ? ` data-mii-index="${overallIndex}"` : "";
+          let icon = "";
+          switch (mii.type) {
+            case 1 /* Favorite */:
+              icon = miiIconFavorite;
+              break;
+            case 2 /* Special */:
+              icon = miiIconSpecial;
+              break;
+            case 3 /* Personal */:
+              icon = miiIconPersonal;
+              break;
+          }
+          return `<div tabindex="0" class="mii"${dataAttr}>` + (mii.img ? `<img draggable="false" src="${mii.img}">` : "") + (mii.name ? `<p style="display: none;">${icon}<span>${escapeHTML(mii.name)}</span></p>` : "") + `</div>`;
+        }).join("");
+      }
+      function miiSelect(el) {
+        var target = el;
+        if (el.classList.contains("selected")) {
+          return;
+        }
+        check2.querySelectorAll(".mii").forEach((mii) => {
+          mii.classList.remove("selected");
+          mii.querySelectorAll("p").forEach((m) => {
+            m.style.display = "none";
+          });
+        });
+        target.classList.add("selected");
+        if (target.hasAttribute("data-mii-index")) {
+          selectedMii = {
+            index: target.getAttribute("data-mii-index"),
+            data: miiArray[parseInt(target.getAttribute("data-mii-index"))]
+          };
+          console.log(selectedMii);
+          target.querySelector("p").style.display = "";
+          confirmButton.disabled = false;
+        } else {
+          selectedMii = null;
+          confirmButton.disabled = true;
+        }
+        if (selectorParam.soundManager) {
+          selectorParam.soundManager.playSound("3ds_mii_selector_select");
+        }
+      }
+      function updateMiiListener() {
+        check2.querySelectorAll(".mii").forEach(function(mii) {
+          mii.addEventListener("click", function(event) {
+            miiSelect(this);
+          });
+          mii.addEventListener("focus", function(event) {
+            miiSelect(this);
+          });
+        });
+      }
+      function initButtonListener() {
+        arrowRight.addEventListener("click", function() {
+          lockArrowsForNation();
+          miiCoUser.classList.add("slideleft");
+          miiTrs.style.display = "";
+          miiTrs.classList.add("slideleftb");
+          miiTrs.addEventListener("animationend", function onAnimationEnd() {
+            miiTrs.removeEventListener("animationend", onAnimationEnd);
+            setTimeout(function() {
+              miiCoUser.classList.remove("slideleft");
+              miiTrs.classList.remove("slideleftb");
+              miiTrs.style.display = "none";
+              miiCoUser.innerHTML = "";
+              currentPage++;
+              fillMiiContainer(miiArray, currentPage).then((data2) => {
+                miiCoUser.innerHTML = data2;
+                updateMiiListener();
+                pagesCurEl.innerText = currentPage;
+                doTrioAtPaginEnd();
+              });
+            }, 0);
+          }, { once: true });
+        });
+        arrowLeft.addEventListener("click", function() {
+          lockArrowsForNation();
+          miiCoUser.classList.add("slideright");
+          miiTrs.style.display = "";
+          miiTrs.classList.add("sliderightb");
+          miiTrs.addEventListener("animationend", function onAnimationEnd() {
+            miiTrs.removeEventListener("animationend", onAnimationEnd);
+            setTimeout(function() {
+              miiCoUser.classList.remove("slideright");
+              miiTrs.classList.remove("sliderightb");
+              miiTrs.style.display = "none";
+              miiCoUser.innerHTML = "";
+              currentPage--;
+              fillMiiContainer(miiArray, currentPage).then((data2) => {
+                miiCoUser.innerHTML = data2;
+                updateMiiListener();
+                pagesCurEl.innerText = currentPage;
+                doTrioAtPaginEnd();
+              });
+            }, 0);
+          }, { once: true });
+        });
+        confirmButton.addEventListener("click", function onConfirm() {
+          console.log("Confirm");
+          if (selectorParam.soundManager) {
+            selectorParam.soundManager.playSound("3ds_mii_selector_confirm");
+          }
+          check2.style.pointerEvents = "none";
+          confirmButton.removeEventListener("click", onConfirm);
+          selCont.classList.add("finish");
+          selCont.addEventListener("animationend", function onAnimationEnd() {
+            selCont.removeEventListener("animationend", onAnimationEnd);
+            setTimeout(function() {
+              check2.remove();
+              if (selectedMii != null) {
+                resolve({ mii: selectedMii.data });
+              } else {
+                reject2("User hasnt selected Mii");
+              }
+            }, 0);
+          }, { once: true });
+        });
+        cancelButton.addEventListener("click", function onCancel() {
+          check2.style.pointerEvents = "none";
+          cancelButton.removeEventListener("click", onCancel);
+          selCont.classList.add("finish");
+          if (selectorParam.soundManager) {
+            selectorParam.soundManager.playSound("3ds_mii_selector_cancel");
+          }
+          selCont.addEventListener("animationend", function onAnimationEnd() {
+            selCont.removeEventListener("animationend", onAnimationEnd);
+            setTimeout(function() {
+              check2.remove();
+              reject2("No Mii data selected by user.");
+            }, 0);
+          }, { once: true });
+        });
+      }
+      function doTrioAtPaginEnd() {
+        ifSelectedMiiRestore();
+        updateArrowsForNation();
+        unlockArrowsForNation();
+      }
+      function updateArrowsForNation() {
+        if (currentPage === pages) {
+          arrowRight.style.display = "none";
+          arrowLeft.style.display = "";
+        } else if (currentPage === 1) {
+          arrowLeft.style.display = "none";
+          arrowRight.style.display = "";
+        } else {
+          arrowLeft.style.display = "";
+          arrowRight.style.display = "";
+        }
+      }
+      function ifSelectedMiiRestore() {
+        if (selectedMii != null && check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]') && selectedMii.index) {
+          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').classList.add("selected");
+          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').querySelector("p").style.display = "";
+          check2.querySelector('.mii[data-mii-index="' + selectedMii.index + '"]').focus();
+        }
+      }
+      function lockArrowsForNation() {
+        if (selectorParam.soundManager) {
+          selectorParam.soundManager.playSound("3ds_mii_selector_page");
+        }
+        arrowRight.disabled = true;
+        arrowLeft.disabled = true;
+        arrowLeft.style.opacity = "0.5";
+        arrowLeft.style.filter = "grayscale(100%)";
+        arrowRight.style.opacity = "0.5";
+        arrowRight.style.filter = "grayscale(100%)";
+      }
+      function unlockArrowsForNation() {
+        arrowLeft.style.opacity = "1";
+        arrowLeft.style.filter = "none";
+        arrowRight.style.opacity = "1";
+        arrowRight.style.filter = "none";
+        arrowRight.disabled = false;
+        arrowLeft.disabled = false;
+      }
+    });
+  }
+};
+function miiSelectorSetFflModule(module2) {
+  fflModule = module2;
+}
+function miiSelectorSetRenderer(r) {
+  renderer2 = r;
+}
+var fflModule;
+var renderer2;
 
 // src/class/audio/SoundManager.ts
 var import_jszip2 = __toESM(require_lib(), 1);
@@ -146871,6 +146890,7 @@ class MiiCreatorCharModel {
     if (!this.scale)
       this.scale = new Vector3;
     this.mixer.update(delta);
+    this.bodyModel.updateMatrixWorld(true);
     let headBone = this.bodyModel.getObjectByName("head");
     if (headBone === undefined)
       headBone = this.bodyModel.getObjectByName("Head");
@@ -146885,7 +146905,7 @@ class MiiCreatorCharModel {
       this.headModel.setRotationFromQuaternion(this.quaternion);
     }
   }
-  setExpression(expression, force = true) {
+  setExpression(expression, force = false) {
     if (force) {
       this.headModel.traverse((n2) => {
         const m = n2;
@@ -146898,6 +146918,9 @@ class MiiCreatorCharModel {
     } else {
       this.charModel.setExpression(expression);
     }
+  }
+  getExpressions() {
+    return this.charModel._maskTargets.map((n2, i) => n2 !== null ? i : undefined).filter((n2) => n2 !== undefined);
   }
 }
 function centerPopupWindow(url, title, w, h) {
@@ -146944,7 +146967,7 @@ function requestUserData(type, pageTitle = document.title) {
 }
 function injectCss() {
   if (Html.qs("head>#mii-creator-helper-styles") === null) {
-    new Html("style").id("mii-creator-helper-styles").html(selector_css_default).appendTo("head");
+    new Html("style").id("mii-creator-helper-styles").html(css).appendTo("head");
   }
 }
 function requestMiiSelection() {
@@ -146955,15 +146978,21 @@ function requestMiiSelection() {
     if (userData.library === null)
       return resolve(false);
     injectCss();
-    const container = new Html("div").id("mii-creator-selector-modal").appendTo("body");
+    new Html("div").id("mii-creator-selector-modal").appendTo("body");
     miiSelectorSetFflModule(FFLModule);
     miiSelectorSetRenderer(helperRenderer);
-    MiiSelector.open([
-      { miiData: userData.personal_mii.data, type: "personal" },
-      ...userData.library.map((n2) => ({ miiData: n2.mii }))
-    ], {
+    MiiSelector.open(userData.library.map((n2) => {
+      let type = 0 /* Regular */;
+      let mii = new Mii(n2.mii);
+      if (mii.favorite === 1)
+        type = 1 /* Favorite */;
+      if (mii.special === 1)
+        type = 2 /* Special */;
+      return { miiData: mii.export(), type };
+    }), {
       allowGuest: true,
-      soundManager
+      soundManager,
+      personalMii: userData.personal_mii.data
     }).then((MiiResult) => {
       resolve(MiiResult);
     });

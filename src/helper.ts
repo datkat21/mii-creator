@@ -207,7 +207,10 @@ class MiiCreatorCharModel {
     if (!this.position) this.position = new THREE.Vector3();
     if (!this.quaternion) this.quaternion = new THREE.Quaternion();
     if (!this.scale) this.scale = new THREE.Vector3();
-    this.mixer.update(delta);
+    this.mixer.update(delta); // <-- update animation
+
+    // Force an update of all world matrices in the animated model
+    this.bodyModel.updateMatrixWorld(true);
 
     let headBone = this.bodyModel.getObjectByName("head") as THREE.Bone;
     if (headBone === undefined)
@@ -220,10 +223,6 @@ class MiiCreatorCharModel {
     headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
 
     if (this.headModel) {
-      // Instead of subtracting the group's position manually:
-      // this.headModel.position.copy(this.position);
-      // this.headModel.position.sub(this.subPosition);
-
       // Copy the head bone's world position
       this.headModel.position.copy(this.position);
       // Convert the head bone's world position to the group's local space
@@ -234,7 +233,7 @@ class MiiCreatorCharModel {
     }
   }
 
-  setExpression(expression: number, force: boolean = true) {
+  setExpression(expression: number, force: boolean = false) {
     if (force) {
       this.headModel.traverse((n) => {
         const m = n as THREE.Mesh;
@@ -248,7 +247,13 @@ class MiiCreatorCharModel {
     }
   }
 
-  // TODO: multiple expressionFlag, setExpression, dispose
+  getExpressions() {
+    return this.charModel._maskTargets
+      .map((n, i) => (n !== null ? i : undefined))
+      .filter((n) => n !== undefined);
+  }
+
+  // TODO: dispose
 }
 
 function centerPopupWindow(url: string, title: string, w: number, h: number) {
@@ -316,8 +321,8 @@ function injectCss() {
   }
 }
 
-import css from "./external/mii-selector/selector.css";
-import { loadBaseSounds, SoundManager } from "./class/audio/SoundManager.js";
+import { loadBaseSounds, SoundManager } from "./class/audio/SoundManager";
+import { css, MiiSelectorMiiType } from "./external/mii-selector/selector_misc";
 
 function requestMiiSelection() {
   console.log("userData:", userData);
@@ -326,20 +331,25 @@ function requestMiiSelection() {
     if (userData.library === null) return resolve(false);
 
     injectCss();
-    const container = new Html("div")
-      .id("mii-creator-selector-modal")
-      .appendTo("body");
+
+    new Html("div").id("mii-creator-selector-modal").appendTo("body");
 
     miiSelectorSetFflModule(FFLModule);
     miiSelectorSetRenderer(helperRenderer);
     MiiSelector.open(
-      [
-        { miiData: userData.personal_mii.data, type: "personal" },
-        ...userData.library.map((n: any) => ({ miiData: n.mii }))
-      ],
+      userData.library.map((n: any) => {
+        let type = MiiSelectorMiiType.Regular;
+        let mii = new Mii(n.mii);
+
+        if (mii.favorite === 1) type = MiiSelectorMiiType.Favorite;
+        if (mii.special === 1) type = MiiSelectorMiiType.Special;
+
+        return { miiData: mii.export(), type };
+      }),
       {
         allowGuest: true,
-        soundManager
+        soundManager,
+        personalMii: userData.personal_mii.data
       }
     ).then((MiiResult) => {
       resolve(MiiResult);
