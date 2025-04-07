@@ -85,7 +85,7 @@ export function ExtHatTab(data: TabRenderInit) {
               color: numToHex(MiiFavoriteColorLookupTable[k]),
               part: RenderPart.Head,
               property: "hatFavoriteColor",
-              selectedCallback: (mii) => {
+              preSelectCallback: (mii) => {
                 mii.hatFavoriteColor = k;
                 mii.hatCommonColor = -1;
               }
@@ -98,7 +98,7 @@ export function ExtHatTab(data: TabRenderInit) {
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Head,
                 property: "hatCommonColor",
-                selectedCallback: (mii) => {
+                preSelectCallback: (mii) => {
                   mii.hatFavoriteColor = -1;
                   mii.hatCommonColor = k;
                 }

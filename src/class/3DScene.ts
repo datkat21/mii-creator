@@ -207,8 +207,6 @@ export class Mii3DScene {
           this.#controls.enabled = true;
           this.#controls.minDistance = 10;
           this.#controls.maxDistance = 35;
-          this.#controls.minAzimuthAngle = -Math.PI;
-          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.zoomTo(1);
           this.cameraPan = true;
         } else {
@@ -216,8 +214,6 @@ export class Mii3DScene {
           this.#controls.enabled = false;
           this.#controls.minDistance = 60;
           this.#controls.maxDistance = 140;
-          this.#controls.minAzimuthAngle = -Math.PI;
-          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.dollyTo(380 / 10);
           this.#controls.zoomTo(2.5);
           this.cameraPan = false;
@@ -235,6 +231,10 @@ export class Mii3DScene {
       this.#controls.minDistance = 8;
       this.#controls.maxDistance = 300;
     } else {
+      this.#controls.minPolarAngle = 0.8;
+      this.#controls.maxPolarAngle = 1.8;
+      this.#controls.minAzimuthAngle = -1.4;
+      this.#controls.maxAzimuthAngle = 1.4;
       setTimeout(() => {
         this.focusCamera(CameraPosition.MiiHead, true);
       }, 200);

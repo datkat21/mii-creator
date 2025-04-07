@@ -489,6 +489,7 @@ export class MiiEditor {
           if (renderPart === RenderPart.Body) {
             // only reload body
             this.ui.scene.updateBody(bodyUpdateType);
+            this.ui.scene.resize();
           } else if (forceReloadHead) {
             // reload head and body
             if (bodyUpdateType !== BodyUpdateType.None) {
@@ -496,6 +497,7 @@ export class MiiEditor {
             }
             this.ui.scene.updateMiiHead(renderPart);
             this.ui.scene.sparkle();
+            this.ui.scene.resize();
           }
           return;
         }

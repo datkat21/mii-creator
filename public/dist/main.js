@@ -169445,8 +169445,6 @@ class Mii3DScene {
           this.#controls.enabled = true;
           this.#controls.minDistance = 10;
           this.#controls.maxDistance = 35;
-          this.#controls.minAzimuthAngle = -Math.PI;
-          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.zoomTo(1);
           this.cameraPan = true;
         } else {
@@ -169454,8 +169452,6 @@ class Mii3DScene {
           this.#controls.enabled = false;
           this.#controls.minDistance = 60;
           this.#controls.maxDistance = 140;
-          this.#controls.minAzimuthAngle = -Math.PI;
-          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.dollyTo(380 / 10);
           this.#controls.zoomTo(2.5);
           this.cameraPan = false;
@@ -169469,6 +169465,10 @@ class Mii3DScene {
       this.#controls.minDistance = 8;
       this.#controls.maxDistance = 300;
     } else {
+      this.#controls.minPolarAngle = 0.8;
+      this.#controls.maxPolarAngle = 1.8;
+      this.#controls.minAzimuthAngle = -1.4;
+      this.#controls.maxAzimuthAngle = 1.4;
       setTimeout(() => {
         this.focusCamera(0 /* MiiHead */, true);
       }, 200);
@@ -170368,6 +170368,8 @@ function MiiPagedFeatureSet(set) {
                   console.log(`condition check: value (${value3}) === newValue (${newValue}), iconSelected (${iconSelected})`);
                   if (value3 === newValue || iconSelected)
                     return;
+                  if (item.preSelectCallback)
+                    item.preSelectCallback(tmpMii);
                   if (item.property) {
                     if (Array.isArray(item.property)) {
                       for (const prop of item.property) {
@@ -170379,8 +170381,6 @@ function MiiPagedFeatureSet(set) {
                   } else {
                     tmpMii[key2] = newValue;
                   }
-                  if (item.selectedCallback)
-                    item.selectedCallback(tmpMii);
                   update();
                   if (item.sound)
                     playSound(item.sound);
@@ -170653,6 +170653,94 @@ var MiiSwitchSkinColorTable = [
   [0, 7, 1, 4, 5],
   [6, 3, 2, 8, 9]
 ];
+var MiiEyeRotationGroups = [
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  0,
+  0,
+  -1,
+  -1,
+  0,
+  0,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  -1,
+  0,
+  -1,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  -1,
+  -1,
+  0,
+  0,
+  -1,
+  -1,
+  -1,
+  0,
+  0,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  -1
+];
+var MiiEyebrowRotationGroups = [
+  0,
+  0,
+  -1,
+  1,
+  0,
+  1,
+  0,
+  1,
+  -2,
+  1,
+  0,
+  2,
+  -1,
+  -1,
+  0,
+  0,
+  1,
+  1,
+  0,
+  0,
+  -1,
+  0,
+  1,
+  0
+];
 function rearrangeArray(array, lookupTable, separator = makeSeparatorGapThinDesktop) {
   let rearrangedArray = [];
   if (Array.isArray(lookupTable) && Array.isArray(lookupTable[0])) {
@@ -170710,7 +170798,10 @@ function EyeTab(data2) {
           type: 0 /* Icon */,
           value: k4,
           icon: data2.icons.eyes[k4],
-          part: 1 /* Face */
+          part: 1 /* Face */,
+          preSelectCallback(tmpMii) {
+            tmpMii.eyeRotate += MiiEyeRotationGroups[k4] - MiiEyeRotationGroups[tmpMii.eyeType];
+          }
         })), MiiEyeTable, makeSeparatorGapThinDesktop)
       },
       eyeColor: {
@@ -171436,7 +171527,10 @@ function EyebrowTab(data2) {
           type: 0 /* Icon */,
           value: k4,
           icon: data2.icons.eyebrows[k4],
-          part: 1 /* Face */
+          part: 1 /* Face */,
+          preSelectCallback(tmpMii) {
+            tmpMii.eyebrowRotate += MiiEyebrowRotationGroups[k4] - MiiEyebrowRotationGroups[tmpMii.eyebrowType];
+          }
         })), MiiEyebrowTable, makeSeparatorGapThinDesktop)
       },
       eyebrowColor: {
@@ -171648,7 +171742,7 @@ function ExtHatTab(data2) {
             color: numToHex(MiiFavoriteColorLookupTable[k4]),
             part: 0 /* Head */,
             property: "hatFavoriteColor",
-            selectedCallback: (mii) => {
+            preSelectCallback: (mii) => {
               mii.hatFavoriteColor = k4;
               mii.hatCommonColor = -1;
             }
@@ -171660,7 +171754,7 @@ function ExtHatTab(data2) {
             color: SwitchMiiColorTable[k4],
             part: 0 /* Head */,
             property: "hatCommonColor",
-            selectedCallback: (mii) => {
+            preSelectCallback: (mii) => {
               mii.hatFavoriteColor = -1;
               mii.hatCommonColor = k4;
             }
@@ -172109,12 +172203,14 @@ class MiiEditor2 {
           this.ui.scene.mii = this.mii;
           if (renderPart === 2 /* Body */) {
             this.ui.scene.updateBody(bodyUpdateType);
+            this.ui.scene.resize();
           } else if (forceReloadHead) {
             if (bodyUpdateType !== 0 /* None */) {
               this.ui.scene.updateBody(bodyUpdateType);
             }
             this.ui.scene.updateMiiHead(renderPart);
             this.ui.scene.sparkle();
+            this.ui.scene.resize();
           }
           return;
         }

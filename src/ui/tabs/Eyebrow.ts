@@ -1,6 +1,7 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet
+  MiiPagedFeatureSet,
+  type FeatureSetIconItem
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiHairColorTable,
@@ -15,6 +16,7 @@ import {
   makeSeparatorFSI,
   makeSeparatorGapThinDesktop,
   makeSeparatorGapThinLaptop,
+  MiiEyebrowRotationGroups,
   MiiEyebrowTable,
   MiiSwitchColorTable,
   rearrangeArray
@@ -32,12 +34,21 @@ export function EyebrowTab(data: TabRenderInit) {
         eyebrowType: {
           label: __("Type"),
           items: rearrangeArray(
-            ArrayNum(24).map((k) => ({
-              type: FeatureSetType.Icon,
-              value: k,
-              icon: data.icons.eyebrows[k],
-              part: RenderPart.Face
-            })),
+            ArrayNum(24).map(
+              (k) =>
+                ({
+                  type: FeatureSetType.Icon,
+                  value: k,
+                  icon: data.icons.eyebrows[k],
+                  part: RenderPart.Face,
+                  preSelectCallback(tmpMii) {
+                    // new - old
+                    tmpMii.eyebrowRotate +=
+                      MiiEyebrowRotationGroups[k] -
+                      MiiEyebrowRotationGroups[tmpMii.eyebrowType];
+                  }
+                }) as FeatureSetIconItem
+            ),
             MiiEyebrowTable,
             makeSeparatorGapThinDesktop
           )

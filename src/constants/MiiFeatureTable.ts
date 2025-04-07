@@ -59,6 +59,16 @@ export const MiiSwitchSkinColorTable: number[][] = [
   [6, 3, 2, 8, 9]
 ];
 
+export const MiiEyeRotationGroups: number[] = [
+  -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, -1, 0, 0, 0, -1,
+  -1, 0, -1, 0, 0, -1, 0, 0, 0, -1, -1, -1, 0, 0, -1, -1, -1, 0, 0, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, -1, 0, 0, -1
+];
+
+export const MiiEyebrowRotationGroups: number[] = [
+  0, 0, -1, 1, 0, 1, 0, 1, -2, 1, 0, 2, -1, -1, 0, 0, 1, 1, 0, 0, -1, 0, 1, 0
+];
+
 export function rearrangeArray(
   array: any[],
   lookupTable: Record<number, number> | number[][],

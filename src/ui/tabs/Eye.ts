@@ -15,6 +15,7 @@ import {
   makeSeparatorFSI,
   makeSeparatorGapThinDesktop,
   makeSeparatorGapThinLaptop,
+  MiiEyeRotationGroups,
   MiiEyeTable,
   MiiSwitchColorTable,
   rearrangeArray
@@ -32,12 +33,21 @@ export function EyeTab(data: TabRenderInit) {
         eyeType: {
           label: __("Type"),
           items: rearrangeArray(
-            ArrayNum(60).map((k) => ({
-              type: FeatureSetType.Icon,
-              value: k,
-              icon: data.icons.eyes[k],
-              part: RenderPart.Face
-            })),
+            ArrayNum(60).map(
+              (k) =>
+                ({
+                  type: FeatureSetType.Icon,
+                  value: k,
+                  icon: data.icons.eyes[k],
+                  part: RenderPart.Face,
+                  preSelectCallback(tmpMii) {
+                    // new - old
+                    tmpMii.eyeRotate +=
+                      MiiEyeRotationGroups[k] -
+                      MiiEyeRotationGroups[tmpMii.eyeType];
+                  }
+                }) as FeatureSetIconItem
+            ),
             MiiEyeTable,
             makeSeparatorGapThinDesktop
           )

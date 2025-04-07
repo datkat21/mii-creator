@@ -23,7 +23,7 @@ export interface FeatureSetIconItem {
   value: number | string;
   property?: string[] | string;
   selectedCondition?: () => boolean;
-  selectedCallback?: (tmpMii: Mii) => void;
+  preSelectCallback?: (tmpMii: Mii) => void;
   forceRender?: boolean;
   bodyUpdateType?: BodyUpdateType;
 }
@@ -231,6 +231,9 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
 
                     // PREVENT DUPLICATE UPDATES
                     if (value === newValue || iconSelected) return;
+
+                    if (item.preSelectCallback) item.preSelectCallback(tmpMii);
+
                     if (item.property) {
                       if (Array.isArray(item.property)) {
                         for (const prop of item.property) {
@@ -243,8 +246,6 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                     } else {
                       (tmpMii as Record<string, any>)[key] = newValue;
                     }
-
-                    if (item.selectedCallback) item.selectedCallback(tmpMii);
 
                     update();
                     if (item.sound) playSound(item.sound);

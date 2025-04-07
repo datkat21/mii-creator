@@ -146902,7 +146902,13 @@ class MiiCreatorCharModel {
     if (this.headModel) {
       this.headModel.position.copy(this.position);
       this.miiGroup.worldToLocal(this.headModel.position);
-      this.headModel.setRotationFromQuaternion(this.quaternion);
+      const headWorldQuaternion = new Quaternion;
+      headBone.getWorldQuaternion(headWorldQuaternion);
+      const groupWorldQuaternion = new Quaternion;
+      this.miiGroup.getWorldQuaternion(groupWorldQuaternion);
+      groupWorldQuaternion.invert();
+      headWorldQuaternion.premultiply(groupWorldQuaternion);
+      this.headModel.setRotationFromQuaternion(headWorldQuaternion);
     }
   }
   setExpression(expression, force = false) {
