@@ -28,7 +28,7 @@ import { miiCreateDialog } from "./library/new/_dialog";
 import { importMiiConfirmation } from "./library/importDialog";
 import {
   createCharModel,
-  createCharModelIcon,
+  makeIconFromCharModel,
   FFLExpression,
   initCharModelTextures,
   parseHexOrB64ToUint8Array
@@ -118,6 +118,7 @@ export const getMiiIcon = async (
           data,
           type,
           expression,
+          texResolution: 256,
           additionalInfo: {
             hatCommonColor: miiData.hatCommonColor,
             hatFavoriteColor: miiData.hatFavoriteColor,
@@ -141,7 +142,9 @@ export const getMiiIcon = async (
     }
 
     try {
-      alert("this doesn't work at the moment sorry try again later");
+      alert(
+        "Icon rendering is broken in your browser since we aren't using web workers, upgrade your browser and try again"
+      );
       // model = createCharModel(
       //   data,
       //   null,
@@ -149,16 +152,6 @@ export const getMiiIcon = async (
       //   getFFL(),
       //   false
       // );
-      initCharModelTextures(model, tmpRenderer);
-      let realView = ViewType.IconFovy45;
-      dataURL = await createCharModelIcon(
-        model,
-        tmpRenderer,
-        realView,
-        512,
-        512
-        // drawBody
-      );
       // console.log(`charModel for ${mii.miiName}:`, model);
     } catch (e) {
       let name = "";

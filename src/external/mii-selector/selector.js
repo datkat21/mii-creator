@@ -15,7 +15,7 @@ function escapeHTML(str) {
 }
 
 //PLEASE ADD LOCALIZATION PROPERLY, MAKE IT GENERAL AND NOT REGION BASED.
-const lang = "en";
+const lang = "es";
 
 export var MiiSelector = {
   loc: {
@@ -28,7 +28,8 @@ export var MiiSelector = {
       "Search",
       "Matches for:",
       "results",
-      "No matches found."
+      "No matches found.",
+      "Guest "
     ],
     es: [
       "Selecciona un Mii.",
@@ -38,7 +39,8 @@ export var MiiSelector = {
       "Buscar",
       "Resultados para:",
       "resultados",
-      "No hay resultados."
+      "No hay resultados.",
+      "Invitado "
     ]
   },
   /**
@@ -54,6 +56,18 @@ export var MiiSelector = {
           type: MiiSelectorMiiType.Personal
         });
       }
+      let guestMiis = [];
+      if (selectorParam.guestData) {
+        guestMiis.push(
+          ...selectorParam.guestData.map((guest, index) => {
+            let guestMii = new Mii(guest);
+            guestMii.nickname = getLoc(8) + String.fromCharCode(65 + index);
+            return { miiData: guestMii.export() };
+          })
+        );
+      }
+      // test
+      miiArray.unshift(...guestMiis);
 
       function getLoc(index) {
         return MiiSelector.loc[lang][index];

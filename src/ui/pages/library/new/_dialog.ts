@@ -67,7 +67,7 @@ export const miiCreateDialog = () => {
             .attr({
               type: "file",
               accept:
-                ".ffsd,.cfsd,.charinfo,.rsd,.rcd" +
+                ".ffsd,.cfsd,.charinfo,.rsd,.rcd," +
                 // add unofficial formats
                 ".miic,.mii,.miigx,.cfcd,.ufsd,.mnms,.nfcd,",
               multiple: "on"

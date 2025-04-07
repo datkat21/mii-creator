@@ -67868,7 +67868,7 @@ void main()
 //#ifdef FFL_MODULATE_MODE_CONSTANT
     if(u_mode == FFL_MODULATE_MODE_CONSTANT)
     {
-        color = u_const1;
+      color = u_const1;
     }
     // modified to handle u_const1 alpha:
 //#elif defined(FFL_MODULATE_MODE_TEXTURE_DIRECT)
@@ -68103,7 +68103,7 @@ void main()
       }
       get opacity() {
         if (!this.uniforms.u_const1) {
-          return this._opacity;
+          return this._opacity ? this._opacity : 1;
         }
         return this.uniforms.u_const1.value.w;
       }
@@ -68126,6 +68126,15 @@ void main()
       set lightEnable(value2) {
         this.uniforms.u_light_enable = { value: value2 };
       }
+      set useSpecularModeBlinn(value2) {
+        this._useSpecularModeBlinn = value2;
+        if (this._modulateType !== undefined) {
+          this.modulateType = this._modulateType;
+        }
+      }
+      get useSpecularModeBlinn() {
+        return this._useSpecularModeBlinn;
+      }
       get modulateType() {
         return this._modulateType;
       }
@@ -68139,7 +68148,7 @@ void main()
         this.uniforms.u_material_diffuse = { value: matParam.diffuse };
         this.uniforms.u_material_specular = { value: matParam.specular };
         this.uniforms.u_material_specular_mode = {
-          value: this.useSpecularModeBlinn ? 0 : matParam.specularMode
+          value: this._useSpecularModeBlinn ? 0 : matParam.specularMode
         };
         this.uniforms.u_material_specular_power = { value: matParam.specularPower };
       }
@@ -68462,7 +68471,7 @@ void main()
         else                                { lightDir = uDirLightDirAndType1.xyz - positionWorld.xyz; }
         lightDir = normalize(lightDir);
 
-        diffuseColor += max(dot(lightDir, normal), 0.0) * uDirLightColor1;
+        diffuseColor += max(dot(lightDir, normal_), 0.0) * uDirLightColor1;
     }
     // ライトは1.0を超えないように
     diffuseColor = min(diffuseColor, 1.0);
@@ -68471,13 +68480,13 @@ void main()
 #if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
     {
         // キューブ環境マップ用の反射ベクトルを求める
-//        vReflectDir = reflect(normalize(positionWorld.xyz - cameraPosition), normal);
+//        vReflectDir = reflect(normalize(positionWorld.xyz - cameraPosition), normal_);
 
         // スフィア環境マップ用の反射ベクトルを求める
-//        vReflectDir = normalize((uViewMatrix * vec4(normal, 0.0)).xyz) * 0.5 + 0.5;
+//        vReflectDir = normalize((uViewMatrix * vec4(normal_, 0.0)).xyz) * 0.5 + 0.5;
 
         // ビュー座標系での位置と法線を取得
-        mediump vec3 viewNormal   = normalize(mat3(uViewMatrix) * normal);
+        mediump vec3 viewNormal   = normalize(mat3(uViewMatrix) * normal_);
         mediump vec4 viewPosition = uViewMatrix * positionWorld;
         viewPosition = viewPosition / viewPosition.w;
         // ビュー座標系での頂点ベクトルを取得
@@ -68492,7 +68501,7 @@ void main()
 
         // 公式
 //        mediump vec3  viewPositionVec = normalize(vec3(uViewMatrix * positionWorld));
-//        mediump vec3  viewReflectVec = viewPositionVec - 2.0 * dot(viewPositionVec, normal) * normal;
+//        mediump vec3  viewReflectVec = viewPositionVec - 2.0 * dot(viewPositionVec, normal_) * normal;
 //        mediump float m = 2.0 * sqrt(viewReflectVec.x * viewReflectVec.x +
 //                                     viewReflectVec.y * viewReflectVec.y +
 //                                     (viewReflectVec.z + 1.0) * (viewReflectVec.z * 1.0));
@@ -68518,14 +68527,14 @@ void main()
         mediump vec3 ground = uHSLightGroundColor;
 
         {
-            mediump float skyRatio = (normal.y + 1.0) * 0.5;
+            mediump float skyRatio = (normal_.y + 1.0) * 0.5;
             hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
             diffuseColor += hemiColor;
         }
 
         {
-//            mediump vec3 reflectDir = -reflect(normal, eyeVecWorld); // おそらくコレで良いはず
-            mediump vec3 reflectDir = 2.0 * dot(eyeVecWorld, normal) * normal - eyeVecWorld; // 多少冗長でも、正しい計算で行なう
+//            mediump vec3 reflectDir = -reflect(normal_, eyeVecWorld); // おそらくコレで良いはず
+            mediump vec3 reflectDir = 2.0 * dot(eyeVecWorld, normal_) * normal_ - eyeVecWorld; // 多少冗長でも、正しい計算で行なう
 
             mediump float skyRatio = (reflectDir.y + 1.0) * 0.5;
             hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
@@ -69108,7 +69117,7 @@ else
       }
       get opacity() {
         if (!this.uniforms.uColor0) {
-          return this._opacity;
+          return this._opacity ? this._opacity : 1;
         }
         return this.uniforms.uColor0.value.w;
       }
@@ -69174,7 +69183,7 @@ else
 var require_ffl_emscripten = __commonJS((exports2, module2) => {
   var ModuleFFL = (() => {
     var _scriptName = typeof document != "undefined" ? document.currentScript?.src : undefined;
-    return function(moduleArg = {}) {
+    return async function(moduleArg = {}) {
       var moduleRtn;
       var Module = moduleArg;
       var readyPromiseResolve, readyPromiseReject;
@@ -69184,7 +69193,7 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
       });
       var ENVIRONMENT_IS_WEB = true;
       var ENVIRONMENT_IS_WORKER = false;
-      var moduleOverrides = Object.assign({}, Module);
+      var moduleOverrides = { ...Module };
       var scriptDirectory = "";
       function locateFile(path) {
         if (Module["locateFile"]) {
@@ -69205,15 +69214,16 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
         if (scriptDirectory.startsWith("blob:")) {
           scriptDirectory = "";
         } else {
-          scriptDirectory = scriptDirectory.substr(0, scriptDirectory.replace(/[?#].*/, "").lastIndexOf("/") + 1);
+          scriptDirectory = scriptDirectory.slice(0, scriptDirectory.replace(/[?#].*/, "").lastIndexOf("/") + 1);
         }
         {
-          readAsync = (url) => fetch(url, { credentials: "same-origin" }).then((response) => {
+          readAsync = async (url) => {
+            var response = await fetch(url, { credentials: "same-origin" });
             if (response.ok) {
               return response.arrayBuffer();
             }
-            return Promise.reject(new Error(response.status + " : " + response.url));
-          });
+            throw new Error(response.status + " : " + response.url);
+          };
         }
       } else {
       }
@@ -69224,8 +69234,8 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
       var wasmBinary;
       var wasmMemory;
       var ABORT = false;
-      var EXITSTATUS;
-      var HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAPF64;
+      var HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAP64, HEAPU64, HEAPF64;
+      var runtimeInitialized = false;
       function updateMemoryViews() {
         var b3 = wasmMemory.buffer;
         Module["HEAP8"] = HEAP8 = new Int8Array(b3);
@@ -69236,26 +69246,18 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
         Module["HEAPU32"] = HEAPU32 = new Uint32Array(b3);
         Module["HEAPF32"] = HEAPF32 = new Float32Array(b3);
         HEAPF64 = new Float64Array(b3);
+        HEAP64 = new BigInt64Array(b3);
+        HEAPU64 = new BigUint64Array(b3);
       }
-      var __ATPRERUN__ = [];
-      var __ATINIT__ = [];
-      var __ATPOSTRUN__ = [];
-      var runtimeInitialized = false;
       function preRun() {
-        callRuntimeCallbacks(__ATPRERUN__);
       }
       function initRuntime() {
         runtimeInitialized = true;
-        callRuntimeCallbacks(__ATINIT__);
+        wasmExports["e"]();
       }
       function postRun() {
-        callRuntimeCallbacks(__ATPOSTRUN__);
-      }
-      function addOnInit(cb) {
-        __ATINIT__.unshift(cb);
       }
       var runDependencies = 0;
-      var runDependencyWatcher = null;
       var dependenciesFulfilled = null;
       function addRunDependency(id) {
         runDependencies++;
@@ -69263,10 +69265,6 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
       function removeRunDependency(id) {
         runDependencies--;
         if (runDependencies == 0) {
-          if (runDependencyWatcher !== null) {
-            clearInterval(runDependencyWatcher);
-            runDependencyWatcher = null;
-          }
           if (dependenciesFulfilled) {
             var callback = dependenciesFulfilled;
             dependenciesFulfilled = null;
@@ -69278,22 +69276,15 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
         what = "Aborted(" + what + ")";
         err(what);
         ABORT = true;
-        EXITSTATUS = 1;
         what += ". Build with -sASSERTIONS for more info.";
         var e = new WebAssembly.RuntimeError(what);
         readyPromiseReject(e);
         throw e;
       }
-      var dataURIPrefix = "data:application/octet-stream;base64,";
-      var isDataURI = (filename) => filename.startsWith(dataURIPrefix);
-      function findWasmBinary() {
-        var f = "ffl-emscripten.wasm";
-        if (!isDataURI(f)) {
-          return locateFile(f);
-        }
-        return f;
-      }
       var wasmBinaryFile;
+      function findWasmBinary() {
+        return locateFile("ffl-emscripten.wasm");
+      }
       function getBinarySync(file) {
         if (file == wasmBinaryFile && wasmBinary) {
           return new Uint8Array(wasmBinary);
@@ -69303,72 +69294,85 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
         }
         throw "both async and sync fetching of the wasm failed";
       }
-      function getBinaryPromise(binaryFile) {
+      async function getWasmBinary(binaryFile) {
         if (!wasmBinary) {
-          return readAsync(binaryFile).then((response) => new Uint8Array(response), () => getBinarySync(binaryFile));
+          try {
+            var response = await readAsync(binaryFile);
+            return new Uint8Array(response);
+          } catch {
+          }
         }
-        return Promise.resolve().then(() => getBinarySync(binaryFile));
+        return getBinarySync(binaryFile);
       }
-      function instantiateArrayBuffer(binaryFile, imports, receiver) {
-        return getBinaryPromise(binaryFile).then((binary) => WebAssembly.instantiate(binary, imports)).then(receiver, (reason) => {
+      async function instantiateArrayBuffer(binaryFile, imports) {
+        try {
+          var binary = await getWasmBinary(binaryFile);
+          var instance = await WebAssembly.instantiate(binary, imports);
+          return instance;
+        } catch (reason) {
           err(`failed to asynchronously prepare wasm: ${reason}`);
           abort(reason);
-        });
-      }
-      function instantiateAsync(binary, binaryFile, imports, callback) {
-        if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && typeof fetch == "function") {
-          return fetch(binaryFile, { credentials: "same-origin" }).then((response) => {
-            var result = WebAssembly.instantiateStreaming(response, imports);
-            return result.then(callback, function(reason) {
-              err(`wasm streaming compile failed: ${reason}`);
-              err("falling back to ArrayBuffer instantiation");
-              return instantiateArrayBuffer(binaryFile, imports, callback);
-            });
-          });
         }
-        return instantiateArrayBuffer(binaryFile, imports, callback);
+      }
+      async function instantiateAsync(binary, binaryFile, imports) {
+        if (!binary && typeof WebAssembly.instantiateStreaming == "function") {
+          try {
+            var response = fetch(binaryFile, { credentials: "same-origin" });
+            var instantiationResult = await WebAssembly.instantiateStreaming(response, imports);
+            return instantiationResult;
+          } catch (reason) {
+            err(`wasm streaming compile failed: ${reason}`);
+            err("falling back to ArrayBuffer instantiation");
+          }
+        }
+        return instantiateArrayBuffer(binaryFile, imports);
       }
       function getWasmImports() {
         return { a: wasmImports };
       }
-      function createWasm() {
-        var info = getWasmImports();
+      async function createWasm() {
         function receiveInstance(instance, module3) {
           wasmExports = instance.exports;
-          wasmMemory = wasmExports["e"];
+          wasmMemory = wasmExports["d"];
           updateMemoryViews();
           wasmTable = wasmExports["O"];
-          addOnInit(wasmExports["f"]);
           removeRunDependency("wasm-instantiate");
           return wasmExports;
         }
         addRunDependency("wasm-instantiate");
-        function receiveInstantiationResult(result) {
-          receiveInstance(result["instance"]);
+        function receiveInstantiationResult(result2) {
+          return receiveInstance(result2["instance"]);
         }
-        if (!wasmBinaryFile)
-          wasmBinaryFile = findWasmBinary();
-        instantiateAsync(wasmBinary, wasmBinaryFile, info, receiveInstantiationResult).catch(readyPromiseReject);
-        return {};
+        var info = getWasmImports();
+        wasmBinaryFile ??= findWasmBinary();
+        try {
+          var result = await instantiateAsync(wasmBinary, wasmBinaryFile, info);
+          var exports3 = receiveInstantiationResult(result);
+          return exports3;
+        } catch (e) {
+          readyPromiseReject(e);
+          return Promise.reject(e);
+        }
       }
-      var callRuntimeCallbacks = (callbacks) => {
-        while (callbacks.length > 0) {
-          callbacks.shift()(Module);
+
+      class ExitStatus {
+        name = "ExitStatus";
+        constructor(status) {
+          this.message = `Program terminated with exit(${status})`;
+          this.status = status;
         }
-      };
+      }
       function stackTrace() {
         abort("missing function: $stackTrace");
       }
       stackTrace.stub = true;
-      var __abort_js = () => {
-        abort("");
-      };
-      var __emscripten_memcpy_js = (dest, src, num) => HEAPU8.copyWithin(dest, src, src + num);
+      var __abort_js = () => abort("");
       var _emscripten_random = () => Math.random();
       var getHeapMax = () => 2147483648;
+      var alignMemory = (size2, alignment) => Math.ceil(size2 / alignment) * alignment;
       var growMemory = (size2) => {
         var b3 = wasmMemory.buffer;
-        var pages = (size2 - b3.byteLength + 65535) / 65536;
+        var pages = (size2 - b3.byteLength + 65535) / 65536 | 0;
         try {
           wasmMemory.grow(pages);
           updateMemoryViews();
@@ -69383,11 +69387,10 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
         if (requestedSize > maxHeapSize) {
           return false;
         }
-        var alignUp = (x2, multiple) => x2 + (multiple - x2 % multiple) % multiple;
         for (var cutDown = 1;cutDown <= 4; cutDown *= 2) {
           var overGrownHeapSize = oldSize * (1 + 0.2 / cutDown);
           overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + 100663296);
-          var newSize = Math.min(maxHeapSize, alignUp(Math.max(requestedSize, overGrownHeapSize), 65536));
+          var newSize = Math.min(maxHeapSize, alignMemory(Math.max(requestedSize, overGrownHeapSize), 65536));
           var replacement = growMemory(newSize);
           if (replacement) {
             return true;
@@ -69416,8 +69419,8 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
         var typeCodes = { i: 127, p: 127, j: 126, f: 125, d: 124, e: 111 };
         target.push(96);
         uleb128Encode(sigParam.length, target);
-        for (var i = 0;i < sigParam.length; ++i) {
-          target.push(typeCodes[sigParam[i]]);
+        for (var paramType of sigParam) {
+          target.push(typeCodes[paramType]);
         }
         if (sigRet == "v") {
           target.push(0);
@@ -69445,8 +69448,6 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
       var getWasmTableEntry = (funcPtr) => {
         var func = wasmTableMirror[funcPtr];
         if (!func) {
-          if (funcPtr >= wasmTableMirror.length)
-            wasmTableMirror.length = funcPtr + 1;
           wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr);
         }
         return func;
@@ -69511,75 +69512,70 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
         setWasmTableEntry(index2, null);
         freeTableIndexes.push(index2);
       };
-      var wasmImports = { a: __abort_js, c: __emscripten_memcpy_js, d: _emscripten_random, b: _emscripten_resize_heap };
-      var wasmExports = createWasm();
-      var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports["f"])();
-      var _FFLInitCharModelCPUStepWithCallback = Module["_FFLInitCharModelCPUStepWithCallback"] = (a0, a1, a2, a3) => (_FFLInitCharModelCPUStepWithCallback = Module["_FFLInitCharModelCPUStepWithCallback"] = wasmExports["g"])(a0, a1, a2, a3);
-      var _FFLInitCharModelCPUStep = Module["_FFLInitCharModelCPUStep"] = (a0, a1, a2) => (_FFLInitCharModelCPUStep = Module["_FFLInitCharModelCPUStep"] = wasmExports["h"])(a0, a1, a2);
-      var _FFLDeleteCharModel = Module["_FFLDeleteCharModel"] = (a0) => (_FFLDeleteCharModel = Module["_FFLDeleteCharModel"] = wasmExports["i"])(a0);
-      var _FFLGetDrawParamOpaFaceline = Module["_FFLGetDrawParamOpaFaceline"] = (a0) => (_FFLGetDrawParamOpaFaceline = Module["_FFLGetDrawParamOpaFaceline"] = wasmExports["j"])(a0);
-      var _FFLGetDrawParamOpaBeard = Module["_FFLGetDrawParamOpaBeard"] = (a0) => (_FFLGetDrawParamOpaBeard = Module["_FFLGetDrawParamOpaBeard"] = wasmExports["k"])(a0);
-      var _FFLGetDrawParamOpaNose = Module["_FFLGetDrawParamOpaNose"] = (a0) => (_FFLGetDrawParamOpaNose = Module["_FFLGetDrawParamOpaNose"] = wasmExports["l"])(a0);
-      var _FFLGetDrawParamOpaForehead = Module["_FFLGetDrawParamOpaForehead"] = (a0) => (_FFLGetDrawParamOpaForehead = Module["_FFLGetDrawParamOpaForehead"] = wasmExports["m"])(a0);
-      var _FFLGetDrawParamOpaHair = Module["_FFLGetDrawParamOpaHair"] = (a0) => (_FFLGetDrawParamOpaHair = Module["_FFLGetDrawParamOpaHair"] = wasmExports["n"])(a0);
-      var _FFLGetDrawParamOpaCap = Module["_FFLGetDrawParamOpaCap"] = (a0) => (_FFLGetDrawParamOpaCap = Module["_FFLGetDrawParamOpaCap"] = wasmExports["o"])(a0);
-      var _FFLGetDrawParamXluMask = Module["_FFLGetDrawParamXluMask"] = (a0) => (_FFLGetDrawParamXluMask = Module["_FFLGetDrawParamXluMask"] = wasmExports["p"])(a0);
-      var _FFLGetDrawParamXluNoseLine = Module["_FFLGetDrawParamXluNoseLine"] = (a0) => (_FFLGetDrawParamXluNoseLine = Module["_FFLGetDrawParamXluNoseLine"] = wasmExports["q"])(a0);
-      var _FFLGetDrawParamXluGlass = Module["_FFLGetDrawParamXluGlass"] = (a0) => (_FFLGetDrawParamXluGlass = Module["_FFLGetDrawParamXluGlass"] = wasmExports["r"])(a0);
-      var _FFLSetExpression = Module["_FFLSetExpression"] = (a0, a1) => (_FFLSetExpression = Module["_FFLSetExpression"] = wasmExports["s"])(a0, a1);
-      var _FFLGetExpression = Module["_FFLGetExpression"] = (a0) => (_FFLGetExpression = Module["_FFLGetExpression"] = wasmExports["t"])(a0);
-      var _FFLSetViewModelType = Module["_FFLSetViewModelType"] = (a0, a1) => (_FFLSetViewModelType = Module["_FFLSetViewModelType"] = wasmExports["u"])(a0, a1);
-      var _FFLGetBoundingBox = Module["_FFLGetBoundingBox"] = (a0, a1) => (_FFLGetBoundingBox = Module["_FFLGetBoundingBox"] = wasmExports["v"])(a0, a1);
-      var _FFLIsAvailableExpression = Module["_FFLIsAvailableExpression"] = (a0, a1) => (_FFLIsAvailableExpression = Module["_FFLIsAvailableExpression"] = wasmExports["w"])(a0, a1);
-      var _FFLSetCoordinate = Module["_FFLSetCoordinate"] = (a0, a1) => (_FFLSetCoordinate = Module["_FFLSetCoordinate"] = wasmExports["x"])(a0, a1);
-      var _FFLSetScale = Module["_FFLSetScale"] = (a0) => (_FFLSetScale = Module["_FFLSetScale"] = wasmExports["y"])(a0);
-      var _FFLiGetRandomCharInfo = Module["_FFLiGetRandomCharInfo"] = (a0, a1, a2, a3) => (_FFLiGetRandomCharInfo = Module["_FFLiGetRandomCharInfo"] = wasmExports["z"])(a0, a1, a2, a3);
-      var _FFLpGetStoreDataFromCharInfo = Module["_FFLpGetStoreDataFromCharInfo"] = (a0, a1) => (_FFLpGetStoreDataFromCharInfo = Module["_FFLpGetStoreDataFromCharInfo"] = wasmExports["A"])(a0, a1);
-      var _FFLpGetCharInfoFromStoreData = Module["_FFLpGetCharInfoFromStoreData"] = (a0, a1) => (_FFLpGetCharInfoFromStoreData = Module["_FFLpGetCharInfoFromStoreData"] = wasmExports["B"])(a0, a1);
-      var _FFLGetAdditionalInfo = Module["_FFLGetAdditionalInfo"] = (a0, a1, a2, a3, a4) => (_FFLGetAdditionalInfo = Module["_FFLGetAdditionalInfo"] = wasmExports["C"])(a0, a1, a2, a3, a4);
-      var _FFLInitRes = Module["_FFLInitRes"] = (a0, a1) => (_FFLInitRes = Module["_FFLInitRes"] = wasmExports["D"])(a0, a1);
-      var _FFLInitResGPUStep = Module["_FFLInitResGPUStep"] = () => (_FFLInitResGPUStep = Module["_FFLInitResGPUStep"] = wasmExports["E"])();
-      var _FFLExit = Module["_FFLExit"] = () => (_FFLExit = Module["_FFLExit"] = wasmExports["F"])();
-      var _FFLIsAvailable = Module["_FFLIsAvailable"] = () => (_FFLIsAvailable = Module["_FFLIsAvailable"] = wasmExports["G"])();
-      var _FFLGetFavoriteColor = Module["_FFLGetFavoriteColor"] = (a0, a1) => (_FFLGetFavoriteColor = Module["_FFLGetFavoriteColor"] = wasmExports["H"])(a0, a1);
-      var _FFLSetLinearGammaMode = Module["_FFLSetLinearGammaMode"] = (a0) => (_FFLSetLinearGammaMode = Module["_FFLSetLinearGammaMode"] = wasmExports["I"])(a0);
-      var _FFLGetFacelineColor = Module["_FFLGetFacelineColor"] = (a0, a1) => (_FFLGetFacelineColor = Module["_FFLGetFacelineColor"] = wasmExports["J"])(a0, a1);
-      var _FFLSetTextureFlipY = Module["_FFLSetTextureFlipY"] = (a0) => (_FFLSetTextureFlipY = Module["_FFLSetTextureFlipY"] = wasmExports["K"])(a0);
-      var _FFLSetNormalIsSnorm8_8_8_8 = Module["_FFLSetNormalIsSnorm8_8_8_8"] = (a0) => (_FFLSetNormalIsSnorm8_8_8_8 = Module["_FFLSetNormalIsSnorm8_8_8_8"] = wasmExports["L"])(a0);
-      var _FFLSetFrontCullForFlipX = Module["_FFLSetFrontCullForFlipX"] = (a0) => (_FFLSetFrontCullForFlipX = Module["_FFLSetFrontCullForFlipX"] = wasmExports["M"])(a0);
-      var _FFLSetTextureCallback = Module["_FFLSetTextureCallback"] = (a0) => (_FFLSetTextureCallback = Module["_FFLSetTextureCallback"] = wasmExports["N"])(a0);
-      var _FFLiDeleteTempObjectMaskTextures = Module["_FFLiDeleteTempObjectMaskTextures"] = (a0, a1, a2) => (_FFLiDeleteTempObjectMaskTextures = Module["_FFLiDeleteTempObjectMaskTextures"] = wasmExports["P"])(a0, a1, a2);
-      var _FFLiDeleteTempObjectFacelineTexture = Module["_FFLiDeleteTempObjectFacelineTexture"] = (a0, a1, a2) => (_FFLiDeleteTempObjectFacelineTexture = Module["_FFLiDeleteTempObjectFacelineTexture"] = wasmExports["Q"])(a0, a1, a2);
-      var _FFLiDeleteTextureTempObject = Module["_FFLiDeleteTextureTempObject"] = (a0) => (_FFLiDeleteTextureTempObject = Module["_FFLiDeleteTextureTempObject"] = wasmExports["R"])(a0);
-      var _FFLiiGetEyeRotateOffset = Module["_FFLiiGetEyeRotateOffset"] = (a0) => (_FFLiiGetEyeRotateOffset = Module["_FFLiiGetEyeRotateOffset"] = wasmExports["S"])(a0);
-      var _FFLiiGetEyebrowRotateOffset = Module["_FFLiiGetEyebrowRotateOffset"] = (a0) => (_FFLiiGetEyebrowRotateOffset = Module["_FFLiiGetEyebrowRotateOffset"] = wasmExports["T"])(a0);
-      var _FFLiInvalidateTempObjectFacelineTexture = Module["_FFLiInvalidateTempObjectFacelineTexture"] = (a0) => (_FFLiInvalidateTempObjectFacelineTexture = Module["_FFLiInvalidateTempObjectFacelineTexture"] = wasmExports["U"])(a0);
-      var _FFLiInvalidatePartsTextures = Module["_FFLiInvalidatePartsTextures"] = (a0) => (_FFLiInvalidatePartsTextures = Module["_FFLiInvalidatePartsTextures"] = wasmExports["V"])(a0);
-      var _FFLiInvalidateRawMask = Module["_FFLiInvalidateRawMask"] = (a0) => (_FFLiInvalidateRawMask = Module["_FFLiInvalidateRawMask"] = wasmExports["W"])(a0);
-      var _FFLiVerifyCharInfoWithReason = Module["_FFLiVerifyCharInfoWithReason"] = (a0, a1) => (_FFLiVerifyCharInfoWithReason = Module["_FFLiVerifyCharInfoWithReason"] = wasmExports["X"])(a0, a1);
-      var _malloc = Module["_malloc"] = (a0) => (_malloc = Module["_malloc"] = wasmExports["Y"])(a0);
-      var _free = Module["_free"] = (a0) => (_free = Module["_free"] = wasmExports["Z"])(a0);
+      var wasmImports = { a: __abort_js, c: _emscripten_random, b: _emscripten_resize_heap };
+      var wasmExports = await createWasm();
+      var ___wasm_call_ctors = wasmExports["e"];
+      var _FFLInitCharModelCPUStepWithCallback = Module["_FFLInitCharModelCPUStepWithCallback"] = wasmExports["f"];
+      var _FFLInitCharModelCPUStep = Module["_FFLInitCharModelCPUStep"] = wasmExports["g"];
+      var _FFLDeleteCharModel = Module["_FFLDeleteCharModel"] = wasmExports["h"];
+      var _FFLGetDrawParamOpaFaceline = Module["_FFLGetDrawParamOpaFaceline"] = wasmExports["i"];
+      var _FFLGetDrawParamOpaBeard = Module["_FFLGetDrawParamOpaBeard"] = wasmExports["j"];
+      var _FFLGetDrawParamOpaNose = Module["_FFLGetDrawParamOpaNose"] = wasmExports["k"];
+      var _FFLGetDrawParamOpaForehead = Module["_FFLGetDrawParamOpaForehead"] = wasmExports["l"];
+      var _FFLGetDrawParamOpaHair = Module["_FFLGetDrawParamOpaHair"] = wasmExports["m"];
+      var _FFLGetDrawParamOpaCap = Module["_FFLGetDrawParamOpaCap"] = wasmExports["n"];
+      var _FFLGetDrawParamXluMask = Module["_FFLGetDrawParamXluMask"] = wasmExports["o"];
+      var _FFLGetDrawParamXluNoseLine = Module["_FFLGetDrawParamXluNoseLine"] = wasmExports["p"];
+      var _FFLGetDrawParamXluGlass = Module["_FFLGetDrawParamXluGlass"] = wasmExports["q"];
+      var _FFLSetExpression = Module["_FFLSetExpression"] = wasmExports["r"];
+      var _FFLGetExpression = Module["_FFLGetExpression"] = wasmExports["s"];
+      var _FFLSetViewModelType = Module["_FFLSetViewModelType"] = wasmExports["t"];
+      var _FFLGetBoundingBox = Module["_FFLGetBoundingBox"] = wasmExports["u"];
+      var _FFLIsAvailableExpression = Module["_FFLIsAvailableExpression"] = wasmExports["v"];
+      var _FFLSetCoordinate = Module["_FFLSetCoordinate"] = wasmExports["w"];
+      var _FFLSetScale = Module["_FFLSetScale"] = wasmExports["x"];
+      var _FFLiGetRandomCharInfo = Module["_FFLiGetRandomCharInfo"] = wasmExports["y"];
+      var _FFLpGetStoreDataFromCharInfo = Module["_FFLpGetStoreDataFromCharInfo"] = wasmExports["z"];
+      var _FFLpGetCharInfoFromStoreData = Module["_FFLpGetCharInfoFromStoreData"] = wasmExports["A"];
+      var _FFLpGetCharInfoFromMiiDataOfficialRFL = Module["_FFLpGetCharInfoFromMiiDataOfficialRFL"] = wasmExports["B"];
+      var _FFLGetAdditionalInfo = Module["_FFLGetAdditionalInfo"] = wasmExports["C"];
+      var _FFLInitRes = Module["_FFLInitRes"] = wasmExports["D"];
+      var _FFLInitResGPUStep = Module["_FFLInitResGPUStep"] = wasmExports["E"];
+      var _FFLExit = Module["_FFLExit"] = wasmExports["F"];
+      var _FFLIsAvailable = Module["_FFLIsAvailable"] = wasmExports["G"];
+      var _FFLGetFavoriteColor = Module["_FFLGetFavoriteColor"] = wasmExports["H"];
+      var _FFLSetLinearGammaMode = Module["_FFLSetLinearGammaMode"] = wasmExports["I"];
+      var _FFLGetFacelineColor = Module["_FFLGetFacelineColor"] = wasmExports["J"];
+      var _FFLSetTextureFlipY = Module["_FFLSetTextureFlipY"] = wasmExports["K"];
+      var _FFLSetNormalIsSnorm8_8_8_8 = Module["_FFLSetNormalIsSnorm8_8_8_8"] = wasmExports["L"];
+      var _FFLSetFrontCullForFlipX = Module["_FFLSetFrontCullForFlipX"] = wasmExports["M"];
+      var _FFLSetTextureCallback = Module["_FFLSetTextureCallback"] = wasmExports["N"];
+      var _FFLiDeleteTempObjectMaskTextures = Module["_FFLiDeleteTempObjectMaskTextures"] = wasmExports["P"];
+      var _FFLiDeleteTempObjectFacelineTexture = Module["_FFLiDeleteTempObjectFacelineTexture"] = wasmExports["Q"];
+      var _FFLiDeleteTextureTempObject = Module["_FFLiDeleteTextureTempObject"] = wasmExports["R"];
+      var _FFLiiGetEyeRotateOffset = Module["_FFLiiGetEyeRotateOffset"] = wasmExports["S"];
+      var _FFLiiGetEyebrowRotateOffset = Module["_FFLiiGetEyebrowRotateOffset"] = wasmExports["T"];
+      var _FFLiInvalidateTempObjectFacelineTexture = Module["_FFLiInvalidateTempObjectFacelineTexture"] = wasmExports["U"];
+      var _FFLiInvalidatePartsTextures = Module["_FFLiInvalidatePartsTextures"] = wasmExports["V"];
+      var _FFLiInvalidateRawMask = Module["_FFLiInvalidateRawMask"] = wasmExports["W"];
+      var _GX2CalcSurfaceSizeAndAlignment = Module["_GX2CalcSurfaceSizeAndAlignment"] = wasmExports["X"];
+      var _GX2CopySurface = Module["_GX2CopySurface"] = wasmExports["Y"];
+      var _FFLiVerifyCharInfoWithReason = Module["_FFLiVerifyCharInfoWithReason"] = wasmExports["Z"];
+      var _malloc = Module["_malloc"] = wasmExports["_"];
+      var _free = Module["_free"] = wasmExports["$"];
       Module["addFunction"] = addFunction;
       Module["removeFunction"] = removeFunction;
-      var calledRun;
-      dependenciesFulfilled = function runCaller() {
-        if (!calledRun)
-          run();
-        if (!calledRun)
-          dependenciesFulfilled = runCaller;
-      };
       function run() {
         if (runDependencies > 0) {
+          dependenciesFulfilled = run;
           return;
         }
         preRun();
         if (runDependencies > 0) {
+          dependenciesFulfilled = run;
           return;
         }
         function doRun() {
-          if (calledRun)
-            return;
-          calledRun = true;
           Module["calledRun"] = true;
           if (ABORT)
             return;
@@ -69597,9 +69593,10 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
       return moduleRtn;
     };
   })();
-  if (typeof exports2 === "object" && typeof module2 === "object")
+  if (typeof exports2 === "object" && typeof module2 === "object") {
     module2.exports = ModuleFFL;
-  else if (typeof define === "function" && define["amd"])
+    module2.exports.default = ModuleFFL;
+  } else if (typeof define === "function" && define["amd"])
     define([], () => ModuleFFL);
 });
 
@@ -106653,7 +106650,7 @@ class WebGLRenderer {
 }
 
 // src/external/ffl.js/ffl.js
-var _ = __toESM(require_struct_fu(), 1);
+var _Import = __toESM(require_struct_fu(), 1);
 /*!
  * Bindings for FFL, a Mii renderer, in JavaScript.
  * https://github.com/ariankordi/FFL.js
@@ -106661,8 +106658,22 @@ var _ = __toESM(require_struct_fu(), 1);
  */
 globalThis._ = globalThis._;
 globalThis.THREE = globalThis.THREE;
+var _ = globalThis._;
+_ = !_ ? _Import : _;
 var FFLResult = {
   OK: 0,
+  ERROR: 1,
+  HDB_EMPTY: 2,
+  FILE_INVALID: 3,
+  MANAGER_NOT_CONSTRUCT: 4,
+  FILE_LOAD_ERROR: 5,
+  FILE_SAVE_ERROR: 7,
+  RES_FS_ERROR: 9,
+  ODB_EMPTY: 10,
+  OUT_OF_MEMORY: 12,
+  UNKNOWN_17: 17,
+  FS_ERROR: 18,
+  FS_NOT_FOUND: 19,
   MAX: 20
 };
 var FFLiShapeType = {
@@ -106679,21 +106690,6 @@ var FFLiShapeType = {
   OPA_FOREHEAD_CAP: 10,
   OPA_HAT_CAP: 11,
   MAX: 12
-};
-var FFLiShapeTypeName = {
-  0: "OpaBeard",
-  1: "OpaFaceline",
-  2: "OpaHairNormal",
-  3: "OpaForeheadNormal",
-  4: "XluMask",
-  5: "XluNoseline",
-  6: "OpaNose",
-  7: "OpaHatNormal",
-  8: "XluGlass",
-  9: "OpaHairCap",
-  10: "OpaForeheadCap",
-  11: "OpaHatCap",
-  12: "Max"
 };
 var FFLAttributeBufferType = {
   POSITION: 0,
@@ -106745,6 +106741,79 @@ var FFLResourceType = {
 };
 var FFLExpression = {
   NORMAL: 0,
+  SMILE: 1,
+  ANGER: 2,
+  SORROW: 3,
+  PUZZLED: 3,
+  SURPRISE: 4,
+  SURPRISED: 4,
+  BLINK: 5,
+  OPEN_MOUTH: 6,
+  SMILE_OPEN_MOUTH: 7,
+  HAPPY: 7,
+  ANGER_OPEN_MOUTH: 8,
+  SORROW_OPEN_MOUTH: 9,
+  SURPRISE_OPEN_MOUTH: 10,
+  BLINK_OPEN_MOUTH: 11,
+  WINK_LEFT: 12,
+  WINK_RIGHT: 13,
+  WINK_LEFT_OPEN_MOUTH: 14,
+  WINK_RIGHT_OPEN_MOUTH: 15,
+  LIKE_WINK_LEFT: 16,
+  LIKE: 16,
+  LIKE_WINK_RIGHT: 17,
+  FRUSTRATED: 18,
+  BORED: 19,
+  BORED_OPEN_MOUTH: 20,
+  SIGH_MOUTH_STRAIGHT: 21,
+  SIGH: 22,
+  DISGUSTED_MOUTH_STRAIGHT: 23,
+  DISGUSTED: 24,
+  LOVE: 25,
+  LOVE_OPEN_MOUTH: 26,
+  DETERMINED_MOUTH_STRAIGHT: 27,
+  DETERMINED: 28,
+  CRY_MOUTH_STRAIGHT: 29,
+  CRY: 30,
+  BIG_SMILE_MOUTH_STRAIGHT: 31,
+  BIG_SMILE: 32,
+  CHEEKY: 33,
+  CHEEKY_DUPLICATE: 34,
+  JOJO_EYES_FUNNY_MOUTH: 35,
+  JOJO_EYES_FUNNY_MOUTH_OPEN: 36,
+  SMUG: 37,
+  SMUG_OPEN_MOUTH: 38,
+  RESOLVE: 39,
+  RESOLVE_OPEN_MOUTH: 40,
+  UNBELIEVABLE: 41,
+  UNBELIEVABLE_DUPLICATE: 42,
+  CUNNING: 43,
+  CUNNING_DUPLICATE: 44,
+  RASPBERRY: 45,
+  RASPBERRY_DUPLICATE: 46,
+  INNOCENT: 47,
+  INNOCENT_DUPLICATE: 48,
+  CAT: 49,
+  CAT_DUPLICATE: 50,
+  DOG: 51,
+  DOG_DUPLICATE: 52,
+  TASTY: 53,
+  TASTY_DUPLICATE: 54,
+  MONEY_MOUTH_STRAIGHT: 55,
+  MONEY: 56,
+  SPIRAL_MOUTH_STRAIGHT: 57,
+  CONFUSED: 58,
+  CHEERFUL_MOUTH_STRAIGHT: 59,
+  CHEERFUL: 60,
+  BLANK_61: 61,
+  BLANK_62: 62,
+  GRUMBLE_MOUTH_STRAIGHT: 63,
+  GRUMBLE: 64,
+  MOVED_MOUTH_STRAIGHT: 65,
+  MOVED: 66,
+  SINGING_MOUTH_SMALL: 67,
+  SINGING: 68,
+  STUNNED: 69,
   MAX: 70
 };
 var FFLModelFlag = {
@@ -107180,13 +107249,13 @@ class FFLResultException extends Error {
   }
   static handleResult(result, funcName) {
     switch (result) {
-      case 1:
+      case FFLResult.ERROR:
         throw new FFLResultWrongParam(funcName);
-      case 3:
+      case FFLResult.FILE_INVALID:
         throw new FFLResultBroken(funcName);
-      case 4:
+      case FFLResult.MANAGER_NOT_CONSTRUCT:
         throw new FFLResultNotAvailable(funcName);
-      case 5:
+      case FFLResult.FILE_LOAD_ERROR:
         throw new FFLResultFatal(funcName);
       case FFLResult.OK:
         return;
@@ -107253,25 +107322,25 @@ async function _loadDataIntoHeap(resource, module2) {
       resource = new Uint8Array(resource);
     }
     if (resource instanceof Uint8Array) {
-      console.warn("initializeFFL -> _loadDataIntoHeap: resource was passed as Uint8Array/ArrayBuffer. Please pass in a fetch Response instance for improved efficiency.");
       heapSize = resource.length;
       heapPtr = module2._malloc(heapSize);
-      console.debug(`loadDataIntoHeap: Loading from Uint8Array. Size: ${heapSize}, pointer: ${heapPtr}`);
+      console.debug(`_loadDataIntoHeap: Loading from buffer. Size: ${heapSize}, pointer: ${heapPtr}`);
       module2.HEAPU8.set(resource, heapPtr);
     } else if (resource instanceof Response) {
       if (!resource.ok) {
         throw new Error(`HTTP error while fetching resource at URL = ${resource.url}, response code = ${resource.status}`);
       }
       if (!resource.body) {
-        throw new Error(`Fetch response is not streamable (resource.body = ${resource.body})`);
+        throw new Error(`Response body is null (resource.body = ${resource.body})`);
       }
       const contentLength = resource.headers.get("Content-Length");
       if (!contentLength) {
-        throw new Error("Fetch response is missing Content-Length.");
+        console.debug("_loadDataIntoHeap: Fetch response is missing Content-Length, falling back to reading as ArrayBuffer.");
+        return _loadDataIntoHeap(await resource.arrayBuffer(), module2);
       }
       heapSize = parseInt(contentLength, 10);
       heapPtr = module2._malloc(heapSize);
-      console.debug(`loadDataIntoHeap: Streaming ${heapSize} bytes from fetch response. URL: ${resource.url}, pointer: ${heapPtr}`);
+      console.debug(`loadDataIntoHeap: Streaming from fetch response. Size: ${heapSize}, pointer: ${heapPtr}, URL: ${resource.url}`);
       const reader = resource.body.getReader();
       let offset = heapPtr;
       while (true) {
@@ -107329,9 +107398,6 @@ ${module2.onRuntimeInitialized}
     if (resource instanceof Promise) {
       resource = await resource;
     }
-    if (resource instanceof Response) {
-      resource = await resource.arrayBuffer();
-    }
     const { pointer: heapPtr, size: heapSize } = await _loadDataIntoHeap(resource, module2);
     console.debug(`initializeFFL: Resource loaded into heap. Pointer: ${heapPtr}, Size: ${heapSize}`);
     resourceDesc = { pData: [0, 0], size: [0, 0] };
@@ -107341,7 +107407,7 @@ ${module2.onRuntimeInitialized}
     resourceDescPtr = module2._malloc(FFLResourceDesc.size);
     module2.HEAPU8.set(resourceDescData, resourceDescPtr);
     const result = module2._FFLInitRes(0, resourceDescPtr);
-    if (result === 3) {
+    if (result === FFLResult.FILE_INVALID) {
       throw new BrokenInitRes;
     }
     FFLResultException.handleResult(result, "FFLInitRes");
@@ -107431,7 +107497,6 @@ class CharModel {
           this._maskMesh = mesh;
           break;
       }
-      mesh.name = FFLiShapeTypeName[shapeType];
       this.meshes.add(mesh);
     }
   }
@@ -107518,7 +107583,7 @@ class CharModel {
     this._module._free(this._ptr);
     this._ptr = 0;
   }
-  disposeTextures() {
+  disposeTargets() {
     if (this._facelineTarget) {
       console.debug(`Disposing target ${this._facelineTarget.texture.id} for faceline`);
       this._facelineTarget.dispose();
@@ -107533,7 +107598,7 @@ class CharModel {
       this._maskTargets[i] = null;
     });
   }
-  dispose(disposeTextures = true) {
+  dispose(disposeTargets = true) {
     console.debug("CharModel.dispose: ptr =", this.__ptr);
     this._finalizeCharModel();
     if (this.meshes) {
@@ -107542,8 +107607,8 @@ class CharModel {
       disposeMeshes(this.meshes);
       this.meshes = null;
     }
-    if (disposeTextures) {
-      this.disposeTextures();
+    if (disposeTargets) {
+      this.disposeTargets();
     }
     if (this._textureManager) {
       this._textureManager.dispose();
@@ -107567,17 +107632,19 @@ class CharModel {
   }
   setExpression(expression) {
     this._model.expression = expression;
-    const target = this._maskTargets[expression];
-    if (!target || !target.texture) {
+    const targ = this._maskTargets[expression];
+    if (!targ || !targ.texture) {
       throw new ExpressionNotSet(expression);
     }
     const mesh = this._maskMesh;
-    if (expression === 61)
-      return console.warn("Blank expression detected, use at your own risk");
     if (!mesh || !(mesh instanceof Mesh)) {
+      if (expression === FFLExpression.BLANK_61 || expression === FFLExpression.BLANK_62) {
+        return;
+      }
       throw new Error("setExpression: mask mesh does not exist, cannot set expression on it");
     }
-    mesh.material.map = target.texture;
+    targ.texture._target = targ;
+    mesh.material.map = targ.texture;
     mesh.material.needsUpdate = true;
   }
   getFaceline() {
@@ -107689,16 +107756,24 @@ function _allocateModelSource(data2, module2) {
     data2 = FFLiCharInfo.pack(charInfo);
     module2.HEAPU8.set(data2, bufferPtr);
   }
+  function callGetCharInfoFunc(data3, size, funcName) {
+    const dataPtr = module2._malloc(size);
+    module2.HEAPU8.set(data3, dataPtr);
+    const result = module2[funcName](bufferPtr, dataPtr);
+    module2._free(dataPtr);
+    if (!result) {
+      module2._free(bufferPtr);
+      throw new Error(`_allocateModelSource: call to ${funcName} returned false, CharInfo verification probably failed`);
+    }
+  }
   switch (data2.length) {
     case FFLStoreData_size: {
-      const storeDataPtr = module2._malloc(FFLStoreData_size);
-      module2.HEAPU8.set(data2, storeDataPtr);
-      const result = module2._FFLpGetCharInfoFromStoreData(bufferPtr, storeDataPtr);
-      module2._free(storeDataPtr);
-      if (!result) {
-        module2._free(bufferPtr);
-        throw new Error("_allocateModelSource: call to FFLpGetCharInfoFromStoreData returned false, CharInfo verification probably failed");
-      }
+      callGetCharInfoFunc(data2, FFLStoreData_size, "_FFLpGetCharInfoFromStoreData");
+      break;
+    }
+    case 74:
+    case 76: {
+      callGetCharInfoFunc(data2, 74, "_FFLpGetCharInfoFromMiiDataOfficialRFL");
       break;
     }
     case FFLiCharInfo.size:
@@ -107745,6 +107820,17 @@ function makeExpressionFlag(expressions) {
       throw new Error(`makeExpressionFlag: input out of range: got ${i}, max: ${FFLExpression.MAX}`);
     }
   }
+  function warnIfChangesShapes(i) {
+    const expressionsDisablingNose = [49, 50, 51, 52, 61, 62];
+    const expressionsDisablingMask = [61, 62];
+    const prefix = `makeExpressionFlag > warnIfChangesShapes: An expression was enabled (${i}) that is meant to disable nose or mask shape for the entire CharModel, so it is only recommended to set this as a single expression rather than as one of multiple.`;
+    if (expressionsDisablingNose.indexOf(i) !== -1) {
+      console.warn(`${prefix} (nose shape)`);
+    }
+    if (expressionsDisablingMask.indexOf(i) !== -1) {
+      console.warn(`${prefix} (in this case, MASK SHAPE so there is supposed to be NO FACE)`);
+    }
+  }
   const flags = new Uint32Array([0, 0, 0]);
   if (typeof expressions === "number") {
     expressions = [expressions];
@@ -107753,6 +107839,7 @@ function makeExpressionFlag(expressions) {
   }
   for (const index2 of expressions) {
     checkRange(index2);
+    warnIfChangesShapes(index2);
     const part = Math.floor(index2 / 32);
     const bitIndex = index2 % 32;
     flags[part] |= 1 << bitIndex;
@@ -107787,7 +107874,7 @@ function createCharModel(data2, modelDesc, materialClass, module2, verify = true
     }
     textureManager = new TextureManager(module2, false);
     const result = module2._FFLInitCharModelCPUStepWithCallback(charModelPtr, modelSourcePtr, modelDescPtr, textureManager._textureCallbackPtr);
-    if (result === 3) {
+    if (result === FFLResult.FILE_INVALID) {
       throw new BrokenInitModel;
     }
     FFLResultException.handleResult(result, "FFLInitCharModelCPUStep");
@@ -107810,6 +107897,9 @@ function createCharModel(data2, modelDesc, materialClass, module2, verify = true
   console.debug(`createCharModel: Initialized for "${charModel._model.charInfo.personal.name}", ptr =`, charModelPtr);
   return charModel;
 }
+function matSupportsFFL(material) {
+  return "modulateMode" in material.prototype;
+}
 function drawParamToMesh(drawParam, materialClass, module2, texManager) {
   if (!drawParam) {
     throw new Error("drawParamToMesh: drawParam may be null.");
@@ -107817,8 +107907,8 @@ function drawParamToMesh(drawParam, materialClass, module2, texManager) {
   if (!texManager) {
     throw new Error("drawParamToMesh: Passed in TextureManager is null or undefined, is it constructed?");
   }
-  if (!materialClass) {
-    throw new Error("drawParamToMesh: materialClass broken");
+  if (typeof materialClass !== "function") {
+    throw new Error("drawParamToMesh: materialClass is unexpectedly not a function.");
   }
   if (drawParam.primitiveParam.indexCount === 0) {
     return null;
@@ -107835,12 +107925,16 @@ function drawParamToMesh(drawParam, materialClass, module2, texManager) {
     throw new Error(`drawParamToMesh: Unexpected value for FFLCullMode: ${drawParam.cullMode}`);
   }
   const texture = _getTextureFromModulateParam(drawParam.modulateParam, texManager);
-  const params = _applyModulateParam(drawParam.modulateParam, module2);
+  const isFFLMaterial = matSupportsFFL(materialClass);
+  const params = _applyModulateParam(drawParam.modulateParam, module2, isFFLMaterial);
   const materialParam = {
     side,
     map: texture,
     ...params
   };
+  if (geometry.attributes.tangent === undefined && "useSpecularModeBlinn" in materialClass.prototype) {
+    materialParam.useSpecularModeBlinn = true;
+  }
   const material = new materialClass(materialParam);
   const mesh = new Mesh(geometry, material);
   if (drawParam.primitiveParam.pAdjustMatrix !== 0) {
@@ -107849,20 +107943,19 @@ function drawParamToMesh(drawParam, materialClass, module2, texManager) {
   if (mesh.geometry.userData) {
     mesh.geometry.userData.modulateMode = drawParam.modulateParam.mode;
     mesh.geometry.userData.modulateType = drawParam.modulateParam.type;
-    mesh.geometry.userData.modulateColor = materialParam.color;
+    mesh.geometry.userData.color = params.color instanceof Color ? [params.color.r, params.color.g, params.color.b, 1] : [1, 1, 1, 1];
+    mesh.geometry.userData.cullMode = drawParam.cullMode;
   }
   return mesh;
 }
 function _bindDrawParamGeometry(drawParam, module2) {
+  function unexpectedStride(typeStr, stride) {
+    throw new Error(`_bindDrawParamGeometry: Unexpected stride for attribute ${typeStr}: ${stride}`);
+  }
   const attributes = drawParam.attributeBufferParam.attributeBuffers;
   const positionBuffer = attributes[FFLAttributeBufferType.POSITION];
   if (positionBuffer.size === 0) {
     throw new Error("_bindDrawParamGeometry: Position buffer must not have size of 0");
-  }
-  const forceHalfFloat = false;
-  if (forceHalfFloat && drawParam.cullMode !== FFLCullMode.MAX) {
-    attributes[FFLAttributeBufferType.POSITION].stride = 6;
-    attributes[FFLAttributeBufferType.TEXCOORD].stride = 4;
   }
   const vertexCount = positionBuffer.size / positionBuffer.stride;
   const geometry = new BufferGeometry;
@@ -107871,9 +107964,6 @@ function _bindDrawParamGeometry(drawParam, module2) {
   const indices = module2.HEAPU16.subarray(indexPtr, indexPtr + indexCount);
   geometry.setIndex(new Uint16BufferAttribute(indices, 1));
   for (const typeStr in attributes) {
-    let unexpectedStride = function() {
-      throw new Error(`_bindDrawParamGeometry: Unexpected stride for attribute ${typeStr}: ${buffer.stride}`);
-    };
     const buffer = attributes[typeStr];
     const type = parseInt(typeStr);
     if (buffer.size === 0) {
@@ -107891,7 +107981,7 @@ function _bindDrawParamGeometry(drawParam, module2) {
           const data2 = module2.HEAPU16.subarray(ptr, ptr + vertexCount * 3);
           geometry.setAttribute("position", new Float16BufferAttribute(data2, 3));
         } else {
-          unexpectedStride();
+          unexpectedStride(typeStr, buffer.stride);
         }
         break;
       }
@@ -107915,7 +108005,7 @@ function _bindDrawParamGeometry(drawParam, module2) {
           const data2 = module2.HEAPU16.subarray(ptr, ptr + vertexCount * 2);
           geometry.setAttribute("uv", new Float16BufferAttribute(data2, 2));
         } else {
-          unexpectedStride();
+          unexpectedStride(typeStr, buffer.stride);
         }
         break;
       }
@@ -107940,7 +108030,11 @@ function _getTextureFromModulateParam(modulateParam, textureManager) {
   if (!texture) {
     throw new Error(`_getTextureFromModulateParam: Texture not found for ${texturePtr}.`);
   }
-  const applyMirrorTypes = [FFLModulateType.SHAPE_FACELINE, FFLModulateType.SHAPE_CAP, FFLModulateType.SHAPE_GLASS];
+  const applyMirrorTypes = [
+    FFLModulateType.SHAPE_FACELINE,
+    FFLModulateType.SHAPE_CAP,
+    FFLModulateType.SHAPE_GLASS
+  ];
   if (applyMirrorTypes.indexOf(modulateParam.type) !== -1) {
     texture.wrapS = MirroredRepeatWrapping;
     texture.wrapT = MirroredRepeatWrapping;
@@ -107967,7 +108061,7 @@ function _getBlendOptionsFromModulateType(modulateType, modulateMode) {
   }
   return {};
 }
-function _applyModulateParam(modulateParam, module2) {
+function _applyModulateParam(modulateParam, module2, forFFLMaterial = true) {
   let color = null;
   let color4 = null;
   const f32 = module2.HEAPF32;
@@ -107991,14 +108085,17 @@ function _applyModulateParam(modulateParam, module2) {
   const opacity = color4 ? color4.a : 1;
   const transparent = modulateParam.type >= FFLModulateType.SHAPE_MASK;
   const lightEnable = !(modulateParam.type >= FFLModulateType.SHAPE_MAX && modulateParam.mode !== FFLModulateMode.CONSTANT);
-  const param = {
+  const modulateModeType = forFFLMaterial ? {
     modulateMode: modulateParam.mode,
-    modulateType: modulateParam.type,
+    modulateType: modulateParam.type
+  } : {};
+  const param = Object.assign(modulateModeType, {
     color,
     opacity,
     transparent,
+    depthWrite: !transparent,
     ..._getBlendOptionsFromModulateType(modulateParam.type, modulateParam.mode)
-  };
+  });
   if (!lightEnable) {
     param.lightEnable = lightEnable;
   }
@@ -108025,23 +108122,30 @@ function _applyAdjustMatrixToMesh(pMtx, mesh, heapf32) {
   const matrix = matrixFromRowMajor3x4(m);
   mesh.scale.setFromMatrixScale(matrix);
   mesh.position.setFromMatrixPosition(matrix);
-  if (matrix.elements[0] === -1)
+  if (matrix.elements[0] === -1) {
     mesh.scale.x = -1;
+  }
 }
 function initCharModelTextures(charModel, renderer2, materialClass = charModel._materialClass) {
+  if (!(renderer2 instanceof WebGLRenderer) && renderer2["isWebGPURenderer"] === undefined) {
+    throw new Error("initCharModelTextures: renderer is an invalid or unexpected type.");
+  }
   const module2 = charModel._module;
   charModel._materialTextureClass = materialClass;
   const textureTempObject = charModel._getTextureTempObject();
   _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass);
   const clearAlpha = renderer2.getClearAlpha();
-  if (clearAlpha !== 0) {
-    renderer2.setClearAlpha(0);
-  }
+  clearAlpha !== 0 && renderer2.setClearAlpha(0);
   _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass);
   charModel._finalizeCharModel();
   charModel.setExpression(charModel.expression);
-  if (clearAlpha !== 0) {
-    renderer2.setClearAlpha(clearAlpha);
+  clearAlpha !== 0 && renderer2.setClearAlpha(clearAlpha);
+  if (!matSupportsFFL(charModel._materialClass)) {
+    if (!matSupportsFFL(charModel._materialTextureClass)) {
+      console.warn("initCharModelTextures: charModel._materialClass does not support modulateMode (no getter), but the _materialTextureClass is either the same or also does not support modulateMode so textures will look wrong");
+    } else {
+      convertModelTexturesToRGBA(charModel, renderer2, charModel._materialTextureClass);
+    }
   }
 }
 function _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass) {
@@ -108084,10 +108188,8 @@ function _drawMaskTextures(charModel, textureTempObject, renderer2, module2, mat
     const rawMaskDrawParam = FFLiRawMaskDrawParam.unpack(module2.HEAPU8.subarray(rawMaskDrawParamPtr, rawMaskDrawParamPtr + FFLiRawMaskDrawParam.size));
     module2._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
     const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer2, module2, materialClass);
-    renderer2.initTexture(target.texture);
     console.debug(`Creating target ${target.texture.id} for mask ${i}`);
     charModel._maskTargets[i] = target;
-    renderer2.initTexture(target.texture);
     scenes.push(scene);
   }
   scenes.forEach((scene) => {
@@ -108128,8 +108230,63 @@ function _setFaceline(charModel, target) {
   if (!mesh || !(mesh instanceof Mesh)) {
     throw new Error("setFaceline: faceline shape does not exist");
   }
+  target.texture._target = target;
   mesh.material.map = target.texture;
   mesh.material.needsUpdate = true;
+}
+function _texDrawRGBATarget(renderer2, material, userData, materialTextureClass) {
+  const plane = new PlaneGeometry(2, 2);
+  const scene = new Scene;
+  const bgClearRGBMesh = new Mesh(plane, new MeshBasicMaterial({
+    color: material.color,
+    transparent: true,
+    opacity: 0,
+    blending: NoBlending
+  }));
+  scene.add(bgClearRGBMesh);
+  if (!material.map) {
+    throw new Error("_texDrawRGBATarget: material.map is null or undefined");
+  }
+  const tex = material.map;
+  const texMat = new materialTextureClass({
+    map: tex,
+    modulateMode: userData.modulateMode,
+    color: material.color,
+    lightEnable: false
+  });
+  texMat.blending = NoBlending;
+  texMat.transparent = true;
+  const textureMesh = new Mesh(plane, texMat);
+  scene.add(textureMesh);
+  const target = createAndRenderToTarget(scene, getIdentCamera(false), renderer2, tex.image.width, tex.image.height, {
+    wrapS: tex.wrapS,
+    wrapT: tex.wrapT,
+    depthBuffer: false,
+    stencilBuffer: false
+  });
+  target.texture._target = target;
+  material.map.dispose();
+  material.map = target.texture;
+  material.color = new Color(1, 1, 1);
+  userData.modulateMode = 1;
+  return target;
+}
+function convertModelTexturesToRGBA(charModel, renderer2, materialTextureClass) {
+  const convertTextureForTypes = [
+    FFLModulateType.SHAPE_CAP,
+    FFLModulateType.SHAPE_NOSELINE,
+    FFLModulateType.SHAPE_GLASS
+  ];
+  if (!charModel.meshes) {
+    throw new Error("convertModelTexturesToRGBA: charModel.meshes is null.");
+  }
+  charModel.meshes.traverse((mesh) => {
+    if (!(mesh instanceof Mesh) || !mesh.geometry.userData.modulateType || !mesh.material.map || convertTextureForTypes.indexOf(mesh.geometry.userData.modulateType) === -1) {
+      return;
+    }
+    const target = _texDrawRGBATarget(renderer2, mesh.material, mesh.geometry.userData, materialTextureClass);
+    charModel._maskTargets.push(target);
+  });
 }
 function createSceneFromDrawParams(drawParams, bgColor, ...drawParamArgs) {
   const scene = new Scene;
@@ -108155,7 +108312,7 @@ function createAndRenderToTarget(scene, camera, renderer2, width2, height2, targ
     magFilter: LinearFilter,
     ...targetOptions
   };
-  const renderTarget = new WebGLRenderTarget(width2, height2, options);
+  const renderTarget = renderer2["isWebGPURenderer"] === undefined ? new WebGLRenderTarget(width2, height2, options) : new RenderTarget(width2, height2, options);
   const prevTarget = renderer2.getRenderTarget();
   renderer2.setRenderTarget(renderTarget);
   renderer2.render(scene, camera);
@@ -108187,76 +108344,11 @@ function disposeMeshes(group, scene) {
   }
   group.children = [];
 }
-function renderTargetToDataURL(renderTarget, renderer2, flipY = false) {
-  const scene = new Scene;
-  scene.background = null;
-  const material = new MeshBasicMaterial({
-    side: DoubleSide,
-    map: renderTarget.texture,
-    transparent: true
-  });
-  const plane = new PlaneGeometry(2, 2);
-  const mesh = new Mesh(plane, material);
-  scene.add(mesh);
-  const camera = getIdentCamera(flipY);
-  const prevTarget = renderer2.getRenderTarget();
-  const prevColorSpace = renderer2.outputColorSpace;
-  const size = new Vector2;
-  renderer2.getSize(size);
-  renderer2.setRenderTarget(null);
-  renderer2.outputColorSpace = ColorManagement ? ColorManagement.workingColorSpace : "";
-  renderer2.setSize(renderTarget.width, renderTarget.height, false);
-  renderer2.render(scene, camera);
-  function cleanup() {
-    material.dispose();
-    plane.dispose();
-    scene.remove(mesh);
-    renderer2.outputColorSpace = prevColorSpace;
-    renderer2.setSize(size.x, size.y, false);
-    renderer2.setRenderTarget(prevTarget);
-  }
-  const dataURL = renderer2.domElement.toDataURL("image/png");
-  cleanup();
-  return dataURL;
-}
 var ViewType = {
   Face: 0,
   MakeIcon: 1,
   IconFovy45: 2
 };
-function getCameraForViewType(viewType, width2 = 1, height2 = 1) {
-  const aspect2 = width2 / height2;
-  switch (viewType) {
-    case ViewType.MakeIcon: {
-      const fovy = 9.8762;
-      const camera = new PerspectiveCamera(fovy, aspect2, 500, 1000);
-      camera.position.set(0, 34.5, 600);
-      camera.lookAt(0, 34.5, 0);
-      return camera;
-    }
-    case ViewType.IconFovy45: {
-      const camera = new PerspectiveCamera(45, aspect2, 50, 1000);
-      camera.position.set(0, 34, 110);
-      camera.lookAt(0, 34, 0);
-      return camera;
-    }
-    default:
-      throw new Error("getCameraForViewType: not implemented");
-  }
-}
-function createCharModelIcon(charModel, renderer2, viewType = ViewType.MakeIcon, width2 = 256, height2 = 256) {
-  if (!charModel.meshes) {
-    throw new Error("CharModel.meshes is null or undefined, it may have been disposed.");
-  }
-  const iconScene = new Scene;
-  iconScene.background = null;
-  iconScene.add(charModel.meshes.clone());
-  const iconCamera = getCameraForViewType(viewType);
-  const target = createAndRenderToTarget(iconScene, iconCamera, renderer2, width2, height2);
-  const dataURL = renderTargetToDataURL(target, renderer2);
-  target.dispose();
-  return dataURL;
-}
 var StudioCharInfo = _.struct([
   _.uint8("beardColor"),
   _.uint8("beardType"),
@@ -108414,8 +108506,8 @@ function stripSpaces(str) {
 }
 function hexToUint8Array(hex) {
   const match = hex.match(/.{1,2}/g);
-  const arr = (match ? match : []).map(function(byte2) {
-    return parseInt(byte2, 16);
+  const arr = (match ? match : []).map(function(byte) {
+    return parseInt(byte, 16);
   });
   return new Uint8Array(arr);
 }
@@ -108600,10 +108692,10 @@ function calculateCRC16(storeData) {
   const data2 = storeData.subarray(0, 94);
   console.log(data2);
   let crc = 0;
-  for (const byte2 of data2) {
+  for (const byte of data2) {
     for (let bit = 7;bit >= 0; bit--) {
       const flag = (crc & 32768) != 0;
-      crc = (crc << 1 | byte2 >> bit & 1) ^ (flag ? 4129 : 0);
+      crc = (crc << 1 | byte >> bit & 1) ^ (flag ? 4129 : 0);
     }
   }
   for (let i = 16;i > 0; i--) {
@@ -109942,32 +110034,6 @@ function validate(input) {
     if (!prop) {
       alert("A prop is missing: " + i);
       return;
-    }
-    switch (prop.type) {
-      case 0 /* Number */: {
-        const value2 = input[i];
-        if (value2 < prop.min)
-          fail(`${i} (${value2}) is below minimum value`);
-        if (value2 > prop.max)
-          fail(`${i} (${value2}) is above maximum value`);
-        break;
-      }
-      case 1 /* String */: {
-        const value2 = input[i];
-        if (value2.trim().length < prop.min)
-          fail(`${i} (${value2}) is below minimum length`);
-        if (value2.trim().length > prop.max)
-          fail(`${i} (${value2}) is above maximum length`);
-        break;
-      }
-      case 2 /* Array */: {
-        const value2 = input[i];
-        if (value2.length !== prop.size)
-          fail(`${i} size is ${value2.length}, expected ${prop.size}`);
-        if (Array.from(value2).every((i2) => i2 >= prop.min && i2 <= prop.max) === false)
-          fail();
-        break;
-      }
     }
   });
   if (valid)
@@ -133727,7 +133793,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
   var bidx = 0;
   var imageIndex = 0;
   var vpos = 0;
-  var byte2 = 0;
+  var byte = 0;
   var arr_a, arr_b;
   var bytes = RW2_Format == 6 ? new Uint32Array(18) : new Uint8Array(16);
   var i, j2, sh, pred = [0, 0], nonz = [0, 0], isOdd, idx = 0, pixel_base;
@@ -133749,8 +133815,8 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
       }
     } else {
       vpos = vpos - bits & 131071;
-      byte2 = vpos >> 3 ^ 16368;
-      return (buffer[byte2] | buffer[byte2 + 1] << 8) >> (vpos & 7) & ~(-1 << bits);
+      byte = vpos >> 3 ^ 16368;
+      return (buffer[byte] | buffer[byte + 1] << 8) >> (vpos & 7) & ~(-1 << bits);
     }
   }
   function getBufferDataRW6(i3) {
@@ -133772,7 +133838,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
     bytes[12] = (getBufferDataRW6(13) << 2 & 1020 | getBufferDataRW6(14) >> 6) & 1023;
     bytes[13] = (getBufferDataRW6(14) << 4 | getBufferDataRW6(15) >> 4) & 1023;
     vpos += 16;
-    byte2 = 0;
+    byte = 0;
   }
   function readPageRw6_bps12() {
     bytes[0] = getBufferDataRW6(0) << 4 | getBufferDataRW6(1) >> 4;
@@ -133794,7 +133860,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
     bytes[16] = getBufferDataRW6(14);
     bytes[17] = getBufferDataRW6(15);
     vpos += 16;
-    byte2 = 0;
+    byte = 0;
   }
   function resetPredNonzeros() {
     pred[0] = 0;
@@ -133822,13 +133888,13 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
           for (i = 0;i < pixelsPerBlock; i++) {
             isOdd = i & 1;
             if (i % 3 == 2) {
-              var base = byte2 < bufferSize ? bytes[byte2++] : 0;
+              var base = byte < bufferSize ? bytes[byte++] : 0;
               if (base == 3)
                 base = 4;
               pixel_base = pixelbase0 << base;
               sh = 1 << base;
             }
-            var epixel = byte2 < bufferSize ? bytes[byte2++] : 0;
+            var epixel = byte < bufferSize ? bytes[byte++] : 0;
             if (pred[isOdd]) {
               epixel *= sh;
               if (pixel_base < pixelbase_compare && nonz[isOdd] > pixel_base)
@@ -137938,13 +138004,13 @@ Parser.prototype.parseStruct = function(description) {
     return description.call(this);
   } else {
     var fields = Object.keys(description);
-    var struct2 = {};
+    var struct = {};
     for (var j2 = 0;j2 < fields.length; j2++) {
       var fieldName = fields[j2];
       var fieldType = description[fieldName];
-      struct2[fieldName] = fieldType.call(this);
+      struct[fieldName] = fieldType.call(this);
     }
-    return struct2;
+    return struct;
   }
 };
 Parser.prototype.parseValueRecord = function(valueFormat) {
@@ -165743,6 +165809,8 @@ var ShaderType;
   ShaderType2["WiiUBlinn"] = "wiiu_blinn";
   ShaderType2["WiiUFFLIconWithBody"] = "wiiu_ffliconwithbody";
   ShaderType2["WiiUToon"] = "wiiu_toon";
+  ShaderType2["ThreeToon"] = "three_toon";
+  ShaderType2["ThreePhong"] = "three_phong";
 })(ShaderType ||= {});
 function adjustShaderQuery(params, shader) {
   switch (shader) {
@@ -165894,10 +165962,16 @@ var getHatModels = () => hatModels;
 var getLoadedBodyModelName = () => bodyModelName;
 var getClothesTextures = () => clothesTextures;
 
+// src/class/3d/shader/ShaderUtils.ts
+var import_FFLShaderMaterial2 = __toESM(require_FFLShaderMaterial(), 1);
+var import_LUTShaderMaterial2 = __toESM(require_LUTShaderMaterial(), 1);
+var import_localforage3 = __toESM(require_localforage(), 1);
+
+// src/class/3d/shader/FFLShaderAlternateMaterial.ts
+var import_FFLShaderMaterial = __toESM(require_FFLShaderMaterial(), 1);
+var import_LUTShaderMaterial = __toESM(require_LUTShaderMaterial(), 1);
+
 // src/class/3d/shader/fflShaderConst.ts
-var FFLBlinnMaterial = {
-  specularMode: 0
-};
 var FFLToonMaterial = {
   ambient: new Color(0.8, 0.8, 0.8),
   diffuse: new Color(0.8, 0.8, 0.8),
@@ -165932,14 +166006,7 @@ var MiiFavoriteFFLColorLookupTable = {
   11: [0.094, 0.094, 0.078]
 };
 
-// src/class/3d/shader/ShaderUtils.ts
-var import_FFLShaderMaterial2 = __toESM(require_FFLShaderMaterial(), 1);
-var import_LUTShaderMaterial2 = __toESM(require_LUTShaderMaterial(), 1);
-var import_localforage3 = __toESM(require_localforage(), 1);
-
 // src/class/3d/shader/FFLShaderAlternateMaterial.ts
-var import_FFLShaderMaterial = __toESM(require_FFLShaderMaterial(), 1);
-var import_LUTShaderMaterial = __toESM(require_LUTShaderMaterial(), 1);
 class FFLShaderBlinnMaterial extends import_FFLShaderMaterial.default {
   constructor(options = {}) {
     options = Object.assign({
@@ -165950,16 +166017,6 @@ class FFLShaderBlinnMaterial extends import_FFLShaderMaterial.default {
       this.uniforms.u_material_specular_power.value = 2;
   }
 }
-
-class FFLShaderLightDisabledMaterial extends import_FFLShaderMaterial.default {
-  constructor(options = {}) {
-    options = Object.assign({
-      lightEnable: false
-    }, options);
-    super(options);
-  }
-}
-
 class FFLShaderToonMaterial extends import_FFLShaderMaterial.default {
   constructor(options = {}) {
     options = Object.assign({}, options);
@@ -166007,16 +166064,16 @@ var getSettingSafe = async (key2) => {
   }
   return value2;
 };
-function traverseAddShader(model, mii) {
+function traverseAddShader(model, shaderType) {
   model.traverse((n2) => {
     const node = n2;
     if (node.isMesh) {
-      traverseMesh(node, mii);
+      traverseMesh(node, shaderType);
     }
   });
 }
-async function traverseMesh(node, mpCharInfo) {
-  const shaderSetting = await getSettingSafe("shaderType");
+async function traverseMesh(node, shaderType) {
+  const shaderSetting = shaderType || await getSettingSafe("shaderType");
   const originalMaterial = node.material;
   const userData = node.geometry.userData;
   if (userData.ignore !== undefined) {
@@ -166058,67 +166115,37 @@ async function traverseMesh(node, mpCharInfo) {
     }
   }
   let finalMat;
-  const overrides = await getMaterialOverridesFromShaderType();
-  const params = {
-    color: new Color(...modulateColor),
+  const isUsingShader = await isShaderMaterial();
+  let modulate = isUsingShader ? {
     modulateMode,
     modulateType,
-    map: originalMaterial.map || undefined,
-    side,
     lightEnable: shaderSetting === "lightDisabled" /* LightDisabled */ ? false : true
+  } : {};
+  const params = {
+    color: new Color(...modulateColor),
+    ...modulate,
+    map: originalMaterial.map || undefined,
+    side
   };
-  switch (shaderSetting) {
-    case "wiiu" /* WiiU */:
-      finalMat = new import_FFLShaderMaterial2.default(params);
-      break;
-    case "switch" /* Switch */:
-      throw new Error("This shader isn't supported yet");
-    case "lightDisabled" /* LightDisabled */:
-      finalMat = new FFLShaderLightDisabledMaterial(params);
-      break;
-    case "miitomo" /* Miitomo */:
-      finalMat = new import_LUTShaderMaterial2.default(params);
-      break;
-    case "miitomo_basic" /* MiitomoBasic */:
-      finalMat = new LUTShaderPretendoMaterial(params);
-      break;
-    case "wiiu_blinn" /* WiiUBlinn */:
-      finalMat = new FFLShaderBlinnMaterial(params);
-      break;
-    case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
-      finalMat = new FFLShaderBrightMaterial(params);
-      break;
-    case "wiiu_toon" /* WiiUToon */:
-      finalMat = new FFLShaderToonMaterial(params);
-      break;
-    default:
-      throw new Error("This shader doesn't exist");
-  }
+  let shaderMaterial = await getShaderMaterialFromShaderType(shaderSetting);
+  finalMat = new shaderMaterial(params);
   node.material = finalMat;
 }
-async function getMaterialOverridesFromShaderType(shader = undefined) {
+async function isShaderMaterial(shader = undefined) {
   let shaderType = shader || await getSettingSafe("shaderType");
   switch (shaderType) {
     case "wiiu" /* WiiU */:
-      return null;
     case "wiiu_blinn" /* WiiUBlinn */:
-      return { customMaterial: FFLBlinnMaterial };
     case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
-      return {
-        lightAmbient: cLightAmbientFFLIconWithBody,
-        lightDiffuse: cLightDiffuseFFLIconWithBody,
-        lightSpecular: cLightSpecularFFLIconWithBody,
-        lightDirection: cLightDirFFLIconWithBody
-      };
     case "wiiu_toon" /* WiiUToon */:
-      return { customMaterial: FFLToonMaterial };
-    case "lightDisabled" /* LightDisabled */:
-      return { lightEnable: false };
     case "switch" /* Switch */:
-      return null;
     case "miitomo" /* Miitomo */:
     case "miitomo_basic" /* MiitomoBasic */:
-      return null;
+      return true;
+    case "lightDisabled" /* LightDisabled */:
+    case "three_toon" /* ThreeToon */:
+    case "three_phong" /* ThreePhong */:
+      return false;
   }
 }
 async function getShaderMaterialFromShaderType(type) {
@@ -166127,7 +166154,7 @@ async function getShaderMaterialFromShaderType(type) {
     case "wiiu" /* WiiU */:
       return import_FFLShaderMaterial2.default;
     case "lightDisabled" /* LightDisabled */:
-      return FFLShaderLightDisabledMaterial;
+      return MeshBasicMaterial;
     case "wiiu_blinn" /* WiiUBlinn */:
       return FFLShaderBlinnMaterial;
     case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
@@ -166140,7 +166167,55 @@ async function getShaderMaterialFromShaderType(type) {
       return import_LUTShaderMaterial2.default;
     case "miitomo_basic" /* MiitomoBasic */:
       return LUTShaderPretendoMaterial;
+    case "three_toon" /* ThreeToon */:
+      return MeshToonMaterial;
+    case "three_phong" /* ThreePhong */:
+      return MeshPhongMaterial;
   }
+}
+var ThreeMaterialStandardLights = (scene) => {
+  const intensity = Number(REVISION) >= 155 ? Math.PI : 1;
+  const ambientLight = new AmbientLight(new Color(0.73, 0.73, 0.73), intensity);
+  const directionalLight = new DirectionalLight(new Color(0.6, 0.6, 0.6), intensity);
+  directionalLight.position.set(-0.455, 0.348, 0.5);
+  ambientLight.name = "ambientLight";
+  directionalLight.name = "directionalLight";
+  scene.add(ambientLight, directionalLight);
+};
+var ThreeMaterialToonLights = (scene) => {
+  const intensity = 2.5;
+  const ambientLight = new AmbientLight(new Color(0.73, 0.73, 0.73), intensity);
+  const directionalLight = new DirectionalLight(new Color(0.6, 0.6, 0.6), intensity);
+  directionalLight.position.set(-0.255, 0.348, 0.5);
+  ambientLight.name = "ambientLight";
+  directionalLight.name = "directionalLight";
+  scene.add(ambientLight, directionalLight);
+};
+async function getSimpleMaterialAddLights(type) {
+  const shaderType = type || await getSettingSafe("shaderType");
+  switch (shaderType) {
+    case "wiiu" /* WiiU */:
+    case "wiiu_blinn" /* WiiUBlinn */:
+    case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
+    case "wiiu_toon" /* WiiUToon */:
+    case "switch" /* Switch */:
+    case "miitomo" /* Miitomo */:
+    case "miitomo_basic" /* MiitomoBasic */:
+      return;
+    case "lightDisabled" /* LightDisabled */:
+    case "three_phong" /* ThreePhong */:
+      return ThreeMaterialStandardLights;
+    case "three_toon" /* ThreeToon */:
+      return ThreeMaterialToonLights;
+  }
+}
+function cleanupLights(scene) {
+  let amb = scene.getObjectByName("ambientLight");
+  let dir = scene.getObjectByName("directionalLight");
+  if (amb)
+    scene.remove(amb);
+  if (dir)
+    scene.remove(dir);
 }
 
 // src/constants/Extensions.ts
@@ -166183,7 +166258,7 @@ var ViewType2 = {
   AllBodySugar: 4,
   CreditIcon: 5
 };
-function getCameraForViewType2(viewType, width2 = 1, height2 = 1, miiHeight = 1) {
+function getCameraForViewType(viewType, width2 = 1, height2 = 1, miiHeight = 1) {
   const aspect2 = width2 / height2;
   switch (viewType) {
     case ViewType2.Face: {
@@ -166244,7 +166319,7 @@ var isWorker = false;
 if (typeof window === "undefined") {
   isWorker = true;
 }
-function renderTargetToDataURL2(renderTarget, renderer2, flipY = false, blob = true) {
+function renderTargetToDataURL(renderTarget, renderer2, flipY = false, blob = true) {
   return new Promise((resolve) => {
     const scene = new Scene;
     scene.background = null;
@@ -166444,6 +166519,7 @@ function loadBlobTextureWorker(blob, width2 = 512, height2 = 512) {
 }
 
 // src/util/IconRendering.ts
+var import_FFLShaderMaterial3 = __toESM(require_FFLShaderMaterial(), 1);
 var defaultParams = {
   type: ViewType2.Face,
   expression: 0,
@@ -166458,6 +166534,7 @@ function createMiiRender(request) {
       dataInput = parseHexOrB64ToUint8Array(request.data);
     else
       dataInput = request.data;
+    let scene = new Scene;
     const isTemporary = request.isTemporary !== false;
     const mii = new Mii(dataInput);
     const localModule = request.module;
@@ -166480,7 +166557,11 @@ function createMiiRender(request) {
     }
     console.log("miic additional info:", JSON.stringify(request.additionalInfo));
     const shaderMaterial = await getShaderMaterialFromShaderType(request.shaderType);
-    const shaderOverrides = await getMaterialOverridesFromShaderType(request.shaderType);
+    const isUsingShader = await isShaderMaterial(request.shaderType);
+    let lights = await getSimpleMaterialAddLights(request.shaderType);
+    if (lights) {
+      lights(scene);
+    }
     let texResolution = request.texResolution || 512;
     if (request.size > 512) {
       texResolution = 1024;
@@ -166499,16 +166580,18 @@ function createMiiRender(request) {
       allExpressionFlag: makeExpressionFlag(expressions),
       modelFlag
     }, shaderMaterial, localModule, false);
+    charModel._materialTextureClass = import_FFLShaderMaterial3.default;
+    charModel._materialClass = shaderMaterial;
     if (request.additionalInfo.eyeSclera === 1 && mii.eyeColor !== 8) {
       self.eyeScleraHack = true;
     }
-    initCharModelTextures(charModel, request.renderer);
+    initCharModelTextures(charModel, request.renderer, charModel._materialTextureClass);
     if (request.additionalInfo.eyeSclera === 1 && mii.eyeColor !== 8) {
       self.eyeScleraHack = false;
     }
     let miiGroup, headModel;
     if (isTemporary) {
-      miiGroup = new Scene;
+      miiGroup = scene;
       miiGroup.background = null;
     } else {
       miiGroup = new Group;
@@ -166534,10 +166617,12 @@ function createMiiRender(request) {
       hatModel.traverse((m) => {
         if (m.isMesh) {
           const oldMat = m.material.map;
-          m.material = new shaderMaterial({
+          let modulate = isUsingShader ? {
             modulateType: 5 /* FFL_MODULATE_TYPE_SHAPE_CAP */,
-            modulateMode: 2,
-            ...shaderOverrides,
+            modulateMode: 2
+          } : {};
+          m.material = new shaderMaterial({
+            ...modulate,
             color: new Color(...hatColor),
             opacity: 1,
             map: oldMat
@@ -166569,7 +166654,7 @@ function createMiiRender(request) {
     }
     let iconCamera;
     if (isTemporary)
-      iconCamera = getCameraForViewType2(request.type, undefined, undefined, bodyScale.y);
+      iconCamera = getCameraForViewType(request.type, undefined, undefined, bodyScale.y);
     let bodyModel, bodyModelBody, bodyModelHands, bodyModelLegs, bodyModelAnims;
     if (headModel !== undefined) {
       miiGroup.add(headModel);
@@ -166618,9 +166703,12 @@ function createMiiRender(request) {
       if (request.additionalInfo.shirtColor !== -1 && !ForbiddenShirtPantColors.includes(request.additionalInfo.shirtColor)) {
         shirtColor = SwitchMiiColorTableSRGB[request.additionalInfo.shirtColor];
       }
-      bodyModelBody.material = new charModel._materialClass({
+      let modulate = isUsingShader ? {
         modulateType: 9 /* FFL_MODULATE_TYPE_SHAPE_BODY */,
-        modulateMode: 0,
+        modulateMode: 0
+      } : {};
+      bodyModelBody.material = new charModel._materialClass({
+        ...modulate,
         color: new Color(...shirtColor),
         opacity: 1
       });
@@ -166639,9 +166727,12 @@ function createMiiRender(request) {
       if (request.additionalInfo.pantsColor !== -1 && !ForbiddenShirtPantColors.includes(request.additionalInfo.pantsColor)) {
         pantsColor = SwitchMiiColorTableSRGB[request.additionalInfo.pantsColor];
       }
-      bodyModelLegs.material = new charModel._materialClass({
+      modulate = isUsingShader ? {
         modulateType: 10 /* FFL_MODULATE_TYPE_SHAPE_PANTS */,
-        modulateMode: 0,
+        modulateMode: 0
+      } : {};
+      bodyModelLegs.material = new charModel._materialClass({
+        ...modulate,
         color: new Color(...pantsColor),
         opacity: 1
       });
@@ -166678,11 +166769,14 @@ function createMiiRender(request) {
         let nLegsMat = nLegs.material;
         nBodyMat.dispose();
         nLegsMat.dispose();
-        const params = {
+        let modulate2 = isUsingShader ? {
           modulateType: 9,
           modulateMode: 1,
-          map: shirtTexture,
           color: new Color(0)
+        } : { color: new Color(16777215) };
+        const params = {
+          ...modulate2,
+          map: shirtTexture
         };
         const newBodyMat = new (await getShaderMaterialFromShaderType(request.shaderType))(params);
         if (getLoadedBodyModelName() !== "miitomo") {
@@ -166724,7 +166818,7 @@ function createMiiRender(request) {
     if (isTemporary) {
       const target = createAndRenderToTarget(miiGroup, iconCamera, request.renderer, request.size, request.size);
       setTimeout(() => {
-        const dataURL = renderTargetToDataURL2(target, request.renderer);
+        const dataURL = renderTargetToDataURL(target, request.renderer);
         target.dispose();
         charModel.dispose();
         if (request.drawBody) {
@@ -167109,10 +167203,12 @@ var settingsInfo = {
     default: "wiiu" /* WiiU */,
     choices: [
       { label: __4("No Lighting"), value: "lightDisabled" /* LightDisabled */ },
-      { label: __4("Toon"), value: "wiiu_toon" /* WiiUToon */ },
+      { label: __4("Simple"), value: "three_phong" /* ThreePhong */ },
+      { label: __4("Toon"), value: "three_toon" /* ThreeToon */ },
       { label: __4("Wii U"), value: "wiiu" /* WiiU */ },
       { label: __4("Wii U (Blinn)"), value: "wiiu_blinn" /* WiiUBlinn */ },
       { label: __4("Wii U (Bright)"), value: "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */ },
+      { label: __4("Wii U (Toon)"), value: "wiiu_toon" /* WiiUToon */ },
       { label: __4("Miitomo"), value: "miitomo" /* Miitomo */ },
       { label: __4("Miitomo (Basic)"), value: "miitomo_basic" /* MiitomoBasic */ }
     ]
@@ -169245,6 +169341,7 @@ class SparkleParticle {
 }
 
 // src/util/MiiRendering.ts
+var import_FFLShaderMaterial4 = __toESM(require_FFLShaderMaterial(), 1);
 async function getHeadModel(mii, rendererRef, modelFlag, texResolution) {
   const dataU8 = mii.export("studioData");
   const modelDesc = FFLCharModelDescDefault;
@@ -169260,7 +169357,8 @@ async function getHeadModel(mii, rendererRef, modelFlag, texResolution) {
     if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
       window.eyeScleraHack = true;
     }
-    initCharModelTextures(currentCharModel, rendererRef);
+    currentCharModel._materialTextureClass = import_FFLShaderMaterial4.default;
+    initCharModelTextures(currentCharModel, rendererRef, import_FFLShaderMaterial4.default);
     if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
       window.eyeScleraHack = false;
     }
@@ -169302,7 +169400,7 @@ async function getMaskTex(mii, rendererRef, expressionFlag = new Uint32Array([1,
       if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
         window.eyeScleraHack = true;
       }
-      initCharModelTextures(currentCharModel, rendererRef);
+      initCharModelTextures(currentCharModel, rendererRef, import_FFLShaderMaterial4.default);
       if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
         window.eyeScleraHack = false;
       }
@@ -169390,11 +169488,13 @@ class Mii3DScene {
     } else {
       this.#renderer = new WebGLRenderer({ antialias: true });
     }
+    this.#renderer.outputColorSpace = LinearSRGBColorSpace;
     this.getRendererElement().classList.add("scene");
     this.setupType = setupType;
     getSetting("bodyModel").then((type) => {
       this.bodyModel = type;
     });
+    window.THREE = exports_three_module;
     getSetting("shaderType").then((type) => {
       this.shaderType = type;
       getSetting("simpleShaderLegacyColors").then((val2) => {
@@ -169445,6 +169545,8 @@ class Mii3DScene {
           this.#controls.enabled = true;
           this.#controls.minDistance = 10;
           this.#controls.maxDistance = 35;
+          this.#controls.minAzimuthAngle = -Math.PI;
+          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.zoomTo(1);
           this.cameraPan = true;
         } else {
@@ -169452,6 +169554,8 @@ class Mii3DScene {
           this.#controls.enabled = false;
           this.#controls.minDistance = 60;
           this.#controls.maxDistance = 140;
+          this.#controls.minAzimuthAngle = -Math.PI;
+          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.dollyTo(380 / 10);
           this.#controls.zoomTo(2.5);
           this.cameraPan = false;
@@ -169465,10 +169569,6 @@ class Mii3DScene {
       this.#controls.minDistance = 8;
       this.#controls.maxDistance = 300;
     } else {
-      this.#controls.minPolarAngle = 0.8;
-      this.#controls.maxPolarAngle = 1.8;
-      this.#controls.minAzimuthAngle = -1.4;
-      this.#controls.maxAzimuthAngle = 1.4;
       setTimeout(() => {
         this.focusCamera(0 /* MiiHead */, true);
       }, 200);
@@ -169761,7 +169861,7 @@ class Mii3DScene {
           color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
         });
       else
-        traverseMesh(gBodyMesh, this.mii);
+        traverseMesh(gBodyMesh, this.shaderType);
       const gHandsMesh = glb.scene.getObjectByName(`hands_${type}`);
       if (gHandsMesh) {
         gHandsMesh.geometry.userData = {
@@ -169777,7 +169877,7 @@ class Mii3DScene {
             color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
           });
         else {
-          traverseMesh(gHandsMesh, this.mii);
+          traverseMesh(gHandsMesh, this.shaderType);
         }
       }
       const gLegsMesh = glb.scene.getObjectByName(`legs_${type}`);
@@ -169794,7 +169894,7 @@ class Mii3DScene {
           color: new Color(this.getPantsColor()[0], this.getPantsColor()[1], this.getPantsColor()[2])
         });
       else
-        traverseMesh(gLegsMesh, this.mii);
+        traverseMesh(gLegsMesh, this.shaderType);
       if (this.#scene.getObjectByName("m"))
         this.#scene.getObjectByName("m").visible = false;
       if (this.#scene.getObjectByName("f"))
@@ -170084,7 +170184,12 @@ class Mii3DScene {
           this.resize();
           this.#scene.add(GLB.scene);
           if (Config.renderer.useRendererServer)
-            traverseAddShader(GLB.scene, this.mii);
+            traverseAddShader(GLB.scene, this.shaderType);
+          let lights = await getSimpleMaterialAddLights(this.shaderType);
+          cleanupLights(this.#scene);
+          if (lights) {
+            lights(this.#scene);
+          }
           console.debug("Traversing shader now");
           const body = this.#scene.getObjectByName(this.type);
           let headBone = body.getObjectByName("head");
@@ -170160,7 +170265,7 @@ class Mii3DScene {
                   };
                   i++;
                   if (Config.renderer.useRendererServer === false) {
-                    traverseMesh(m, this.mii);
+                    traverseMesh(m, this.shaderType);
                   }
                 }
               });
@@ -176317,7 +176422,7 @@ var miiCreateDialog = () => {
       modal.qsa(".modal-body .flex-group,.modal-body span").forEach((q2) => q2.style({ display: "none" }));
       modal.qs(".modal-body").appendMany(new Html("span").text(__28("Import Mii data file(s) here. Supported formats: .ffsd/.cfsd, .miic, .charinfo, .rsd")), new Html("input").attr({
         type: "file",
-        accept: ".ffsd,.cfsd,.charinfo,.rsd,.rcd" + ".miic,.mii,.miigx,.cfcd,.ufsd,.mnms,.nfcd,",
+        accept: ".ffsd,.cfsd,.charinfo,.rsd,.rcd," + ".miic,.mii,.miigx,.cfcd,.ufsd,.mnms,.nfcd,",
         multiple: "on"
       }).style({ margin: "auto" }).on("change", async (e) => {
         const target = e.target;
@@ -176793,6 +176898,7 @@ var getMiiIcon = async (mii, source = "unknown", view = "variableiconbody", size
         data: data2,
         type,
         expression,
+        texResolution: 256,
         additionalInfo: {
           hatCommonColor: miiData.hatCommonColor,
           hatFavoriteColor: miiData.hatFavoriteColor,
@@ -176813,10 +176919,7 @@ var getMiiIcon = async (mii, source = "unknown", view = "variableiconbody", size
       return icon;
     }
     try {
-      alert("this doesn't work at the moment sorry try again later");
-      initCharModelTextures(model, tmpRenderer);
-      let realView = ViewType2.IconFovy45;
-      dataURL = await createCharModelIcon(model, tmpRenderer, realView, 512, 512);
+      alert("Icon rendering is broken in your browser since we aren't using web workers, upgrade your browser and try again");
     } catch (e) {
       let name2 = "";
       if (typeof mii !== "string") {

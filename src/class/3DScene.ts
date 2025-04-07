@@ -35,7 +35,9 @@ import {
   HatTypeList
 } from "../constants/Extensions";
 import {
+  cleanupLights,
   getShaderMaterialFromShaderType,
+  getSimpleMaterialAddLights,
   traverseAddShader,
   traverseMesh
 } from "./3d/shader/ShaderUtils";
@@ -130,12 +132,19 @@ export class Mii3DScene {
     // this.stats = new Stats();
     // document.body.appendChild(this.stats.dom);
 
+    // To fix default materials colors looking washed out,
+    // shouldn't affect shader colors
+    this.#renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+
     this.getRendererElement().classList.add("scene");
     this.setupType = setupType;
 
     getSetting("bodyModel").then((type) => {
       this.bodyModel = type;
     });
+
+    // THREE.ColorManagement.enabled = false;
+    window.THREE = THREE;
 
     getSetting("shaderType").then((type) => {
       this.shaderType = type;
@@ -207,6 +216,8 @@ export class Mii3DScene {
           this.#controls.enabled = true;
           this.#controls.minDistance = 10;
           this.#controls.maxDistance = 35;
+          this.#controls.minAzimuthAngle = -Math.PI;
+          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.zoomTo(1);
           this.cameraPan = true;
         } else {
@@ -214,6 +225,8 @@ export class Mii3DScene {
           this.#controls.enabled = false;
           this.#controls.minDistance = 60;
           this.#controls.maxDistance = 140;
+          this.#controls.minAzimuthAngle = -Math.PI;
+          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.dollyTo(380 / 10);
           this.#controls.zoomTo(2.5);
           this.cameraPan = false;
@@ -231,10 +244,6 @@ export class Mii3DScene {
       this.#controls.minDistance = 8;
       this.#controls.maxDistance = 300;
     } else {
-      this.#controls.minPolarAngle = 0.8;
-      this.#controls.maxPolarAngle = 1.8;
-      this.#controls.minAzimuthAngle = -1.4;
-      this.#controls.maxAzimuthAngle = 1.4;
       setTimeout(() => {
         this.focusCamera(CameraPosition.MiiHead, true);
       }, 200);
@@ -626,7 +635,7 @@ export class Mii3DScene {
           color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
         });
       // adds shader material
-      else traverseMesh(gBodyMesh, this.mii);
+      else traverseMesh(gBodyMesh, this.shaderType);
 
       const gHandsMesh = glb.scene.getObjectByName(
         `hands_${type}`
@@ -646,7 +655,7 @@ export class Mii3DScene {
           });
         // adds shader material
         else {
-          traverseMesh(gHandsMesh, this.mii);
+          traverseMesh(gHandsMesh, this.shaderType);
         }
       }
 
@@ -670,7 +679,7 @@ export class Mii3DScene {
           )
         });
       // adds shader material
-      else traverseMesh(gLegsMesh, this.mii);
+      else traverseMesh(gLegsMesh, this.shaderType);
 
       if (this.#scene.getObjectByName("m"))
         this.#scene.getObjectByName("m")!.visible = false;
@@ -1233,7 +1242,14 @@ export class Mii3DScene {
           this.#scene.add(GLB.scene);
 
           if (Config.renderer.useRendererServer)
-            traverseAddShader(GLB.scene, this.mii);
+            traverseAddShader(GLB.scene, this.shaderType);
+
+          let lights = await getSimpleMaterialAddLights(this.shaderType);
+          cleanupLights(this.#scene);
+          if (lights) {
+            lights(this.#scene);
+          }
+
           // else {
           //   this.#pastCharModel = (GLB as any).CharModel;
           // }
@@ -1370,7 +1386,7 @@ export class Mii3DScene {
                   if (Config.renderer.useRendererServer === false) {
                     // apply shader material!
                     // var mc = m.geometry.userData["modulateColor"];
-                    traverseMesh(m, this.mii);
+                    traverseMesh(m, this.shaderType);
                     // m.material = new LUTShaderMaterial({
                     //   modulateMode: 0,
                     //   modulateType: 5,

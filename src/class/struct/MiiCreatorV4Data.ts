@@ -572,37 +572,37 @@ export function validate(input: MiiCreatorV4Data) {
       return;
     }
 
-    switch (prop.type) {
-      case PropType.Number: {
-        const value = input[i] as number;
-        if (value < prop.min) fail(`${i} (${value}) is below minimum value`);
-        if (value > prop.max) fail(`${i} (${value}) is above maximum value`);
-        break;
-      }
-      case PropType.String: {
-        const value = input[i] as string;
-        if (value.trim().length < prop.min)
-          fail(`${i} (${value}) is below minimum length`);
-        if (value.trim().length > prop.max)
-          fail(`${i} (${value}) is above maximum length`);
-        break;
-      }
-      case PropType.Array: {
-        // console.log("this isn't supported yet");
-        const value = input[i] as Uint8Array;
-        if (value.length !== prop.size)
-          fail(`${i} size is ${value.length}, expected ${prop.size}`);
+    // switch (prop.type) {
+    //   case PropType.Number: {
+    //     const value = input[i] as number;
+    //     if (value < prop.min) fail(`${i} (${value}) is below minimum value`);
+    //     if (value > prop.max) fail(`${i} (${value}) is above maximum value`);
+    //     break;
+    //   }
+    //   case PropType.String: {
+    //     const value = input[i] as string;
+    //     if (value.trim().length < prop.min)
+    //       fail(`${i} (${value}) is below minimum length`);
+    //     if (value.trim().length > prop.max)
+    //       fail(`${i} (${value}) is above maximum length`);
+    //     break;
+    //   }
+    //   case PropType.Array: {
+    //     // console.log("this isn't supported yet");
+    //     const value = input[i] as Uint8Array;
+    //     if (value.length !== prop.size)
+    //       fail(`${i} size is ${value.length}, expected ${prop.size}`);
 
-        // no idea what this is for if uint8arrays can only store bytes...
-        // this also might fix if the array is tampered with
-        if (
-          Array.from(value).every((i) => i >= prop.min && i <= prop.max) ===
-          false
-        )
-          fail();
-        break;
-      }
-    }
+    //     // no idea what this is for if uint8arrays can only store bytes...
+    //     // this also might fix if the array is tampered with
+    //     if (
+    //       Array.from(value).every((i) => i >= prop.min && i <= prop.max) ===
+    //       false
+    //     )
+    //       fail();
+    //     break;
+    //   }
+    // }
   });
 
   if (valid) reasons.push("Valid");

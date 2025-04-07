@@ -17,7 +17,9 @@ export enum ShaderType {
   MiitomoBasic = "miitomo_basic",
   WiiUBlinn = "wiiu_blinn",
   WiiUFFLIconWithBody = "wiiu_ffliconwithbody",
-  WiiUToon = "wiiu_toon"
+  WiiUToon = "wiiu_toon",
+  ThreeToon = "three_toon",
+  ThreePhong = "three_phong"
 }
 
 export function adjustShaderQuery(params: URLSearchParams, shader: ShaderType) {

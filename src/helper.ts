@@ -219,27 +219,17 @@ class MiiCreatorCharModel {
     if (!headBone) return alert("???");
     headBone.updateMatrixWorld(true);
 
-    // Get the group's world position
     this.miiGroup.getWorldPosition(this.subPosition);
-    // Decompose head bone's world matrix
     headBone.matrixWorld.decompose(this.position, this.quaternion, this.scale);
 
     if (this.headModel) {
-      // Position: Copy the head bone's world position and convert to group local space
+      // Copy the head bone's world position
       this.headModel.position.copy(this.position);
+      // Convert the head bone's world position to the group's local space
       this.miiGroup.worldToLocal(this.headModel.position);
 
-      // Rotation: Convert the head bone's world quaternion to the group's local space
-      const headWorldQuaternion = new THREE.Quaternion();
-      headBone.getWorldQuaternion(headWorldQuaternion);
-
-      const groupWorldQuaternion = new THREE.Quaternion();
-      this.miiGroup.getWorldQuaternion(groupWorldQuaternion);
-      groupWorldQuaternion.invert(); // Invert the group's world rotation
-      headWorldQuaternion.premultiply(groupWorldQuaternion);
-
-      // Set the head model's rotation from the computed local quaternion
-      this.headModel.setRotationFromQuaternion(headWorldQuaternion);
+      // Set the head model's rotation from the head bone's quaternion
+      this.headModel.setRotationFromQuaternion(this.quaternion);
     }
   }
 
@@ -357,7 +347,7 @@ function requestMiiSelection() {
         return { miiData: mii.export(), type };
       }),
       {
-        allowGuest: true,
+        guestData: GUEST_MII_DATA,
         soundManager,
         personalMii: userData.personal_mii.data
       }

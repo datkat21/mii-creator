@@ -49,18 +49,19 @@ export const getSettingSafe = async (key: string) => {
 
 export function traverseAddShader(
   model: THREE.Group<THREE.Object3DEventMap>,
-  mii: Mii
+  shaderType: ShaderType
 ) {
   // Traverse the model to access its meshes
   model.traverse((n) => {
     const node = n as THREE.Mesh;
     if (node.isMesh) {
-      traverseMesh(node, mii);
+      traverseMesh(node, shaderType);
     }
   });
 }
-export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
-  const shaderSetting = (await getSettingSafe("shaderType")) as ShaderType;
+export async function traverseMesh(node: THREE.Mesh, shaderType: ShaderType) {
+  const shaderSetting =
+    shaderType || ((await getSettingSafe("shaderType")) as ShaderType);
   const originalMaterial = node.material as THREE.MeshBasicMaterial;
 
   // Access userData from geometry
@@ -133,75 +134,76 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
 
   let finalMat: THREE.Material;
 
-  const overrides = await getMaterialOverridesFromShaderType();
+  const isUsingShader = await isShaderMaterial();
+
+  let modulate = isUsingShader
+    ? {
+        modulateMode,
+        modulateType: modulateType,
+        lightEnable: shaderSetting === ShaderType.LightDisabled ? false : true
+      }
+    : {};
 
   const params = {
     color: new THREE.Color(...modulateColor),
-    modulateMode,
-    modulateType: modulateType,
+    ...modulate,
     map: originalMaterial.map || undefined,
-    side,
-    lightEnable: shaderSetting === ShaderType.LightDisabled ? false : true
+    side
   };
 
-  switch (shaderSetting) {
-    case ShaderType.WiiU:
-      finalMat = new FFLShaderMaterial(params) as any;
-      break;
-    case ShaderType.Switch:
-      throw new Error("This shader isn't supported yet");
-    case ShaderType.LightDisabled:
-      finalMat = new FFLShaderLightDisabledMaterial(params) as any;
-      break;
-    case ShaderType.Miitomo:
-      finalMat = new LUTShaderMaterial(params) as any;
-      break;
-    case ShaderType.MiitomoBasic:
-      finalMat = new LUTShaderPretendoMaterial(params) as any;
-      break;
-    case ShaderType.WiiUBlinn:
-      finalMat = new FFLShaderBlinnMaterial(params) as any;
-      break;
-    case ShaderType.WiiUFFLIconWithBody:
-      finalMat = new FFLShaderBrightMaterial(params) as any;
-      break;
-    case ShaderType.WiiUToon:
-      finalMat = new FFLShaderToonMaterial(params) as any;
-      break;
-    default:
-      throw new Error("This shader doesn't exist");
-  }
+  let shaderMaterial = await getShaderMaterialFromShaderType(shaderSetting);
+
+  finalMat = new shaderMaterial(params) as any;
+  // switch (shaderSetting) {
+  //   case ShaderType.WiiU:
+  //     finalMat = new FFLShaderMaterial(params) as any;
+  //     break;
+  //   case ShaderType.Switch:
+  //     throw new Error("This shader isn't supported yet");
+  //   case ShaderType.LightDisabled:
+  //     finalMat = new FFLShaderLightDisabledMaterial(params) as any;
+  //     break;
+  //   case ShaderType.Miitomo:
+  //     finalMat = new LUTShaderMaterial(params) as any;
+  //     break;
+  //   case ShaderType.MiitomoBasic:
+  //     finalMat = new LUTShaderPretendoMaterial(params) as any;
+  //     break;
+  //   case ShaderType.WiiUBlinn:
+  //     finalMat = new FFLShaderBlinnMaterial(params) as any;
+  //     break;
+  //   case ShaderType.WiiUFFLIconWithBody:
+  //     finalMat = new FFLShaderBrightMaterial(params) as any;
+  //     break;
+  //   case ShaderType.WiiUToon:
+  //     finalMat = new FFLShaderToonMaterial(params) as any;
+  //     break;
+  //   default:
+  //     throw new Error("This shader doesn't exist");
+  // }
 
   // Assign the custom material to the mesh
   node.material = finalMat;
 }
 
-export async function getMaterialOverridesFromShaderType(
+export async function isShaderMaterial(
   shader: string | undefined = undefined
-): Promise<Partial<any> | null> {
+): Promise<boolean> {
   let shaderType = (shader ||
     (await getSettingSafe("shaderType"))) as ShaderType;
   switch (shaderType) {
     case ShaderType.WiiU:
-      return null;
     case ShaderType.WiiUBlinn:
-      return { customMaterial: FFLBlinnMaterial };
     case ShaderType.WiiUFFLIconWithBody:
-      return {
-        lightAmbient: cLightAmbientFFLIconWithBody,
-        lightDiffuse: cLightDiffuseFFLIconWithBody,
-        lightSpecular: cLightSpecularFFLIconWithBody,
-        lightDirection: cLightDirFFLIconWithBody
-      };
     case ShaderType.WiiUToon:
-      return { customMaterial: FFLToonMaterial };
-    case ShaderType.LightDisabled:
-      return { lightEnable: false };
     case ShaderType.Switch:
-      return null;
     case ShaderType.Miitomo:
     case ShaderType.MiitomoBasic:
-      return null;
+      return true;
+    case ShaderType.LightDisabled:
+    case ShaderType.ThreeToon:
+    case ShaderType.ThreePhong:
+      return false;
   }
 }
 export async function getShaderMaterialFromShaderType(type?: string) {
@@ -211,7 +213,7 @@ export async function getShaderMaterialFromShaderType(type?: string) {
     case ShaderType.WiiU:
       return FFLShaderMaterial;
     case ShaderType.LightDisabled:
-      return FFLShaderLightDisabledMaterial;
+      return THREE.MeshBasicMaterial;
     case ShaderType.WiiUBlinn:
       return FFLShaderBlinnMaterial;
     case ShaderType.WiiUFFLIconWithBody:
@@ -226,5 +228,73 @@ export async function getShaderMaterialFromShaderType(type?: string) {
       return LUTShaderMaterial;
     case ShaderType.MiitomoBasic:
       return LUTShaderPretendoMaterial;
+    case ShaderType.ThreeToon:
+      return THREE.MeshToonMaterial;
+    case ShaderType.ThreePhong:
+      return THREE.MeshPhongMaterial;
   }
+}
+
+const ThreeMaterialStandardLights = (scene: THREE.Scene) => {
+  const intensity = Number(THREE.REVISION) >= 155 ? Math.PI : 1;
+  const ambientLight = new THREE.AmbientLight(
+    new THREE.Color(0.73, 0.73, 0.73),
+    intensity
+  );
+  const directionalLight = new THREE.DirectionalLight(
+    new THREE.Color(0.6, 0.6, 0.6),
+    intensity
+  );
+  directionalLight.position.set(-0.455, 0.348, 0.5);
+
+  ambientLight.name = "ambientLight";
+  directionalLight.name = "directionalLight";
+
+  scene.add(ambientLight, directionalLight);
+};
+const ThreeMaterialToonLights = (scene: THREE.Scene) => {
+  const intensity = 2.5;
+  const ambientLight = new THREE.AmbientLight(
+    new THREE.Color(0.73, 0.73, 0.73),
+    intensity
+  );
+  const directionalLight = new THREE.DirectionalLight(
+    new THREE.Color(0.6, 0.6, 0.6),
+    intensity
+  );
+  directionalLight.position.set(-0.255, 0.348, 0.5);
+
+  ambientLight.name = "ambientLight";
+  directionalLight.name = "directionalLight";
+
+  scene.add(ambientLight, directionalLight);
+};
+
+export async function getSimpleMaterialAddLights(
+  type?: string
+): Promise<((scene: THREE.Scene) => any) | undefined> {
+  const shaderType = (type ||
+    (await getSettingSafe("shaderType"))) as ShaderType;
+  switch (shaderType) {
+    case ShaderType.WiiU:
+    case ShaderType.WiiUBlinn:
+    case ShaderType.WiiUFFLIconWithBody:
+    case ShaderType.WiiUToon:
+    case ShaderType.Switch:
+    case ShaderType.Miitomo:
+    case ShaderType.MiitomoBasic:
+      return;
+    case ShaderType.LightDisabled:
+    case ShaderType.ThreePhong:
+      return ThreeMaterialStandardLights;
+    case ShaderType.ThreeToon:
+      return ThreeMaterialToonLights;
+  }
+}
+export function cleanupLights(scene: THREE.Scene) {
+  let amb = scene.getObjectByName("ambientLight");
+  let dir = scene.getObjectByName("directionalLight");
+
+  if (amb) scene.remove(amb);
+  if (dir) scene.remove(dir);
 }

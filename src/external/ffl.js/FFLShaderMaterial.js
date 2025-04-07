@@ -6,6 +6,20 @@
  * @typedef {import('three')} THREE
  */
 
+/**
+ * @typedef {Object} FFLShaderMaterialParameters
+ * @property {FFLModulateMode} [modulateMode] - Modulate mode.
+ * @property {FFLModulateType} [modulateType] - Modulate type.
+ * @property {import('three').Color|Array<import('three').Color>} [color] -
+ * Constant color assigned to u_const1/2/3 depending on single or array.
+ * @property {boolean} [lightEnable] - Enable lighting. Needs to be off when drawing faceline/mask textures.
+ * @property {import('three').Vector3} [lightDirection] - Light direction.
+ * @property {boolean} [useSpecularModeBlinn] - Whether to override
+ * specular mode on all materials with 0 (Blinn-Phong specular).
+ * @property {import('three').Texture} [map] - Texture map.
+ */
+
+// eslint-disable-next-line jsdoc/convert-to-jsdoc-comments -- not applicable
 /* global define, require, module -- UMD globals. */
 (function (root, factory) {
 	// @ts-ignore - cannot find name define
@@ -349,7 +363,7 @@ void main()
 //#ifdef FFL_MODULATE_MODE_CONSTANT
     if(u_mode == FFL_MODULATE_MODE_CONSTANT)
     {
-        color = u_const1;
+      color = u_const1;
     }
     // modified to handle u_const1 alpha:
 //#elif defined(FFL_MODULATE_MODE_TEXTURE_DIRECT)
@@ -590,19 +604,9 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
 	/** @typedef {import('three').IUniform<import('three').Vector4>} IUniformVector4 */
 
 	/**
-	 * @typedef {Object} FFLShaderMaterialParameters
-	 * @property {FFLModulateMode} [modulateMode] - Modulate mode.
-	 * @property {FFLModulateType} [modulateType] - Modulate type.
-	 * @property {import('three').Color|Array<import('three').Color>} [color] - Constant color assigned to u_const1/2/3 depending on single or array.
-	 * @property {boolean} [lightEnable] - Enable lighting. Needs to be off when drawing faceline/mask textures.
-	 * @property {import('three').Vector3} [lightDirection] - Light direction.
-	 * @property {boolean} [useSpecularModeBlinn] - Whether to override specular mode on all materials with 0 (Blinn-Phong specular).
-   * @property {import('three').Texture} [map] - Texture map.
-	 */
-
-	/**
 	 * Constructs an FFLShaderMaterial instance.
-	 * @param {import('three').ShaderMaterialParameters & FFLShaderMaterialParameters} [options] - Parameters for the material.
+	 * @param {import('three').ShaderMaterialParameters & FFLShaderMaterialParameters} [options] -
+	 * Parameters for the material.
 	 */
 	constructor(options = {}) {
 		// Set default uniforms.
@@ -660,7 +664,8 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
 
 	/**
 	 * Sets the constant color uniforms from THREE.Color.
-	 * @param {import('three').Color|Array<import('three').Color>} value - The constant color (u_const1), or multiple (u_const1/2/3) to set the uniforms for.
+	 * @param {import('three').Color|Array<import('three').Color>} value - The
+	 * constant color (u_const1), or multiple (u_const1/2/3) to set the uniforms for.
 	 */
 	set color(value) {
 		/**
@@ -698,13 +703,13 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
 
 	/**
 	 * Gets the opacity of the constant color.
-	 * @returns {number|undefined} The new opacity value.
+	 * @returns {number} The opacity value.
 	 */
 	// @ts-ignore - Already defined on parent class.
 	get opacity() {
 		if (!this.uniforms.u_const1) {
 			// Get from _opacity if it is set before constant color.
-			return this._opacity;
+			return this._opacity ? this._opacity : 1;
 		}
 		// Return w (alpha) of the constant color uniform.
 		return /** @type {IUniformVector4} */ (this.uniforms.u_const1).value.w;
@@ -759,6 +764,26 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
 	}
 
 	/**
+	 * Sets whether to override specular mode with 0.
+	 * @param {boolean} value - The useSpecularModeBlinn value.
+	 */
+	set useSpecularModeBlinn(value) {
+		this._useSpecularModeBlinn = value; // Private property.
+		if (this._modulateType !== undefined) {
+			// Set material again if it was already set.
+			this.modulateType = this._modulateType;
+		}
+	}
+
+	/**
+	 * Gets the value for whether to override specular mode with 0.
+	 * @returns {boolean|undefined} The useSpecularModeBlinn value.
+	 */
+	get useSpecularModeBlinn() {
+		return this._useSpecularModeBlinn;
+	}
+
+	/**
 	 * Gets the modulateType value.
 	 * @returns {FFLModulateType|undefined} The modulateType value if it is set.
 	 */
@@ -787,7 +812,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
 		this.uniforms.u_material_specular = { value: matParam.specular };
 		this.uniforms.u_material_specular_mode = {
 			// Force value of 0 if useSpecularModeBlinn is set.
-			value: this.useSpecularModeBlinn ? 0 : matParam.specularMode
+			value: this._useSpecularModeBlinn ? 0 : matParam.specularMode
 		};
 		this.uniforms.u_material_specular_power = { value: matParam.specularPower };
 	}

@@ -14,11 +14,12 @@ import {
   updateCharModel
 } from "../external/ffl.js/ffl";
 import {
-  getMaterialOverridesFromShaderType,
+  isShaderMaterial,
   getShaderMaterialFromShaderType
 } from "../class/3d/shader/ShaderUtils";
 import { getFFL } from "./FFLLoader";
 import { renderTargetToDataTexture } from "./rendertarget";
+import FFLShaderMaterial from "../external/ffl.js/FFLShaderMaterial";
 
 export type GLTFLike = {
   animations: any[];
@@ -112,7 +113,10 @@ export async function getHeadModel(
       window.eyeScleraHack = true;
     }
 
-    initCharModelTextures(currentCharModel, rendererRef);
+    // QUICKLY Replace the material
+    currentCharModel._materialTextureClass = FFLShaderMaterial;
+
+    initCharModelTextures(currentCharModel, rendererRef, FFLShaderMaterial);
 
     if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
       window.eyeScleraHack = false;
@@ -188,7 +192,8 @@ export async function getMaskTex(
 
       initCharModelTextures(
         currentCharModel!,
-        rendererRef
+        rendererRef,
+        FFLShaderMaterial
         // null,
         // (dataTexture) => {
         //   resolve(dataTexture);

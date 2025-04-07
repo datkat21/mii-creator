@@ -112,10 +112,12 @@ export const settingsInfo: Record<string, any> = {
     default: ShaderType.WiiU,
     choices: [
       { label: __("No Lighting"), value: ShaderType.LightDisabled },
-      { label: __("Toon"), value: ShaderType.WiiUToon },
+      { label: __("Simple"), value: ShaderType.ThreePhong },
+      { label: __("Toon"), value: ShaderType.ThreeToon },
       { label: __("Wii U"), value: ShaderType.WiiU },
       { label: __("Wii U (Blinn)"), value: ShaderType.WiiUBlinn },
       { label: __("Wii U (Bright)"), value: ShaderType.WiiUFFLIconWithBody },
+      { label: __("Wii U (Toon)"), value: ShaderType.WiiUToon },
       // { label: __("Switch (WIP)"), value: ShaderType.Switch, disabled: true },
       { label: __("Miitomo"), value: ShaderType.Miitomo },
       { label: __("Miitomo (Basic)"), value: ShaderType.MiitomoBasic }

@@ -13,8 +13,9 @@ import {
   parseHexOrB64ToUint8Array
 } from "../external/ffl.js/ffl";
 import {
-  getMaterialOverridesFromShaderType,
-  getShaderMaterialFromShaderType
+  isShaderMaterial,
+  getShaderMaterialFromShaderType,
+  getSimpleMaterialAddLights
 } from "../class/3d/shader/ShaderUtils";
 import type { MiiCreatorAdditionalData } from "../util/MiiCreatorTypes";
 import {
@@ -50,10 +51,8 @@ import { renderTargetToDataURL } from "./rendertarget";
 import { ShaderType } from "../constants/BodyShaderTypes";
 import { SkeletonUtils } from "three/examples/jsm/Addons.js";
 import { colorMixTexture } from "../class/3d/shader/ColorMix";
-import {
-  loadBlobTexture,
-  loadBlobTextureWorker
-} from "../ui/pages/library/util/3DModel";
+import { loadBlobTextureWorker } from "../ui/pages/library/util/3DModel";
+import FFLShaderMaterial from "../external/ffl.js/FFLShaderMaterial";
 
 export const defaultParams: Partial<RenderRequest> = {
   type: ViewType.Face,
@@ -115,6 +114,8 @@ export function createMiiRender(
       dataInput = parseHexOrB64ToUint8Array(request.data);
     else dataInput = request.data;
 
+    let scene = new THREE.Scene();
+
     const isTemporary = request.isTemporary !== false;
 
     const mii = new Mii(dataInput);
@@ -147,9 +148,12 @@ export function createMiiRender(
     const shaderMaterial = await getShaderMaterialFromShaderType(
       request.shaderType
     );
-    const shaderOverrides = await getMaterialOverridesFromShaderType(
-      request.shaderType
-    );
+    const isUsingShader = await isShaderMaterial(request.shaderType);
+
+    let lights = await getSimpleMaterialAddLights(request.shaderType);
+    if (lights) {
+      lights(scene);
+    }
 
     let texResolution = request.texResolution || 512;
 
@@ -184,11 +188,19 @@ export function createMiiRender(
       false
     );
 
+    // QUICKLY Replace the material
+    charModel._materialTextureClass = FFLShaderMaterial;
+    charModel._materialClass = shaderMaterial;
+
     if (request.additionalInfo!.eyeSclera === 1 && mii.eyeColor !== 8) {
       self.eyeScleraHack = true;
     }
 
-    initCharModelTextures(charModel, request.renderer);
+    initCharModelTextures(
+      charModel,
+      request.renderer,
+      charModel._materialTextureClass
+    );
 
     if (request.additionalInfo!.eyeSclera === 1 && mii.eyeColor !== 8) {
       self.eyeScleraHack = false;
@@ -198,7 +210,7 @@ export function createMiiRender(
     let miiGroup: THREE.Scene, headModel: THREE.Group;
 
     if (isTemporary) {
-      miiGroup = new THREE.Scene();
+      miiGroup = scene;
       miiGroup.background = null; // Transparent background.
     } else {
       miiGroup = new THREE.Group() as any;
@@ -246,11 +258,17 @@ export function createMiiRender(
         if ((m as THREE.Mesh).isMesh) {
           const oldMat = ((m as THREE.Mesh).material as THREE.MeshBasicMaterial)
             .map;
+
+          let modulate = isUsingShader
+            ? {
+                modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_CAP,
+                modulateMode: 2
+              }
+            : {};
+
           (m as THREE.Mesh as any).material = new shaderMaterial(
             {
-              modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_CAP,
-              modulateMode: 2,
-              ...shaderOverrides,
+              ...modulate,
               color: new THREE.Color(...hatColor),
               opacity: 1,
               map: oldMat!
@@ -372,10 +390,15 @@ export function createMiiRender(
           SwitchMiiColorTableSRGB[request.additionalInfo!.shirtColor];
       }
 
+      let modulate = isUsingShader
+        ? {
+            modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY,
+            modulateMode: 0
+          }
+        : {};
+
       bodyModelBody.material = new charModel._materialClass({
-        // ...charModel._materialParams,
-        modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY,
-        modulateMode: 0,
+        ...modulate,
         color: new THREE.Color(...shirtColor),
         opacity: 1
       });
@@ -403,10 +426,14 @@ export function createMiiRender(
           SwitchMiiColorTableSRGB[request.additionalInfo!.pantsColor];
       }
 
+      modulate = isUsingShader
+        ? {
+            modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS,
+            modulateMode: 0
+          }
+        : {};
       bodyModelLegs.material = new charModel._materialClass({
-        // ...charModel._materialParams,
-        modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS,
-        modulateMode: 0,
+        ...modulate,
         color: new THREE.Color(...pantsColor),
         opacity: 1
       });
@@ -501,11 +528,16 @@ export function createMiiRender(
         nBodyMat.dispose();
         nLegsMat.dispose();
 
+        let modulate = isUsingShader
+          ? {
+              modulateType: 9,
+              modulateMode: 1,
+              color: new THREE.Color(0x000000)
+            }
+          : { color: new THREE.Color(0xffffff) };
         const params = {
-          modulateType: 9,
-          modulateMode: 1,
-          map: shirtTexture,
-          color: new THREE.Color(0x000000)
+          ...modulate,
+          map: shirtTexture
         };
         const newBodyMat = new (await getShaderMaterialFromShaderType(
           request.shaderType
