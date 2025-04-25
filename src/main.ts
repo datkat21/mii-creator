@@ -1,3 +1,4 @@
+import "./util/PrepareThree.js";
 import MiiData from "./class/MiiData";
 import { setupUi } from "./ui/setup";
 import { MiiEditor } from "./class/MiiEditor";
@@ -21,6 +22,7 @@ import {
   Ver3StoreData
 } from "./class/struct/FFLStoreData.js";
 import localforage from "localforage";
+// import { setTHREE } from "./util/GetThree.js";
 
 declare global {
   interface Window {
@@ -40,6 +42,28 @@ declare global {
 }
 
 window.LazyLoad = new LazyLoad();
+
+// import {
+//   Camera,
+//   Color,
+//   ColorManagement,
+//   Mesh,
+//   PerspectiveCamera,
+//   Scene,
+//   Vector3,
+//   Vector4
+// } from "three";
+
+// setTHREE({
+//   Camera,
+//   PerspectiveCamera,
+//   Scene,
+//   Color,
+//   Mesh,
+//   ColorManagement,
+//   Vector3,
+//   Vector4
+// });
 
 if (Config.apis.useSentry) {
   Sentry.init({
@@ -114,8 +138,8 @@ setupUi();
 // window.MiiCreatorV3Data = MiiCreatorV3Data;
 // //@ts-expect-error
 // window.MiiCreatorV4Data = MiiCreatorV4Data;
-// //@ts-expect-error
-// window.dataToHex = dataToHex;
+//@ts-expect-error
+window.dataToHex = dataToHex;
 // //@ts-expect-error
 // window.validationThing = validationThing;
 // //@ts-expect-error

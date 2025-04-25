@@ -1,5 +1,9 @@
 // @ts-check
 
+import { _THREE } from '../../util/PrepareThree';
+
+const THREE = _THREE();
+
 /**
  * @typedef {number} FFLModulateMode
  * @typedef {number} FFLModulateType
@@ -19,30 +23,7 @@
  * @property {import('three').Texture} [map] - Texture map.
  */
 
-// eslint-disable-next-line jsdoc/convert-to-jsdoc-comments -- not applicable
-/* global define, require, module -- UMD globals. */
-(function (root, factory) {
-	// @ts-ignore - cannot find name define
-	if (typeof define === 'function' && define.amd) {
-		// AMD. Register as an anonymous module.
-		// @ts-ignore
-		define(['three'], factory);
-	} else if (typeof module === 'object' && module.exports) {
-		// Node.js/CommonJS
-		module.exports = factory(require('three'));
-	} else {
-		// Browser globals
 
-		// Assume THREE is defined in window.
-		/** @type {*} */ (root).FFLShaderMaterial = factory(/** @type {*} */ (root).THREE);
-	}
-}(typeof self !== 'undefined' ? self : this,
-	/* eslint-disable jsdoc/require-returns-type -- Allow TS to predict return type. */
-	/**
-	 * @param {THREE} THREE - Three.js namespace.
-	 * @returns Returns the exported namespace.
-	 */
-	function (THREE) {
 /* eslint-enable jsdoc/require-returns-type -- Allow TS to predict return type. */
 'use strict';
 // // ---------------------------------------------------------------------
@@ -855,5 +836,4 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
 // window.FFLShaderMaterial = FFLShaderMaterial;
 // export { FFLShaderMaterial };
 
-return FFLShaderMaterial;
-}));
+export default FFLShaderMaterial;

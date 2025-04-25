@@ -1,4 +1,4 @@
-import { Color, Vector3, Vector4 } from "three";
+import { Color, MeshToonMaterial, Vector4 } from "three";
 import FFLShaderMaterial from "../../../external/ffl.js/FFLShaderMaterial";
 import LUTShaderMaterial from "../../../external/ffl.js/LUTShaderMaterial";
 import {
@@ -9,6 +9,7 @@ import {
   cLightSpecularFFLIconWithBody,
   FFLToonMaterial
 } from "./fflShaderConst";
+import { getSettingSafe } from "./ShaderUtils";
 
 /**
  * Variant of FFLShaderMaterial that forces specular mode to Blinn-Phong.
@@ -135,10 +136,28 @@ class LUTShaderPretendoMaterial extends LUTShaderMaterial {
   }
 }
 
+class CustomToonMaterial extends MeshToonMaterial {
+  constructor(options: any = {}) {
+    const clr = new Color(options.color);
+    let intensity = 0x080808;
+    if (clr.r === 0 && clr.g === 0 && clr.b === 0) clr.set(intensity);
+    options = Object.assign(options, {
+      color: clr
+    });
+    super(options);
+
+    getSettingSafe("toonShaderOutline").then((value) => {
+      if (value === true) {
+      }
+    });
+  }
+}
+
 export {
   FFLShaderBlinnMaterial,
   FFLShaderLightDisabledMaterial,
   FFLShaderBrightMaterial,
   FFLShaderToonMaterial,
-  LUTShaderPretendoMaterial
+  LUTShaderPretendoMaterial,
+  CustomToonMaterial
 };

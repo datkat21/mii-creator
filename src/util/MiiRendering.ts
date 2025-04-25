@@ -1,7 +1,10 @@
 import type { GLTF } from "three/examples/jsm/Addons.js";
 // import Mii from "../external/mii-js/mii";
 import Mii from "../class/MiiData";
-import * as THREE from "three";
+import { _THREE } from "./PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 import {
   CharModel,
   convertStudioCharInfoToFFLiCharInfo,
@@ -114,9 +117,13 @@ export async function getHeadModel(
     }
 
     // QUICKLY Replace the material
-    currentCharModel._materialTextureClass = FFLShaderMaterial;
+    currentCharModel._materialTextureClass = FFLShaderMaterial as any;
 
-    initCharModelTextures(currentCharModel, rendererRef, FFLShaderMaterial);
+    initCharModelTextures(
+      currentCharModel,
+      rendererRef,
+      FFLShaderMaterial as any
+    );
 
     if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
       window.eyeScleraHack = false;
@@ -193,7 +200,7 @@ export async function getMaskTex(
       initCharModelTextures(
         currentCharModel!,
         rendererRef,
-        FFLShaderMaterial
+        FFLShaderMaterial as any
         // null,
         // (dataTexture) => {
         //   resolve(dataTexture);

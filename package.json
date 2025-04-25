@@ -3,14 +3,15 @@
   "module": "build.ts",
   "type": "module",
   "scripts": {
+    "install_packages": "bun i && cd mii-creator-server && bun i",
     "dev": "bun build.ts",
-    "serve": "bunx serve -l 3000 -C ./public",
     "server": "cd mii-creator-server && bun ."
   },
   "devDependencies": {
     "@namchee/bun-plugin-strip-debug": "^1.0.4",
     "@types/bun": "latest",
-    "po2json": "^0.3.0"
+    "po2json": "^0.3.0",
+    "postprocessing": "^6.37.2"
   },
   "peerDependencies": {
     "typescript": "^5.8.2"

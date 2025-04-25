@@ -1,11 +1,9 @@
-import * as THREE from "three";
+import { _THREE } from "../util/PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 // make sure types work with the patched GLTF loader
-import {
-  GLTFLoader as TrueGLTFLoader,
-  type GLTF
-} from "three/addons/loaders/GLTFLoader.js";
-// very hacky but it works to fix the shader bug...
-import { GLTFLoader } from "./3d/Custom_GLTFLoader";
+import { GLTFLoader, type GLTF } from "three/addons/loaders/GLTFLoader.js";
 import CameraControls from "camera-controls";
 // import Mii from "../external/mii-js/mii";
 import Mii from "../class/MiiData";
@@ -38,19 +36,32 @@ import {
   cleanupLights,
   getShaderMaterialFromShaderType,
   getSimpleMaterialAddLights,
+  isShaderMaterial,
   traverseAddShader,
   traverseMesh
 } from "./3d/shader/ShaderUtils";
 import { getSetting } from "../util/SettingsHelper";
 import { ShaderType } from "../constants/BodyShaderTypes";
 import { getHeadModel, getMaskTex, type ModelFlag } from "../util/MiiRendering";
-import { makeExpressionFlag, type CharModel } from "../external/ffl.js/ffl";
+import {
+  FFLModulateType,
+  makeExpressionFlag,
+  type CharModel
+} from "../external/ffl.js/ffl";
 import JSZip from "jszip";
 import { streetpassHandScaling } from "../util/scaling";
-import { colorMixTexture } from "./3d/shader/ColorMix";
-import { loadBlobTexture } from "../ui/pages/library/util/3DModel";
-import FFLShaderMaterial from "../external/ffl.js/FFLShaderMaterial";
-// import Stats from "three/examples/jsm/libs/stats.module.js";
+
+import {
+  OutlineEffect,
+  EffectComposer,
+  EffectPass,
+  RenderPass,
+  BlendFunction,
+  OverrideMaterialManager
+} from "postprocessing";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
+import { clothingUpdate } from "./3d/ClothingHelper";
+import { getClothesTextures } from "../util/ModelLoader";
 
 export enum CameraPosition {
   MiiHead,
@@ -65,7 +76,7 @@ export class Mii3DScene {
   #camera: THREE.PerspectiveCamera;
   #controls: CameraControls;
   #textureLoader: THREE.TextureLoader;
-  #gltfLoader!: TrueGLTFLoader;
+  #gltfLoader!: GLTFLoader;
   #scene: THREE.Scene;
   #renderer: THREE.WebGLRenderer;
   #parent: HTMLElement;
@@ -90,6 +101,10 @@ export class Mii3DScene {
   editor?: MiiEditor;
   camSetup!: () => void;
   texResolution: number;
+
+  // #composer!: EffectComposer;
+  // #pass!: EffectPass;
+  // #effect!: OutlineEffect;
 
   constructor(
     mii: Mii,
@@ -120,13 +135,23 @@ export class Mii3DScene {
 
     if (setupType === SetupType.Screenshot) {
       this.#renderer = new THREE.WebGLRenderer({
+        alpha: true,
         antialias: true,
-        preserveDrawingBuffer: true,
-        logarithmicDepthBuffer: true
+        preserveDrawingBuffer: true
+        // logarithmicDepthBuffer: true,
+        // powerPreference: "high-performance",
+        // stencil: false,
+        // depth: false
       });
       this.texResolution = 1024;
     } else {
-      this.#renderer = new THREE.WebGLRenderer({ antialias: true });
+      this.#renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true
+        // powerPreference: "high-performance",
+        // stencil: false,
+        // depth: false
+      });
     }
 
     // this.stats = new Stats();
@@ -143,25 +168,42 @@ export class Mii3DScene {
       this.bodyModel = type;
     });
 
-    // THREE.ColorManagement.enabled = false;
-    window.THREE = THREE;
+    // // Simple toon shader effect composer setup
+    // getSetting("toonShaderOutline").then((enabled) => {
+    //   if (enabled === true) {
+    //     const multisampling = Math.min(
+    //       4,
+    //       this.#renderer.capabilities.maxSamples
+    //     );
+    //     OverrideMaterialManager.workaroundEnabled = true;
+    //     this.#composer = new EffectComposer(this.#renderer, { multisampling });
+    //     this.#composer.addPass(new RenderPass(this.#scene, this.#camera));
+    //     this.#effect = new OutlineEffect(this.#scene, this.#camera, {
+    //       blendFunction: BlendFunction.ALPHA,
+    //       patternScale: 40,
+    //       visibleEdgeColor: 0x000000,
+    //       hiddenEdgeColor: 0x22090a,
+    //       resolutionScale: 0.75,
+    //       blur: false,
+    //       xRay: false,
+    //       multisampling,
+    //       resolutionX: 512,
+    //       resolutionY: 512,
+    //       edgeStrength: 10
+    //     });
+    //     this.#pass = new EffectPass(this.#camera, this.#effect);
+    //     this.#composer.addPass(this.#pass);
+    //   }
+    // });
 
     getSetting("shaderType").then((type) => {
       this.shaderType = type;
       getSetting("simpleShaderLegacyColors").then((val) => {
         this.simpleShaderLegacyColors = val;
       });
-      // glTF Loader hack only for FFL shader to force srgb-linear textures.
-      if (
-        type === "lightDisabled" ||
-        type.startsWith("wiiu") ||
-        type === "switch"
-      ) {
-        // this.#gltfLoader = new GLTFLoader() as TrueGLTFLoader;
-        this.#gltfLoader = new TrueGLTFLoader();
-      } else {
-        this.#gltfLoader = new TrueGLTFLoader();
-      }
+      this.#gltfLoader = new GLTFLoader();
+
+      this.#gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
       if (type === "none") {
         const cubeTextureLoader = new THREE.CubeTextureLoader();
@@ -205,6 +247,13 @@ export class Mii3DScene {
       this.camSetup = async () => {
         const canPan = this.cameraPan !== undefined ? this.cameraPan : false;
 
+        // this.#controls.minAzimuthAngle = -0.6;
+        // this.#controls.maxAzimuthAngle = 0.6;
+        this.#controls.minAzimuthAngle = -Math.PI;
+        this.#controls.maxAzimuthAngle = Math.PI;
+        this.#controls.minPolarAngle = 0.98;
+        this.#controls.maxPolarAngle = 1.8;
+
         if (canPan !== true) {
           console.log("canPan is not false:", canPan);
           this.#controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
@@ -216,8 +265,6 @@ export class Mii3DScene {
           this.#controls.enabled = true;
           this.#controls.minDistance = 10;
           this.#controls.maxDistance = 35;
-          this.#controls.minAzimuthAngle = -Math.PI;
-          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.zoomTo(1);
           this.cameraPan = true;
         } else {
@@ -225,8 +272,6 @@ export class Mii3DScene {
           this.#controls.enabled = false;
           this.#controls.minDistance = 60;
           this.#controls.maxDistance = 140;
-          this.#controls.minAzimuthAngle = -Math.PI;
-          this.#controls.maxAzimuthAngle = Math.PI;
           this.#controls.dollyTo(380 / 10);
           this.#controls.zoomTo(2.5);
           this.cameraPan = false;
@@ -266,11 +311,17 @@ export class Mii3DScene {
 
       // this.stats.update();
       try {
+        // if (this.#composer !== undefined) {
+        // this.#composer.render(delta);
+        // } else
         this.#renderer.render(this.#scene, this.#camera);
       } catch (e) {
         console.error(e);
       }
-      this.animators.forEach((f) => f(time, delta));
+      // this is changed so the effect pass doesn't complain about "this" being undefined
+      this.animators.forEach(function (f) {
+        f(time, delta);
+      });
     };
 
     this.#renderer.setClearAlpha(0);
@@ -333,9 +384,8 @@ export class Mii3DScene {
     const pos = new THREE.Vector3();
     let body = this.#scene.getObjectByName(this.type)!,
       head = this.#scene.getObjectByName("MiiHead");
-    // if (body !== undefined) {
-    //   head = body.getObjectByName("head")! as THREE.Bone;
-    // }
+
+    const rotation = 0;
 
     if (part === CameraPosition.MiiFullBody) {
       if (body !== undefined && head !== undefined) {
@@ -348,7 +398,7 @@ export class Mii3DScene {
           minOutput = 38,
           maxOutput = 40;
         this.#controls.moveTo(pos.x, pos.y, pos.z, transition);
-        this.#controls.rotateTo(0, Math.PI / 2, transition);
+        this.#controls.rotateTo(rotation, Math.PI / 2, transition);
         if (this.cameraPan === false) {
           minOutput = 80;
           maxOutput = 96;
@@ -370,7 +420,7 @@ export class Mii3DScene {
           }
           if (onlyReturn === false) {
             this.#controls.moveTo(pos.x, pos.y + 2, pos.z, transition);
-            this.#controls.rotateTo(0, Math.PI / 2, transition);
+            this.#controls.rotateTo(rotation, Math.PI / 2, transition);
             this.#controls.dollyTo(25, transition);
             if (this.cameraPan === false) {
               this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
@@ -384,7 +434,7 @@ export class Mii3DScene {
             pos.y = box.max.y - box.min.y;
           }
           this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
-          this.#controls.rotateTo(0, Math.PI / 2, transition);
+          this.#controls.rotateTo(rotation, Math.PI / 2, transition);
           this.#controls.dollyTo(30, transition);
           break;
       }
@@ -462,9 +512,12 @@ export class Mii3DScene {
     const h = Math.floor(canvas.clientHeight * pixelRatio);
     // const needResize = canvas.width !== w || canvas.height !== h;
     // if (needResize) {
-    this.#renderer.setSize(w, h, false);
     // }
     // return needResize;
+    // if (this.#composer !== undefined) this.#composer.setSize(width, height);
+    // else {
+    this.#renderer.setSize(w, h, false);
+    // }
   }
   preparing!: boolean;
   async init() {
@@ -604,7 +657,9 @@ export class Mii3DScene {
 
       const clips = glb.animations;
 
-      this.mixer = new THREE.AnimationMixer(glb.scene.getObjectByName(type)!);
+      let armature = glb.scene.getObjectByName(type)!;
+
+      this.mixer = new THREE.AnimationMixer(armature);
       for (const anim of clips) {
         this.animations.set(`${type}-${anim.name}`, anim);
       }
@@ -786,9 +841,6 @@ export class Mii3DScene {
 
     scaleFactors.z = scaleFactors.x;
 
-    // @ts-expect-error debug
-    window.scaleFactors = scaleFactors;
-
     let body = this.type === "m" ? bodyM : bodyF;
 
     const traverseBones = (object: THREE.Object3D) => {
@@ -937,8 +989,6 @@ export class Mii3DScene {
         .getObjectByName(type)!
         .getObjectByName("legs_" + type)! as THREE.Mesh;
 
-      const colorHands = await getSetting("bodyModelHands");
-
       if (updateType === BodyUpdateType.ClothingUpdate) {
         if (hasShaderApplied) {
           (nBody.material as any).color = new THREE.Color(
@@ -950,97 +1000,14 @@ export class Mii3DScene {
             ...this.getPantsColor()
           );
 
-        if (this.mii.clothesType !== -1) {
-          console.log("clothing update");
-          let shirtTexture: THREE.Texture,
-            pantsTexture: THREE.Texture | null = null;
-
-          const suffix = this.type == "f" ? "F" : "";
-          let key = `${this.bodyModel}_${
-            ExtClothesList[this.mii.clothesType]
-          }${suffix}`;
-          let shirtKey = key;
-          if (this.bodyModel === "miitomo") {
-            shirtKey = key + "_Top";
-          }
-
-          switch (ClothesTypeList[this.mii.clothesType]) {
-            case ClothesType.COLOR_MIXED: {
-              const colorMixR = new THREE.Vector4(...this.getShirtColor(), 1),
-                colorMixG = new THREE.Vector4(...this.getShoesColor(), 1),
-                colorMixB = new THREE.Vector4(...this.getPantsColor(), 1),
-                colorMixA = this.charModel
-                  ? this.charModel!.facelineColor
-                  : 0xff0000;
-
-              console.log("Shirt Texture Key:", shirtKey);
-              let tex = await colorMixTexture(
-                this.clothingTextures[shirtKey],
-                colorMixR,
-                colorMixG,
-                colorMixB,
-                colorMixA,
-                this.#renderer
-              );
-              shirtTexture = await loadBlobTexture(tex);
-
-              console.log("loaded shirt texture!");
-
-              // if (this.bodyModel === "miitomo") {
-              //   const pantsKey = key + "_Bot";
-              //   let tex = await colorMixTexture(
-              //     this.clothingTextures[pantsKey],
-              //     colorMixR,
-              //     colorMixG,
-              //     colorMixB,
-              //     colorMixA
-              //   );
-              //   pantsTexture = await loadBlobTexture(tex);
-              // }
-              break;
-            }
-            case ClothesType.TEXTURE_COLOR: {
-              shirtTexture = this.clothingTextures[shirtKey + suffix];
-              break;
-            }
-            default:
-              alert("Something isn't right here");
-              throw "???";
-          }
-          this.#renderer.initTexture(shirtTexture);
-
-          let nBodyMat = nBody.material as any;
-          let nLegsMat = nLegs.material as any;
-
-          nBodyMat.dispose();
-          nLegsMat.dispose();
-
-          const params = {
-            modulateType: 9,
-            modulateMode: 1,
-            map: shirtTexture
-          };
-          const newBodyMat = new (await getShaderMaterialFromShaderType())(
-            params
-          );
-          if (this.bodyModel !== "miitomo") nBody.material = newBodyMat as any;
-
-          if (this.bodyModel === "miitomo" && pantsTexture !== null) {
-            const params = {
-              modulateType: 9,
-              modulateMode: 1,
-              map: pantsTexture
-            };
-            const newLegsMat = new (await getShaderMaterialFromShaderType())(
-              params
-            );
-            nLegs.material = newLegsMat as any;
-          } else {
-            nLegs.material = newBodyMat as any;
-          }
-
-          console.log("mat changed!", newBodyMat, nBody, nLegs);
-        } else {
+        if (this.mii.clothesType === -1) {
+          const isUsingShader = await isShaderMaterial();
+          let shirtModulate = isUsingShader
+            ? { modulateMode: 0, modulateType: 9 }
+            : {};
+          let pantsModulate = isUsingShader
+            ? { modulateMode: 0, modulateType: 10 }
+            : {};
           (nBody.material as any) =
             new (await getShaderMaterialFromShaderType())({
               color: new THREE.Color(
@@ -1048,8 +1015,7 @@ export class Mii3DScene {
                 this.getShirtColor()[1],
                 this.getShirtColor()[2]
               ),
-              modulateMode: 0,
-              modulateType: 9
+              ...shirtModulate
             });
           (nLegs.material as any) =
             new (await getShaderMaterialFromShaderType())({
@@ -1058,42 +1024,28 @@ export class Mii3DScene {
                 this.getPantsColor()[1],
                 this.getPantsColor()[2]
               ),
-              modulateMode: 0,
-              modulateType: 10
+              ...pantsModulate
             });
         }
-      }
 
-      const nHands = bodyN
-        .getObjectByName(type)!
-        .getObjectByName("hands_" + type)! as THREE.Mesh;
-
-      if (nHands) {
-        if (colorHands === true) {
-          let desiredColor: [number, number, number] = [1, 0, 0];
-
-          // TODO: REMOVE ALL REFERENCES TO SIMPLE SHADER
-          if (this.mii.facePaintColor !== -1) {
-            desiredColor = SwitchMiiColorTableSRGB[this.mii.facePaintColor];
-          } else {
-            desiredColor = MiiSwitchSkinColorSRGB[this.mii.facelineColor];
-          }
-
-          if (hasShaderApplied) {
-            (nHands.material as THREE.MeshBasicMaterial).color =
-              new THREE.Color(...desiredColor);
-          } else if (this.shaderOverride) {
-            (nHands.material as THREE.MeshBasicMaterial).color.set(
-              desiredColor[0],
-              desiredColor[1],
-              desiredColor[2]
-            );
-          }
-
-          this.handColor = desiredColor;
-        } else {
-          nHands.material = nBody.material;
-        }
+        // Clothing update should run anyways just to fix miitomo meshes visibility.
+        await clothingUpdate({
+          gender: this.mii.gender,
+          clothesType: this.mii.clothesType,
+          renderer: this.#renderer,
+          bodyModel: this.bodyModel,
+          shirtColor: this.getShirtColor(),
+          pantsColor: this.getPantsColor(),
+          shoesColor: this.getShoesColor(),
+          facelineColor: this.charModel!.facelineColor,
+          nBody: nBody,
+          nLegs: nLegs,
+          bodyGroup: this.#scene.getObjectByName(
+            this.type
+          )! as unknown as any as THREE.Group,
+          clothesTextures: getClothesTextures(),
+          originalMaterial: await getShaderMaterialFromShaderType()
+        });
       }
     };
 
@@ -1193,11 +1145,6 @@ export class Mii3DScene {
             //   } as unknown as any)
             // );
           } else {
-            // if (this.#pastCharModel) {
-            //   // console.log("Past Char Model:", this.#pastCharModel);
-            //   if (this.#pastCharModel.dispose) this.#pastCharModel.dispose();
-            // }
-
             let modelType: ModelFlag = "NORMAL";
 
             switch (params.modelType) {
@@ -1216,8 +1163,6 @@ export class Mii3DScene {
               this.texResolution
             );
           }
-          //@ts-expect-error
-          window.GLB = GLB;
 
           GLB.scene.name = "MiiHead";
           // head is no longer attached to head bone physically, no more need to offset rotation
@@ -1228,6 +1173,14 @@ export class Mii3DScene {
 
           // enable shader on head
           if (head) {
+            // if (this.#effect !== undefined)
+            //   head.forEach((h) =>
+            //     h.traverse((n) => {
+            //       if (!(n as THREE.Mesh).isMesh) return;
+            //       this.#effect.selection.delete(n);
+            //     })
+            //   );
+
             this.#scene.remove(...head);
             // hack to force remove head anyways
             this.#scene
@@ -1307,8 +1260,6 @@ export class Mii3DScene {
               if (GLB.asset.extras.partsTransform.hatTranslate) {
                 const vec = GLB.asset.extras.partsTransform.hatTranslate;
                 hatModel.position.add(vec);
-                //@ts-expect-error
-                window.hatModel = hatModel;
 
                 // TODO: Hats
                 switch (HatTypeList[this.mii.hatType]) {
@@ -1337,15 +1288,15 @@ export class Mii3DScene {
                   let m = o as THREE.Mesh;
                   const mat = m.material as THREE.MeshStandardMaterial;
 
-                  let tableToPullFrom = MiiFavoriteColorVec3Table;
-                  if (shaderSetting === "none") {
-                    // bug: inaccurate colors
-                    tableToPullFrom = MiiFavoriteColorVec3Table;
+                  // let tableToPullFrom = MiiFavoriteColorVec3Table;
+                  // if (shaderSetting === "none") {
+                  //   // bug: inaccurate colors
+                  //   tableToPullFrom = MiiFavoriteColorVec3Table;
 
-                    if (this.simpleShaderLegacyColors === true) {
-                      tableToPullFrom = MiiFavoriteColorVec3Table;
-                    }
-                  }
+                  //   if (this.simpleShaderLegacyColors === true) {
+                  //     tableToPullFrom = MiiFavoriteColorVec3Table;
+                  //   }
+                  // }
                   // const tex = multiplyTexture(
                   //   mat.map!,
                   //   tableToPullFrom[
@@ -1364,7 +1315,7 @@ export class Mii3DScene {
                     color: 0xffffff,
                     map: mat.map!
                   });
-                  m.material.needsUpdate = true;
+                  (m.material as THREE.MeshBasicMaterial).needsUpdate = true;
                   m.geometry.userData = {
                     // ignore: 1,
                     cullMode: 0,
@@ -1422,6 +1373,34 @@ export class Mii3DScene {
         }
         break;
     }
+
+    // //@ts-expect-error
+    // window.thisEffect = this.#effect;
+    // //@ts-expect-error
+    // window.thisComposer = this.#composer;
+    // //@ts-expect-error
+    // window.thisPass = this.#pass;
+
+    const traverseHierarchy = (
+      tree: THREE.Object3D<THREE.Object3DEventMap>
+    ) => {
+      tree.traverse((n) => {
+        if (!(n as THREE.Mesh).isMesh) return;
+        const modulateType = (n as THREE.Mesh).geometry.userData.modulateType;
+        if (
+          modulateType !== undefined &&
+          (modulateType === FFLModulateType.SHAPE_MASK ||
+            modulateType === FFLModulateType.SHAPE_GLASS)
+        )
+          return;
+
+        // if (this.#effect !== undefined) this.#effect.selection.add(n);
+      });
+    };
+
+    traverseHierarchy(this.getHead()!);
+    traverseHierarchy(this.#scene.getObjectByName("m")!);
+    traverseHierarchy(this.#scene.getObjectByName("f")!);
 
     if (this.headReady === false) this.fadeIn();
     this.headReady = true;
@@ -1536,8 +1515,7 @@ export class Mii3DScene {
                   this.#renderer.initTexture(tex);
 
                   (child.material as THREE.MeshBasicMaterial)!.map = tex;
-                  (child.material as THREE.MeshBasicMaterial)!.transparent =
-                    true;
+                  (child.material as THREE.MeshBasicMaterial)!.transparent = true;
 
                   // child.material = new THREE.MeshBasicMaterial({
                   //   map: tex,

@@ -16,7 +16,7 @@ export async function compile(
     outdir: outputDir,
     splitting: false,
     emitDCEAnnotations: true,
-    sourcemap: "none",
+    sourcemap: "none"
     // Only apply when building for prod !!
     // minify: {
     //   identifiers: true,
@@ -43,7 +43,7 @@ import type { BuildOutput } from "bun";
 async function build() {
   try {
     await compile(
-      ["./src/main.ts", "./src/helper.ts", "./src/popup.ts", "./src/worker.ts"],
+      ["./src/main.ts", "./src/helper.ts", "./src/popup.ts", "./src/three.ts"],
       "./public/dist/"
     );
   } catch (e) {

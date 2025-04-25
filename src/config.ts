@@ -19,7 +19,7 @@ const newApiParams = true;
 // false if using FFL-Testing-with-hats
 // true if using new FFL-Testing version with headwear
 
-// Origin used for NNID, PNID, and random NNID fetch.
+// Origin used for NNID, and PNID fetch.
 // Details: https://github.com/ariankordi/nwf-mii-cemu-toy/blob/ffl-renderer-proto-integrate/README.md
 const nnidFetchOrigin = "https://mii-unsecure.ariankordi.net";
 

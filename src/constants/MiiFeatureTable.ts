@@ -59,14 +59,30 @@ export const MiiSwitchSkinColorTable: number[][] = [
   [6, 3, 2, 8, 9]
 ];
 
+// Converted from tables found in FFL
+// FFLiCharInfo.cpp:269
+// and checked w/ Mii Studio, seems OK
+
+// subtracted by 4
 export const MiiEyeRotationGroups: number[] = [
-  -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, -1, 0, 0, 0, -1,
-  -1, 0, -1, 0, 0, -1, 0, 0, 0, -1, -1, -1, 0, 0, -1, -1, -1, 0, 0, -1, -1, -1,
-  -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, -1, 0, 0, -1
+  -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, -1, -1, 0, 0, 0, -1, -1, 0, -1, 0,
+  -1, -1, 0, -1, 0, 0, -1, 0, 0, 0, -1, -1, -1, 0, 0, -1, -1, -1, 0, 0, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, -1, 0, 0, -1
 ];
 
+// subtracted by 6
 export const MiiEyebrowRotationGroups: number[] = [
   0, 0, -1, 1, 0, 1, 0, 1, -2, 1, 0, 2, -1, -1, 0, 0, 1, 1, 0, 0, -1, 0, 1, 0
+];
+
+// Extracted from Mii Studio - whether to allow hair flipping in UI or not based on if the hair is asymmetrical
+export const MiiHairFlipTable = [
+  1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0,
+  0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
+  1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1,
+  0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0,
+  1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1,
+  1, 1
 ];
 
 export function rearrangeArray(
@@ -99,6 +115,7 @@ export function rearrangeArray(
   return rearrangedArray;
 }
 
+// Helper functions for UI, uhh most of these are the same
 export const makeSeparator = () => new Html("div").class("separator");
 export const makeSeparatorFSI: () => any = () => ({
   type: FeatureSetType.Misc,

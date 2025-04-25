@@ -306,6 +306,15 @@ export function FFLiDatabaseRandom_Get(
     pCharInfo.favoriteColor = fixedSettings.favoriteColor;
   }
   pCharInfo.favorite = 0;
+
+  // bias
+  if (pCharInfo.facelineType === 9) {
+    pCharInfo.eyebrowY -= 2;
+    pCharInfo.eyeY -= 2;
+    pCharInfo.noseY -= 2;
+    pCharInfo.mouthY -= 2;
+    pCharInfo.glassY = EYE_Y_TO_GLASS_Y[pCharInfo.eyeY];
+  }
 }
 
 export function RandomizeMii(

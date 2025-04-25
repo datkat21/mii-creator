@@ -1,7 +1,11 @@
-import { DataTexture, RGBAFormat, UnsignedByteType, type Texture } from "three";
+// import { DataTexture, RGBAFormat, UnsignedByteType, type Texture } from "three";
+import { _THREE } from "../../../util/PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 import type { RGBColor } from "../shader/fflShaderConst";
 
-export function multiplyTexture(tex: Texture, color: RGBColor) {
+export function multiplyTexture(tex: THREE.Texture, color: RGBColor) {
   const canvas = document.createElement("canvas");
   canvas.width = tex.image.width;
   canvas.height = tex.image.height;
@@ -23,12 +27,12 @@ export function multiplyTexture(tex: Texture, color: RGBColor) {
   ctx.putImageData(imageData, 0, 0);
 
   // Create a new texture from the modified canvas
-  const modifiedTexture = new DataTexture(
+  const modifiedTexture = new THREE.DataTexture(
     imageData.data,
     canvas.width,
     canvas.height,
-    RGBAFormat,
-    UnsignedByteType
+    THREE.RGBAFormat,
+    THREE.UnsignedByteType
   );
   modifiedTexture.repeat = tex.repeat;
   modifiedTexture.wrapS = tex.wrapS;

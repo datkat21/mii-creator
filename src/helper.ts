@@ -1,10 +1,12 @@
-import * as THREE from "three";
+import { _THREE } from "./util/PrepareThree.js";
+
 import {
   createMiiRender,
   type RenderRequest,
   type RenderRequestNonTemporaryResult
 } from "./util/IconRendering";
 import {
+  getLoadedBodyModelName,
   loadBodyModels,
   loadClothesTextures,
   loadHatModels,
@@ -12,9 +14,9 @@ import {
 } from "./util/ModelLoader";
 import {
   CharModel,
-  initializeFFLWithResource,
-  parseHexOrB64ToUint8Array,
-  FFLiShapeType
+  FFLModulateType,
+  initializeFFL,
+  parseHexOrB64ToUint8Array
 } from "./external/ffl.js/ffl";
 import Mii from "./class/MiiData";
 import { dataToBase64, dataToHex } from "./util/dataConvert";
@@ -30,20 +32,20 @@ import {
   miiSelectorSetRenderer
 } from "./external/mii-selector/selector.js";
 
-// if (this === undefined) {
-//   console.log("Running in module scope");
-// } else {
-//   console.log("Running in script scope");
+// Assume importer app already has its own copy of three.js
+// (probably fine in 99.9% of cases)
+// function setThree(three: any) {
+//   // setTHREE(three);
 // }
+
+const LocalTHREE = _THREE();
+
+import type * as THREE from "three";
 
 let FFLModule: any,
   FFLWorker: Worker | undefined,
   userData: any,
-  helperRenderer = new THREE.WebGLRenderer({ alpha: true });
-
-// function log(...content: string[]) {
-//   console.debug("[miic helper]", ...content);
-// }
+  helperRenderer: import("three").WebGLRenderer;
 
 const GUEST_MII_DATA = [
   "BAM5i2G9mwPpOoAAAADs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEEAAAAAAAAACAAAAAAAQAMDCAYEBgIKCAQEAgIMBAAAAP8ABAAACAQACggARP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
@@ -53,12 +55,11 @@ const GUEST_MII_DATA = [
   "BAP3BYyHQ6gZsoAAAATs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEUAAAAAAAAACAAAAAAAQAMDBwYEAAIKDQMEBAIMAAAAAP8ABgABCAQACgcADv///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
   "BANfFfqpycZfsoAAAAXs/4LSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEYAAAAAAAAACAAAAAAAQAMDAQYEAAIKCAMEBAIMAAAAAP8ABwABCAQACgEADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
 
-  "BAVIEyyDkVU1GYD/cJm7kTTHqf8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEcAAAAAAAAACAAAAAAAQAMDCAYEBgIKCAQEAgIMBQAAAP8ACwAACAQACggAKv///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
-  "BAWUIlPmHJkY0oD/cJmB+j7p1g8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEgAAAAAAAAACAAAAAAAQAMDDgYEBgIKCQQEAgIMBwAAAP8ACQAACAQACg4APv///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
-  "BAVlJYmsV8fzIID/cJmJvGY0ejIAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEkAAAAAAAAACAAAAAAAQAMDAwYEBgIKCAQEAgIMBgAAAP8AAQAACAQACgMAef///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
-  "BABEp+/5p6E6GoDfGZofZsl0BT8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEoAAAAAAAAACAAAAAAAQAMDCAYEAAIKCAMEBAIMCAAAAP8AAwABCAQACggAB////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
-  "BABEp+/5p6E6GoDfGZofZsl0BT8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEsAAAAAAAAACAAAAAAAQAMDDgYEAAIKCwMEBAIMBwAAAP8ACgABCAQACg4AX////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
-  "BABEp+/5p6E6GoDfGZofZsl0BT8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEwAAAAAAAAACAAAAAAAQAMDBgYEAAIKCAMEBAIMBgAAAP8ACAABCAQACgYADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA=="
+  // "BAVlJYmsV8fzIID/cJmJvGY0ejIAAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEkAAAAAAAAACAAAAAAAQAMDAwYEBgIKCAQEAgIMBgAAAP8AAQAACAQACgMAef///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA==",
+  "BAXGigDvV8wSNID/cJl869TJwxYAAAAAAAAAAAAAAAAAAAAAAAAAAEcAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDCgYEBgIKCAQEAgIMBgAAAP8AAQAACAQACgoAc////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAP//",
+
+  // "BABEp+/5p6E6GoDfGZofZsl0BT8AAAAAAAAAAAAAAAAAAAAAAAAAAEcAdQBlAHMAdAAgAEoAAAAAAAAACAAAAAAAQAMDCAYEAAIKCAMEBAIMCAAAAP8AAwABCAQACggAB////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAA=="
+  "BACnywgm6RFTRIDfGZqVDHu5NhQAAAAAAAAAAAAAAAAAAAAAAAAAAGgAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDCAYEAAIKCAMEBAIMCAAAAP8AAwABCAQACggAB////0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAP//"
 ];
 
 function getFFLModule() {
@@ -95,6 +96,14 @@ try {
 let soundManager: SoundManager;
 
 async function loadAssets(resourcePath: string, bodyType: string = "wiiu") {
+  // setTHREE(three);
+  helperRenderer = new (_THREE().WebGLRenderer)({
+    alpha: true,
+    powerPreference: "high-performance",
+    antialias: false,
+    stencil: false,
+    depth: false
+  });
   setRoot(root.origin + "/");
   console.debug("Loading body models..");
   await loadBodyModels(bodyType, true);
@@ -118,14 +127,29 @@ async function loadAssets(resourcePath: string, bodyType: string = "wiiu") {
     }
   });
 
-  let m = await initializeFFLWithResource(FFLModule, resourcePath);
+  let fflResource = await fetch(resourcePath).catch((e) => e);
+
+  if (fflResource instanceof Error) {
+    alert(
+      "(Mii Creator JS API) Failed to fetch FFL resource file: " +
+        fflResource +
+        "\n\nMake sure your path is correct."
+    );
+    throw fflResource;
+  }
+
+  let m = await initializeFFL(fflResource, FFLModule);
   FFLModule = m.module;
   console.debug("Loaded FFL.js!");
 }
 
-interface CharModelRequest extends RenderRequest {
+interface CharModelRequest extends Omit<
+  RenderRequest,
+  "data" | "additionalInfo"
+> {
   respectBodyColors: boolean;
   useAnimation: boolean;
+  mii: Mii;
 }
 
 class MiiCreatorCharModel {
@@ -146,11 +170,22 @@ class MiiCreatorCharModel {
   mixer!: THREE.AnimationMixer;
   clips!: Map<string, THREE.AnimationAction>;
 
+  get mii() {
+    return this.#mii;
+  }
+  #mii!: Mii;
+
   constructor() {}
+
+  expressions?: number[];
 
   init(request: CharModelRequest): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(async () => {
+        let mii = request.mii;
+
+        const data = getAdditionalInfoFromMii(mii);
+
         const {
           bodyModel,
           bodyModelAnims,
@@ -164,13 +199,22 @@ class MiiCreatorCharModel {
           ...request,
           module: FFLModule,
           isTemporary: false,
+          // renderer: request.renderer,
           renderer: request.renderer,
           textureRenderer: helperRenderer,
           clothingLinearColors:
             request.clothingLinearColors === undefined
               ? true
-              : request.clothingLinearColors
+              : request.clothingLinearColors,
+          additionalInfo: data,
+          data: mii.export("studioData")
         })) as any as RenderRequestNonTemporaryResult;
+
+        if (request.expression) {
+          if (Array.isArray(request.expression)) {
+            this.expressions = request.expression;
+          } else this.expressions = [request.expression];
+        }
 
         this.bodyModel = bodyModel;
         this.bodyModelBody = bodyModelBody;
@@ -179,9 +223,10 @@ class MiiCreatorCharModel {
         this.charModel = charModel;
         this.headModel = headModel;
         this.miiGroup = miiGroup;
+        this.#mii = mii;
 
         if (request.useAnimation) {
-          this.mixer = new THREE.AnimationMixer(bodyModel);
+          this.mixer = new (_THREE().AnimationMixer)(bodyModel);
           this.clips = new Map();
 
           for (const clip of bodyModelAnims!) {
@@ -202,11 +247,11 @@ class MiiCreatorCharModel {
 
   mixerUpdate(delta: number) {
     // Extract the position and rotation from the matrix
-    if (!this.subPosition) this.subPosition = new THREE.Vector3();
-    if (!this.subScale) this.subScale = new THREE.Vector3();
-    if (!this.position) this.position = new THREE.Vector3();
-    if (!this.quaternion) this.quaternion = new THREE.Quaternion();
-    if (!this.scale) this.scale = new THREE.Vector3();
+    if (!this.subPosition) this.subPosition = new (_THREE().Vector3)();
+    if (!this.subScale) this.subScale = new (_THREE().Vector3)();
+    if (!this.position) this.position = new (_THREE().Vector3)();
+    if (!this.quaternion) this.quaternion = new (_THREE().Quaternion)();
+    if (!this.scale) this.scale = new (_THREE().Vector3)();
     this.mixer.update(delta); // <-- update animation
 
     // Force an update of all world matrices in the animated model
@@ -230,6 +275,14 @@ class MiiCreatorCharModel {
 
       // Set the head model's rotation from the head bone's quaternion
       this.headModel.setRotationFromQuaternion(this.quaternion);
+
+      if (getLoadedBodyModelName() === "miitomo") {
+        // hacky
+        this.headModel.rotation.z -= Math.PI / 2;
+        this.headModel.position.y += 0.05;
+      } else {
+        this.headModel.position.y += 0.1;
+      }
     }
   }
 
@@ -238,7 +291,8 @@ class MiiCreatorCharModel {
       this.headModel.traverse((n) => {
         const m = n as THREE.Mesh;
         if (!m.isMesh) return;
-        if (m.geometry.userData.modulateType !== FFLiShapeType.XLU_MASK) return;
+        if (m.geometry.userData.modulateType !== FFLModulateType.SHAPE_MASK)
+          return;
         (m.material as THREE.MeshBasicMaterial).map =
           this.charModel._maskTargets[expression]!.texture;
       });
@@ -248,9 +302,10 @@ class MiiCreatorCharModel {
   }
 
   getExpressions() {
-    return this.charModel._maskTargets
-      .map((n, i) => (n !== null ? i : undefined))
-      .filter((n) => n !== undefined);
+    return this.expressions;
+    // return this.charModel._maskTargets
+    //   .map((n, i) => (n !== null ? i : undefined))
+    //   .filter((n) => n !== undefined);
   }
 
   // TODO: dispose
@@ -316,7 +371,7 @@ function injectCss() {
   if (Html.qs("head>#mii-creator-helper-styles") === null) {
     new Html("style")
       .id("mii-creator-helper-styles")
-      .html(css)
+      .html(css(root.origin))
       .appendTo("head");
   }
 }
@@ -347,6 +402,7 @@ function requestMiiSelection() {
         return { miiData: mii.export(), type };
       }),
       {
+        allowGuest: true,
         guestData: GUEST_MII_DATA,
         soundManager,
         personalMii: userData.personal_mii.data

@@ -7,12 +7,13 @@ import {
   Library,
   getMiiIcon,
   type MiiLocalforage,
-  pushToServer
+  pushToServer,
+  newMiiId
 } from "../Library";
 import Html from "@datkat21/html";
 import { miiRender } from "./render/renderMenu";
 import { miiExportData } from "./export";
-import { confirmOrReviseMii } from "./new/lookalike";
+import { dataToBase64 } from "../../../util/dataConvert";
 
 import { _ } from "../../../util/Lang";
 const __ = _();
@@ -53,7 +54,7 @@ export const miiSelect = (
         }
       },
       {
-        text: __("Revise"),
+        text: __("Make a Copy"),
         async callback() {
           if (isSpecial) {
             return Modal.modal(
@@ -64,10 +65,18 @@ export const miiSelect = (
               { text: __("OK") }
             );
           }
-          confirmOrReviseMii(miiData, {
-            gender: miiData.gender,
-            isOriginalMii: true
-          });
+          const randomMiiB64 = dataToBase64(miiData.export("miic"));
+          _shutdown()();
+          new MiiEditor(
+            0,
+            async (m, shouldSave) => {
+              if (shouldSave === true)
+                await localforage.setItem(await newMiiId(), m);
+              await pushToServer();
+              Library();
+            },
+            randomMiiB64
+          );
         }
       },
       {
@@ -101,6 +110,9 @@ export const miiSelect = (
 
             function destroy() {
               // cry about it
+              scaredIcon.dispose();
+              fearfulIcon.dispose();
+              reliefIcon.dispose();
               disableModal();
               scaredMiiImage.classOn("rotateAndCry");
             }
@@ -230,7 +242,10 @@ export const miiSelect = (
     });
 
     getMiiIcon(miiData, "preview", "all_body_sugar", 240).then((result) => {
-      miiBodyIcon.attr({ src: result }).style({ opacity: "1" });
+      miiBodyIcon
+        .attr({ src: result.url })
+        .style({ opacity: "1" })
+        .on("load", result.dispose);
     });
     modal.qs(".modal-body")?.prepend(miiBodyIcon);
   };

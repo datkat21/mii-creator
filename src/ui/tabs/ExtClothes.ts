@@ -48,16 +48,14 @@ export function ExtClothesTab(data: TabRenderInit) {
               bodyUpdateType: BodyUpdateType.ClothingUpdate
             },
             makeSeparatorGapThinFSI(),
-            ...ArrayNum(10)
-              .slice(1)
-              .map((k) => ({
-                type: FeatureSetType.Icon as any,
-                forceRender: true,
-                bodyUpdateType: BodyUpdateType.ClothingUpdate,
-                value: k - 1,
-                icon: k,
-                part: RenderPart.Head
-              }))
+            ...ArrayNum(4).map((k) => ({
+              type: FeatureSetType.Icon as any,
+              forceRender: true,
+              bodyUpdateType: BodyUpdateType.ClothingUpdate,
+              value: k,
+              icon: k + 1,
+              part: RenderPart.Head
+            }))
           ]
         },
         shirtColor: {

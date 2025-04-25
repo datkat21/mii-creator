@@ -1,4 +1,3 @@
-import { WebGLRenderer } from "three";
 import type Mii from "../../../../class/MiiData";
 import { downloadLink, saveBlob } from "../../../../util/downloadLink";
 import {
@@ -12,7 +11,10 @@ import { getFFL } from "../../../../util/FFLLoader";
 
 import { _ } from "../../../../util/Lang";
 import { ViewType } from "../../../../util/camera";
+import { _THREE } from "../../../../util/PrepareThree";
 const __ = _();
+
+const { WebGLRenderer } = _THREE();
 
 export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
   const renderer = new WebGLRenderer({ alpha: true });

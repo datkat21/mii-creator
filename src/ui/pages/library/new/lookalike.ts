@@ -231,7 +231,7 @@ export const newFromLookalike = async () => {
 
       getMiiIcon(randomMii, "lookalike").then((icon) => {
         playLoadSound();
-        button.qs("img")?.attr({ src: icon });
+        button.qs("img")?.attr({ src: icon.url }).on("load", icon.dispose);
       });
 
       button.on("click", async () => {
@@ -255,7 +255,10 @@ export function confirmOrReviseMii(
   });
 
   getMiiIcon(mii, "lookalike_preview", "all_body_sugar", 210).then((icon) => {
-    miiIcon.attr({ src: icon }).style({ opacity: "1" });
+    miiIcon
+      .attr({ src: icon.url })
+      .style({ opacity: "1" })
+      .on("load", icon.dispose);
   });
 
   Modal.modal(
@@ -365,7 +368,10 @@ export function confirmOrReviseMii(
                 108
               ).then((icon) => {
                 playLoadSound();
-                img.attr({ src: icon }).style({ opacity: "1" });
+                img
+                  .attr({ src: icon.url })
+                  .style({ opacity: "1" })
+                  .on("load", icon.dispose);
               });
             }
           }

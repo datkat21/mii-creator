@@ -5,44 +5,19 @@ import {
   loadClothesTextures,
   loadHatModels
 } from "../util/ModelLoader";
-import { defaultParams, type RenderRequest } from "../util/IconRendering";
-
 import { _, loadLang } from "./Lang";
-import type {
-  FFLWorkerInitializeMessage,
-  FFLWorkerMessage
-} from "../worker.js";
 import { Config } from "../config.js";
-import { initializeFFLWithResource } from "../external/ffl.js/ffl.js";
+import { initializeFFL } from "../external/ffl.js/ffl.js";
 import { getSetting } from "./SettingsHelper.js";
+import type Html from "@datkat21/html";
 
 const __ = _();
 
-let FFLModule: any, FFLWorker: Worker | undefined;
+let FFLModule: any;
 export const getFFL = () => FFLModule;
-export const getFFLWorker = () => FFLWorker;
-export const getFFLWorkerExists = () => FFLWorker !== undefined;
-export const getFFLWorkerMakeIcon = (
-  request: Partial<RenderRequest>,
-  useBlob: boolean = true
-): Promise<string> => {
-  if (FFLWorker === undefined)
-    throw new Error("FFL worker told to make icon, but it wasn't initialized");
 
-  return new Promise((resolve, reject) => {
-    sendMessageToWorker({
-      type: "MakeIcon",
-      useBlob,
-      request: {
-        ...defaultParams,
-        ...request
-      }
-    } as FFLWorkerMessage)
-      .then((resp) => resolve(resp))
-      .catch((err) => reject(err));
-  });
-};
-let sendMessageToWorker: (data: any) => Promise<any>;
+let currentLoadingModal: Html;
+export const getCurrentLoadingModal = () => currentLoadingModal;
 
 export async function prepareFFL() {
   // Depending on config, load FFL.js
@@ -50,7 +25,7 @@ export async function prepareFFL() {
     return console.log("why do you");
   }
 
-  var m = Modal.modal(
+  currentLoadingModal = Modal.modal(
     __("Notice"),
     // TODO: Make a better message? 😅
     // Displayed in a modal while loading resource files.
@@ -73,82 +48,15 @@ export async function prepareFFL() {
   await loadHatModels();
   // for some reason
   await loadClothesTextures();
-  let { module } = await initializeFFLWithResource(
-    FFLModule,
+
+  const fflResourceFile = await fetch(
     Config.renderer.fflResourcePath[await getSetting("resourceType")]
   );
+
+  let { module } = await initializeFFL(fflResourceFile, FFLModule);
   FFLModule = module;
-
-  // TODO: CLEAN THIS UP so all the wasm/worker loading logic isn't in main.ts??? this was just a temp spot since its before everything else loads
-  // Detect and use Web Workers/OffscreenCanvas if available, to optimize icon generation
-  if (window.Worker) {
-    if (window.OffscreenCanvas) {
-      const tempOffscreenCanvas = document.createElement("canvas");
-      const offscreenCanvas = tempOffscreenCanvas.transferControlToOffscreen();
-      FFLWorker = new Worker("./dist/worker.js", { type: "module" });
-
-      // chat gpt
-      sendMessageToWorker = (data: any) => {
-        return new Promise((resolve, reject) => {
-          const requestId = Math.random().toString(36).substring(7);
-
-          function handleMessage(event: MessageEvent) {
-            const { id, result, error } = event.data;
-            if (id === requestId) {
-              FFLWorker!.removeEventListener("message", handleMessage);
-              if (error) {
-                Notify.show("Worker error", error);
-                resolve(null);
-              } else resolve(result);
-            }
-          }
-
-          FFLWorker!.addEventListener("message", handleMessage);
-          FFLWorker!.postMessage({ id: requestId, ...data });
-        });
-      };
-
-      // unfortunately, the worker has to load ffl wasm on its own
-      FFLWorker.postMessage(
-        {
-          type: "Init",
-          resourcePath:
-            Config.renderer.fflResourcePath[await getSetting("resourceType")],
-          offscreenCanvas,
-          devicePixelRatio: window.devicePixelRatio
-        } as FFLWorkerInitializeMessage,
-        // transfer the offscreen canvas over
-        [offscreenCanvas]
-      );
-      await new Promise<void>((resolve) => {
-        FFLWorker!.onmessage = (e) => {
-          if (e.data.ready) {
-            resolve();
-          }
-        };
-      });
-    } else {
-      Modal.modal(
-        __("Notice"),
-        __(
-          "Your browser doesn't support OffscreenCanvas, so Mii Creator may experience lag."
-        ),
-        "body",
-        ...buttonsOkCancel
-      );
-    }
-  } else {
-    Modal.modal(
-      __("Notice"),
-      __(
-        "Your browser doesn't support Web Workers, so Mii Creator may experience lag."
-      ),
-      "body",
-      ...buttonsOkCancel
-    );
-  }
 
   console.log("Ready!");
 
-  closeModal(m);
+  closeModal(currentLoadingModal);
 }

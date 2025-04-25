@@ -1,8 +1,12 @@
 import JSZip from "jszip";
 import localforage from "localforage";
-import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/Addons.js";
 import { BodyType } from "../constants/BodyShaderTypes";
+
+// three.js Type declaration
+import type * as THREE from "three";
+import { _THREE } from "./PrepareThree";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 //! NOTE: THIS ASSUMES THE ROOT IS THE PUBLIC FOLDER
 let root = "/";
@@ -10,14 +14,15 @@ export const setRoot = (newRoot: string) => {
   root = newRoot;
 };
 var gltfLoader = new GLTFLoader();
-var imageLoader = new THREE.ImageBitmapLoader();
+gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+var imageLoader = new (_THREE().ImageBitmapLoader)();
 function makeModelPath(gender: string, modelName: string) {
   return `${root}assets/models/miiBody${gender}_${modelName}.glb`;
 }
 async function loadBodyModel(modelPath: string) {
   const model = await gltfLoader.loadAsync(modelPath);
 
-  var mixer = new THREE.AnimationMixer(model.scene);
+  var mixer = new (_THREE().AnimationMixer)(model.scene);
   const scene = model.scene;
 
   if (model.animations.length > 0) {
@@ -103,7 +108,6 @@ export async function loadHatModels() {
 
 export async function loadClothesTextures() {
   clothesTextures = {};
-  imageLoader.setOptions({ imageOrientation: "flipY" });
 
   // Load hat models bundle
   const data = await fetch(
@@ -123,8 +127,8 @@ export async function loadClothesTextures() {
     const url = URL.createObjectURL(resolves[i]);
     let result: any;
 
-    console.log("Loading texture");
-    result = new THREE.CanvasTexture(await imageLoader.loadAsync(url));
+    console.log("Loading texture", fileList[i]);
+    result = new (_THREE().CanvasTexture)(await imageLoader.loadAsync(url));
     // (result as THREE.Texture).flipY = true;
     console.log("Loading texture done");
 

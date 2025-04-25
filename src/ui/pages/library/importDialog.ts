@@ -41,6 +41,8 @@ export async function importMiiConfirmation(
   m2.qs(".modal-content")!.styleJs({ maxWidth: "100%", maxHeight: "100%" });
   m2.qs(".modal-body span")!.cleanup();
 
+  const icon = await getMiiIcon(mii, "import", "all_body_sugar", 260);
+
   m2.qs(".modal-body")!
     .style({ "align-items": "center", gap: "1.5rem" })
     .prependMany(
@@ -51,8 +53,9 @@ export async function importMiiConfirmation(
         .text(`${mii.nickname} has arrived!`),
       new Html("img")
         .attr({
-          src: await getMiiIcon(mii, "import", "all_body_sugar", 260)
+          src: icon.url
         })
+        .on("load", (await icon).dispose)
         .style({
           width: "260px",
           height: "260px",

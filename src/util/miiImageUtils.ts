@@ -10,7 +10,7 @@ import { getMiiIcon } from "../ui/pages/Library";
 import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
 import EditorIcons from "../constants/EditorIcons";
 import { MiiCreatorV4AppendData } from "../class/struct/MiiCreatorV4Data";
-import { getFFLWorkerMakeIcon } from "./FFLLoader";
+// import { getFFLWorkerMakeIcon } from "./FFLLoader";
 import { ViewType } from "./camera.js";
 import {
   ToVer3EyeColorTable,
@@ -25,6 +25,8 @@ import {
   Ver3HairColorTable,
   Ver3MouthColorTable
 } from "../constants/ColorTables.js";
+import { createMiiRender, iconRenderer } from "./IconRendering.js";
+import { getFFL } from "./FFLLoader.js";
 
 const makeQrCodeImage = async (mii: Mii): Promise<HTMLImageElement> => {
   let convertedVer3Data: Uint8Array, ver3QRData: Uint8Array | any[];
@@ -118,35 +120,28 @@ export const QRCodeCanvas = async (
       Ver3MouthColorTable[ToVer3MouthColorTable[mii2.mouthColor]];
     mii2.facePaintColor = -1;
     mii2.hatType = -1;
+    mii2.clothesType = -1;
+    mii2.shirtColor = -1;
+    mii2.pantsColor = -1;
+    mii2.shoesColor = -1;
     mii2.eyeSclera = 0;
 
-    const renderResult = await getFFLWorkerMakeIcon({
-      data: mii2.export("studioData"),
-      additionalInfo: {
-        favorite: mii2.favorite,
-        hatCommonColor: mii2.hatCommonColor,
-        hatFavoriteColor: mii2.hatFavoriteColor,
-        hatType: mii2.hatType,
-        pantsColor: mii2.pantsColor,
-        shirtColor: mii2.shirtColor,
-        special: mii2.special,
-        temporary: mii2.temporary,
-        eyeSclera: mii2.eyeSclera,
-        wigType: mii2.wigType,
-        clothesType: mii2.clothesType,
-        shoesColor: mii2.shoesColor
-      },
-      size: 720,
-      expression: 0,
-      type: ViewType.AllBodySugar
-    });
+    const renderResult = await getMiiIcon(
+      mii2,
+      "qr_code",
+      "all_body_sugar",
+      720,
+      0,
+      true
+    );
 
     // Load in the image
-    let imageURL: string = renderResult;
+    let imageURL: string = renderResult.url;
     const img = new Image(720, 720);
     img.src = imageURL;
     render = await new Promise((resolve) => {
       img.onload = () => {
+        renderResult.dispose();
         return resolve(img);
       };
     });
@@ -239,6 +234,12 @@ export async function createMiiCard(
   studioData: string,
   extra: string = ""
 ) {
+  const creditIcon = await getMiiIcon(
+    studioData,
+    "creditIcon",
+    "creditIcon",
+    128
+  );
   new Html("div")
     .class("flex-group")
     .style({
@@ -251,13 +252,14 @@ export async function createMiiCard(
         .attr({
           width: 96,
           draggable: "false",
-          src: await getMiiIcon(studioData, "creditIcon", "creditIcon", 128)
+          src: creditIcon.url
           // Config.renderer.renderHeadshotURLNoParams +
           // `?data=${encodeURIComponent(
           //   studioData
           // )}&type=variableiconbody&verifyCharInfo=0&shaderType=switch&width=96&source=credits&characterYRotate=8&bodyType=switch&` +
           // extra,
         })
+        .on("load", creditIcon.dispose)
         .style({ width: "96px", height: "96px" }),
       new Html("div")
         .class("col")

@@ -1,7 +1,7 @@
 import localforage from "localforage";
 import { getMusicManager } from "../class/audio/MusicManager";
 import { getSoundManager } from "../class/audio/SoundManager";
-import Modal, { buttonsOkCancel } from "./components/Modal";
+import Modal, { buttonsOkCancel, closeModal } from "./components/Modal";
 import { Library } from "./pages/Library";
 import Mii from "../class/MiiData";
 import { MiiEditor } from "../class/MiiEditor";
@@ -13,7 +13,8 @@ import {
 import { customRender } from "./pages/library/render/customRender";
 
 import { _ } from "../util/Lang";
-import { prepareFFL } from "../util/FFLLoader";
+import { getCurrentLoadingModal, prepareFFL } from "../util/FFLLoader";
+import Html from "@datkat21/html";
 const __ = _();
 
 export async function setupUi() {
@@ -55,7 +56,21 @@ export async function setupUi() {
 
   updateSettings(true);
 
-  await prepareFFL();
+  await prepareFFL().catch((e) => {
+    closeModal(getCurrentLoadingModal());
+    let m = Modal.modal(
+      "Error",
+      "Oops, an error occurred when loading Mii Creator.." +
+        "\n\nLoading will not continue."
+    );
+    m.qs(".modal-body")!.appendMany(
+      new Html("pre").style({ margin: "0" }).text(e.stack),
+      new Html("span").html(
+        'If the error persists, please report this to the developer <a href="mailto:datkat21.yt@gmail.com">kat21\'s e-mail</a>!'
+      )
+    );
+    throw e;
+  });
 
   // displayUpdateNotice();
 

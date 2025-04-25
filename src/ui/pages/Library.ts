@@ -33,17 +33,14 @@ import {
   initCharModelTextures,
   parseHexOrB64ToUint8Array
 } from "../../external/ffl.js/ffl";
-import { WebGLRenderer } from "three";
+import type { WebGLRenderer } from "three";
 import { MiiExpression } from "../../external/ffl/FFLTypes";
 import Notify from "../components/Notify";
 import { dataToBase64 } from "../../util/dataConvert";
-import {
-  getFFL,
-  getFFLWorkerExists,
-  getFFLWorkerMakeIcon
-} from "../../util/FFLLoader";
+import { getFFL } from "../../util/FFLLoader";
 import { ViewType } from "../../util/camera";
 import LUTShaderMaterial from "../../external/ffl.js/LUTShaderMaterial";
+import { createMiiRender, iconRenderer } from "../../util/IconRendering";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -56,12 +53,22 @@ export const playLoadSound = () => {
   }, RandomInt(200));
 };
 
-let tmpRenderer: WebGLRenderer;
-export const getTempRenderer = () => tmpRenderer;
-
 var canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
-tmpRenderer = new WebGLRenderer({ alpha: true, preserveDrawingBuffer: true });
+
+import { _THREE } from "../../util/PrepareThree";
+
+// https://stackoverflow.com/a/30407959
+//**blob to dataURL**
+export function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve) => {
+    var a = new FileReader();
+    a.onload = function (e) {
+      resolve(e.target!.result as string);
+    };
+    a.readAsDataURL(blob);
+  });
+}
 
 export const getMiiIcon = async (
   mii: Mii | string,
@@ -96,123 +103,83 @@ export const getMiiIcon = async (
 
   console.debug("icon view:", Object.keys(ViewType)[type]);
 
-  if (Config.renderer.useRendererServer === false) {
-    // Momentarily create CharModel
-    let dataURL = "undefined",
-      model: any,
-      data: Uint8Array,
-      miiData: Mii;
-
-    if (typeof mii === "string") {
-      data = parseHexOrB64ToUint8Array(mii);
-      miiData = new Mii(data);
-    } else {
-      data = mii.export("studioData");
-      miiData = mii;
-    }
-
-    if (getFFLWorkerExists()) {
-      console.debug("Asking worker thread for an icon plz!");
-      const icon = await getFFLWorkerMakeIcon(
-        {
-          data,
-          type,
-          expression,
-          texResolution: 256,
-          additionalInfo: {
-            hatCommonColor: miiData.hatCommonColor,
-            hatFavoriteColor: miiData.hatFavoriteColor,
-            hatType: miiData.hatType,
-            pantsColor: miiData.pantsColor,
-            shirtColor: miiData.shirtColor,
-            favorite: miiData.favorite,
-            special: miiData.special,
-            temporary: miiData.temporary,
-            eyeSclera: miiData.eyeSclera,
-            wigType: miiData.wigType,
-            clothesType: miiData.clothesType,
-            shoesColor: miiData.shoesColor
-          },
-          drawBody,
-          size
-        },
-        useBlob
-      );
-      return icon;
-    }
-
-    try {
-      alert(
-        "Icon rendering is broken in your browser since we aren't using web workers, upgrade your browser and try again"
-      );
-      // model = createCharModel(
-      //   data,
-      //   null,
-      //   FFLShaderMaterial,
-      //   getFFL(),
-      //   false
-      // );
-      // console.log(`charModel for ${mii.miiName}:`, model);
-    } catch (e) {
-      let name = "";
-      if (typeof mii !== "string") {
-        name = mii.nickname;
-      }
-      console.error(`Library: Could not make icon for ${name}: ${e}`);
-    } finally {
-      model.dispose();
-      return dataURL;
-    }
+  if (Config.renderer.useRendererServer !== false) {
+    throw "Use of render server isn't supported anymore, sorry";
   }
 
-  if (typeof mii === "string") return;
+  // Momentarily create CharModel
+  let dataURL = "undefined",
+    model: any,
+    data: Uint8Array,
+    miiData: Mii;
 
-  let url = Config.renderer.renderHeadshotURLNoParams;
-
-  let params = new URLSearchParams();
-
-  params.set("data", mii.exportHex("studioData"));
-  // set shader type in query params
-  adjustShaderQuery(params, currentShader);
-  params.set("bodyType", currentBodyModel);
-  params.set("type", view);
-  params.set("width", size.toString());
-  params.set("verifyCharInfo", "0");
-  params.set("miic", encodeURIComponent(mii.exportHex("miic")));
-  params.set("version", Config.version.string);
-  params.set("source", source ? "library" : "lookalike");
-  params.set(
-    "pantsColor",
-    mii.special === 1 ? "gold" : mii.favorite === 1 ? "red" : "gray"
-  );
-
-  if (mii.hatType !== -1) {
-    params.set(
-      Config.renderer.hatTypeParam,
-      String(mii.hatType + 1 + Config.renderer.hatTypeAdd)
-    );
-  }
-  if (mii.hatFavoriteColor !== -1) {
-    params.set(
-      Config.renderer.hatColorParam,
-      String(mii.hatFavoriteColor + Config.renderer.hatColorAdd)
-    );
+  if (typeof mii === "string") {
+    data = parseHexOrB64ToUint8Array(mii);
+    miiData = new Mii(data);
+  } else {
+    data = mii.export("studioData");
+    miiData = mii;
   }
 
-  // params.set(
-  //   "lightXDirection",
-  //   "0"
-  // );
-  // params.set(
-  //   "lightYDirection",
-  //   "0"
-  // );
-  // params.set(
-  //   "lightZDirection",
-  //   "57"
-  // );
+  console.debug("Asking worker thread for an icon plz!");
+  const icon = await createMiiRender({
+    data,
+    type,
+    expression,
+    module: getFFL(),
+    renderer: iconRenderer(),
+    texResolution: 256,
+    additionalInfo: {
+      hatCommonColor: miiData.hatCommonColor,
+      hatFavoriteColor: miiData.hatFavoriteColor,
+      hatType: miiData.hatType,
+      pantsColor: miiData.pantsColor,
+      shirtColor: miiData.shirtColor,
+      favorite: miiData.favorite,
+      special: miiData.special,
+      temporary: miiData.temporary,
+      eyeSclera: miiData.eyeSclera,
+      wigType: miiData.wigType,
+      clothesType: miiData.clothesType,
+      shoesColor: miiData.shoesColor
+    },
+    drawBody,
+    size
+  });
 
-  return `${url}?${params.toString()}`;
+  let url: string, dispose: () => any;
+  if (useBlob) {
+    url = URL.createObjectURL(icon.result as Blob);
+  } else {
+    url = await blobToDataURL(icon.result as Blob);
+  }
+
+  dispose = () => URL.revokeObjectURL(url);
+
+  return { url, dispose };
+
+  // try {
+  //   alert(
+  //     "Icon rendering is broken in your browser since we aren't using web workers, upgrade your browser and try again"
+  //   );
+  //   // model = createCharModel(
+  //   //   data,
+  //   //   null,
+  //   //   FFLShaderMaterial,
+  //   //   getFFL(),
+  //   //   false
+  //   // );
+  //   // console.log(`charModel for ${mii.miiName}:`, model);
+  // } catch (e) {
+  //   let name = "";
+  //   if (typeof mii !== "string") {
+  //     name = mii.nickname;
+  //   }
+  //   console.error(`Library: Could not make icon for ${name}: ${e}`);
+  // } finally {
+  //   model.dispose();
+  //   return dataURL;
+  // }
 };
 
 let currentShader: ShaderType = ShaderType.WiiU;
@@ -256,11 +223,20 @@ export async function pushToServer() {
       console.error("Failed to sync library data: " + e);
     });
 }
-function choosePersonalMii(miiList: MiiLocalforage[]) {
+export function choosePersonalMii(
+  miiList: MiiLocalforage[],
+  cancelable: boolean = false
+) {
   return new Promise((resolve) => {
-    const personalMiiChooseModal = Modal.modal(__("Notice"), "", "body", {
-      text: __("Confirm")
-    });
+    const personalMiiChooseModal = Modal.modal(
+      __("Notice"),
+      "",
+      "body",
+      {
+        text: __("Confirm")
+      },
+      cancelable ? { text: "Cancel" } : (undefined as any)
+    );
     personalMiiChooseModal.classOn("random-mii-grid");
     const container = personalMiiChooseModal.qs(".modal-body")!;
     // Hide unused elements without deleting them
@@ -299,9 +275,9 @@ function choosePersonalMii(miiList: MiiLocalforage[]) {
       const m = new Mii(mii.mii);
 
       function loadIcon() {
-        getMiiIcon(m, "lookalike").then((icon) => {
+        getMiiIcon(m, "personal_mii_icon").then((icon) => {
           playLoadSound();
-          button.qs("img")?.attr({ src: icon });
+          button.qs("img")?.attr({ src: icon.url }).on("load", icon.dispose);
         });
       }
 
@@ -318,10 +294,12 @@ function choosePersonalMii(miiList: MiiLocalforage[]) {
         // alert("browser mitigations enabled");
         setTimeout(() => {
           loadIcon();
-        }, count * 100);
+        }, count * 50);
       } else {
         // alert("browser mitigations disabled");
-        loadIcon();
+        setTimeout(() => {
+          loadIcon();
+        }, 0);
       }
 
       count++;
@@ -341,9 +319,14 @@ function confirmPersonalMii(
       transition: "opacity 0.35s ease"
     });
 
-    getMiiIcon(mii, "lookalike_preview", "all_body_sugar", 210).then((icon) => {
-      miiIcon.attr({ src: icon }).style({ opacity: "1" });
-    });
+    getMiiIcon(mii, "personal_mii_preview", "all_body_sugar", 210).then(
+      (icon) => {
+        miiIcon
+          .attr({ src: icon.url })
+          .style({ opacity: "1" })
+          .on("load", icon.dispose);
+      }
+    );
 
     Modal.modal(
       // Confirmation message
@@ -399,6 +382,18 @@ function confirmPersonalMii(
   });
 }
 
+export async function getAllMiis() {
+  return Promise.all(
+    (await localforage.keys())
+      .filter((k) => k.startsWith("mii-"))
+      .sort((a, b) => Number(a.split("-")[1]!) - Number(b.split("-")[1]!))
+      .map(async (k) => ({
+        id: k,
+        mii: (await localforage.getItem(k)) as string
+      }))
+  );
+}
+
 export async function Library(highlightMiiId?: string) {
   currentShader = await getSetting("shaderType");
   currentBodyModel = await getSetting("bodyModel");
@@ -432,15 +427,7 @@ export async function Library(highlightMiiId?: string) {
     miisJson = [];
 
     // Fallback to checking your local storage data
-    miis = await Promise.all(
-      (await localforage.keys())
-        .filter((k) => k.startsWith("mii-"))
-        .sort((a, b) => Number(a.split("-")[1]!) - Number(b.split("-")[1]!))
-        .map(async (k) => ({
-          id: k,
-          mii: (await localforage.getItem(k)) as string
-        }))
-    );
+    miis = await getAllMiis();
   } else {
     miis = miisJson;
   }
@@ -545,8 +532,11 @@ export async function Library(highlightMiiId?: string) {
           180,
           MiiExpression.Normal
         )
-          .then((r) => {
-            miiImage.attr({ src: r }).style({ opacity: "1" });
+          .then((icon) => {
+            miiImage
+              .attr({ src: icon.url })
+              .style({ opacity: "1" })
+              .on("load", icon.dispose);
           })
           .catch((e) => {
             Notify.show(
@@ -811,7 +801,7 @@ export async function Library(highlightMiiId?: string) {
                   "https://github.com/ariankordi",
                   // Arian's attribution
                   __(
-                    'Creator of <a target="_blank" href="https://mii-unsecure.ariankordi.net">Mii Renderer (REAL)</a>, made FFL.js and ported Miitomo shader, and was a big help with debugging many issues'
+                    'Creator of <a target="_blank" href="https://mii-unsecure.ariankordi.net">Mii Renderer (REAL)</a>, made FFL.js and ported shaders, was a big help with debugging many issues'
                   ),
                   "080037030d020531020c030105040a0209000001000a011004010b0100662f04000214031603140d04000a020109"
                 );

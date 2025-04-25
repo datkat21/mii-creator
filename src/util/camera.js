@@ -1,5 +1,7 @@
-import * as THREE from "three";
+import { _THREE } from "./PrepareThree";
+const THREE = _THREE();
 
+window.THREE3 = THREE;
 /**
  * @enum {number}
  */

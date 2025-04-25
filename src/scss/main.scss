@@ -47,6 +47,7 @@ body {
 
   // UI colors
   --root: #ffffffee;
+  --root-solid: #ffffff;
   --text: #000000;
   --label: #666666;
   --stroke: #dddddd;
@@ -86,6 +87,7 @@ body {
 
     // UI colors
     --root: #000000ee;
+    --root-solid: #000000;
     --text: #ffffff;
     --label: #cccccc;
     --stroke: #484848;
@@ -359,7 +361,7 @@ $desktopWidth: 1875px;
     }
     .modal-body {
       padding: 16px 18px;
-      background-color: var(--root);
+      background-color: var(--root-solid);
       height: 100%;
       flex: 1;
       display: flex;
@@ -1022,7 +1024,7 @@ canvas.scene {
 
         --scale: 0.1rem;
         --blur: 0;
-        --color: rgba(255,255,255);
+        --color: rgba(255, 255, 255);
         // filter: drop-shadow(calc(-1 * var(--scale)) calc(-1 * var(--scale)) var(--blur) var(--color))
         // drop-shadow(0 calc(-1 * var(--scale)) var(--blur) var(--color))
         // drop-shadow(calc(1 * var(--scale)) calc(-1 * var(--scale)) var(--blur) var(--color))
@@ -1031,7 +1033,6 @@ canvas.scene {
         // drop-shadow(calc(-1 * var(--scale)) calc(1 * var(--scale)) var(--blur) var(--color))
         // drop-shadow(0 calc(1 * var(--scale)) var(--blur) var(--color))
         // drop-shadow(calc(1 * var(--scale)) calc(1 * var(--scale)) var(--blur) var(--color));
-
       }
       span {
         width: 100%;

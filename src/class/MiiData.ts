@@ -1,4 +1,3 @@
-import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
 // import Notify from "../ui/components/Notify";
 import { allocateArray } from "../util/allocateArray";
 import { dataToBase64, dataToHex } from "../util/dataConvert";
@@ -27,6 +26,7 @@ import {
 import { StudioData } from "./struct/StudioData";
 
 import { _ } from "../util/Lang";
+import { parseHexOrB64ToUint8Array } from "../util/NumberToHexString";
 const __ = _();
 
 export type MiiDataExportType =
@@ -160,8 +160,9 @@ export default class Mii {
         data.creator = "";
         data.originPlatform = MiiCreatorOriginPlatform.nn_mii_Switch;
         break;
-      // 92/96-byte Ver3StoreData - .cfsd/.ffsd
+      // 92/94/96-byte Ver3StoreData - .cfsd/.ffsd
       case 92:
+      case 94:
       case 96:
         tempArray = allocateArray(108, input);
         data = MiiCreatorV3DataToV4(
@@ -481,12 +482,22 @@ export default class Mii {
   // (3DS/Wii U systems will complain)
   // Easiest solution is to just randomize them
   fixInternalIDs() {
-    const createId = FFLiCreateID.unpack(this.createId) as FFLiCreateID;
+    let createId = FFLiCreateID.unpack(this.createId) as FFLiCreateID;
     const authorId = this.authorId;
+    const CREATEID_IS_EMPTY = Array.from(createId.base).every((e) => e === 0);
 
     // If empty, randomize CreateID base value
-    if (Array.from(createId.base).every((e) => e === 0)) {
+    if (CREATEID_IS_EMPTY) {
       createId.base = randomizeUint8Array(createId.base);
+
+      // save modified create id
+      this.createId = FFLiCreateID.pack(createId);
+
+      // apply bit mask thing idk what this is
+      this.createId[0] = (this.createId[0] & 0b00001111) | 0b11010000;
+
+      // continue modifying current createId
+      createId = FFLiCreateID.unpack(this.createId) as FFLiCreateID;
     }
 
     // If empty, randomize AuthorID value
@@ -507,6 +518,14 @@ export default class Mii {
     }
     if (createId.flag_temporary === 1 && this.temporary === 0) {
       createId.flag_temporary = 0;
+    }
+
+    if (!CREATEID_IS_EMPTY) {
+      // fix createid by unsetting temporary flag after we parsed it.
+      this.createId[0] &= ~0b00100000;
+
+      // continue modifying current createId
+      createId = FFLiCreateID.unpack(this.createId) as FFLiCreateID;
     }
 
     // Re-pack CreateID value

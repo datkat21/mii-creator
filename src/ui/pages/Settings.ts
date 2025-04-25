@@ -7,7 +7,10 @@ import { getSoundManager } from "../../class/audio/SoundManager";
 import {
   getSetting,
   setSetting,
-  settingsInfo
+  settingsInfo,
+  SettingsType,
+  type SettingsOptionCheckbox,
+  type SettingsOptionMulti
 } from "../../util/SettingsHelper";
 import { adjustShaderQuery } from "../../constants/BodyShaderTypes";
 import { Config } from "../../config";
@@ -229,13 +232,16 @@ export async function Settings() {
     let prefixedKey = prefix + key;
 
     if ((await localforage.getItem(prefixedKey)) === null) {
-      await localforage.setItem(prefixedKey, settingsInfo[key].default);
+      await localforage.setItem(
+        prefixedKey,
+        (settingsInfo[key] as SettingsOptionCheckbox).default
+      );
     }
 
     prevSetting[key] = await localforage.getItem(prefixedKey);
 
     switch (settingsInfo[key].type) {
-      case "checkbox":
+      case SettingsType.Checkbox:
         const checkboxDiv = new Html("div").class("col").appendMany(
           new Html("div")
             .class("flex-group")
@@ -272,7 +278,7 @@ export async function Settings() {
         elements.set(key, checkboxDiv.elm);
         modalBody.append(checkboxDiv);
         break;
-      case "multi":
+      case SettingsType.Multi:
         const val = await localforage.getItem(prefixedKey);
         let options = await Promise.all(
           settingsInfo[key].choices.map(async (c: any) => {
@@ -307,7 +313,7 @@ export async function Settings() {
               )
               .attr({ "data-setting": prefixedKey })
               .text(
-                settingsInfo[key].default === c.value
+                (settingsInfo[key] as SettingsOptionMulti).default === c.value
                   ? `${c.label} ${__("(Default)")}`
                   : c.label
               );
@@ -382,7 +388,7 @@ export async function Settings() {
         elements.set(key, multiDiv.elm);
         modalBody.append(multiDiv);
         break;
-      case "non-settings-multi":
+      case SettingsType.NonConfigMulti:
         const nonSettingsMulti = new Html("div").class("col").appendMany(
           new Html("label").text(settingsInfo[key].label),
           new Html("small").text(settingsInfo[key].description),

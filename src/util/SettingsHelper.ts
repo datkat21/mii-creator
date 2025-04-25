@@ -1,11 +1,12 @@
 import localforage from "localforage";
 import { BodyType, ShaderType } from "../constants/BodyShaderTypes";
 import Modal from "../ui/components/Modal";
-import { replayUpdateNotice } from "../ui/pages/Settings";
+import { replayUpdateNotice, Settings } from "../ui/pages/Settings";
 
 import { _ } from "../util/Lang";
 import { Config } from "../config";
-import type Html from "@datkat21/html";
+import Html from "@datkat21/html";
+import { choosePersonalMii, getAllMiis } from "../ui/pages/Library";
 const __ = _();
 
 /* Unused but here for translation purposes */
@@ -16,27 +17,110 @@ __("Middle");
 // High resource file
 __("High");
 
-export const settingsInfo: Record<string, any> = {
+type SettingsOption =
+  | SettingsOptionCheckbox
+  | SettingsOptionMulti
+  | SettingsOptionNonMulti;
+
+enum SettingsType {
+  /** a on/off option */
+  Checkbox,
+  /** a multi select of options */
+  Multi,
+  /** multi that doesn't change a setting */
+  NonConfigMulti
+}
+
+interface SettingBasic {
+  /**
+   * Large label text
+   */
+  label: string;
+  /**
+   * Small description text
+   */
+  description: string;
+  /**
+   * Function called as soon as the setting item is rendered.
+   * Useful for displaying custom html data next to a setting option.
+   * @param html Html instance of the settings item
+   * @returns void
+   */
+  render?: (html: Html) => void;
+  /**
+   * Condition function whether to show or hide the setting.
+   * Return true to keep it visible, false to hide it.
+   * This is optional so if you don't provide this function, it will stay visible.
+   * @param allSettings All current values of settings entries
+   * @returns boolean
+   */
+  condition?: (allSettings: Record<string, any>) => boolean;
+}
+
+interface SettingsOptionCheckbox extends SettingBasic {
+  type: SettingsType.Checkbox;
+  default: boolean;
+}
+
+interface SettingsOptionMulti extends SettingBasic {
+  type: SettingsType.Multi;
+  default: string;
+  choices: SettingsOptionMultiEntry[];
+}
+
+type SettingsOptionMultiEntry = {
+  label: string;
+  value: string;
+  disabled?: boolean;
+  /**
+   * Adds a custom color picker to the settings item. Used only in one place,
+   * and its implementation was pretty hacky.
+   */
+  isColor?: boolean;
+};
+
+interface SettingsOptionNonMulti extends SettingBasic {
+  type: SettingsType.NonConfigMulti;
+  choices: SettingsOptionNonMultiEntry[];
+}
+
+type SettingsOptionNonMultiEntry = {
+  label: string;
+  type?: string;
+  select?: () => any;
+  disabled?: boolean;
+};
+
+export {
+  SettingsType,
+  type SettingBasic,
+  type SettingsOptionCheckbox,
+  type SettingsOptionMulti,
+  type SettingsOptionNonMulti,
+  type SettingsOptionNonMultiEntry
+};
+
+export const settingsInfo: Record<string, SettingsOption> = {
   bgm: {
-    type: "checkbox",
+    type: SettingsType.Checkbox,
     label: __("Enable background music"),
     default: true,
     description: __("Toggle background music depending on the theme.")
   },
   sfx: {
-    type: "checkbox",
+    type: SettingsType.Checkbox,
     label: __("Enable sound effects"),
     default: true,
     description: __("Toggle sound effects for buttons and inputs.")
   },
   accessibilityFeature: {
-    type: "checkbox",
+    type: SettingsType.Checkbox,
     label: __("Enable accessibility features"),
     default: false,
     description: __("The editor UI will be tweaked to be more accessible.")
   },
   autoCloseCustomRender: {
-    type: "checkbox",
+    type: SettingsType.Checkbox,
     label: __("Auto-close custom render menu"),
     default: true,
     description: __(
@@ -44,7 +128,7 @@ export const settingsInfo: Record<string, any> = {
     )
   },
   autoCloseQrScan: {
-    type: "checkbox",
+    type: SettingsType.Checkbox,
     label: __("Auto-close QR scan menu"),
     default: true,
     description: __(
@@ -52,23 +136,15 @@ export const settingsInfo: Record<string, any> = {
     )
   },
   allowQrCamera: {
-    type: "checkbox",
+    type: SettingsType.Checkbox,
     label: __("Allow using camera in QR scanner"),
     default: true,
     description: __(
       "When this is disabled, the camera won't be used and some errors may not appear."
     )
   },
-  // syncLibrary: {
-  //   type: "checkbox",
-  //   label: __("Automatically sync Miis in your library"),
-  //   default: true,
-  //   description: __(
-  //     "When this is disabled, Mii characters will not sync automatically with the server."
-  //   )
-  // },
   editMode: {
-    type: "multi",
+    type: SettingsType.Multi,
     label: __("Editing Mode"),
     description: __("Changes the default edit mode option."),
     default: "3d",
@@ -78,7 +154,7 @@ export const settingsInfo: Record<string, any> = {
     ]
   },
   theme: {
-    type: "multi",
+    type: SettingsType.Multi,
     label: __("Theme"),
     default: "default",
     description: __(
@@ -90,7 +166,7 @@ export const settingsInfo: Record<string, any> = {
     ]
   },
   resourceType: {
-    type: "multi",
+    type: SettingsType.Multi,
     label: __("Resource Type"),
     default: String(Config.renderer.fflResourcePath.length - 1),
     description: __(
@@ -104,7 +180,7 @@ export const settingsInfo: Record<string, any> = {
     ]
   },
   shaderType: {
-    type: "multi",
+    type: SettingsType.Multi,
     label: __("Shader Type"),
     description: __(
       "Change the lighting used in icons, renders and the editor."
@@ -123,8 +199,17 @@ export const settingsInfo: Record<string, any> = {
       { label: __("Miitomo (Basic)"), value: ShaderType.MiitomoBasic }
     ]
   },
+  toonShaderOutline: {
+    type: SettingsType.Checkbox,
+    label: __("Toon shader uses outline"),
+    description: __("Apply toon outline to renders and 3D scene."),
+    default: true,
+    condition(allSettings) {
+      return allSettings["shaderType"] === ShaderType.ThreeToon ? true : false;
+    }
+  },
   bodyModel: {
-    type: "multi",
+    type: SettingsType.Multi,
     label: __("Body Model"),
     description: __(
       "Pose selections are different depending on the body model you use."
@@ -137,30 +222,8 @@ export const settingsInfo: Record<string, any> = {
       // { label: __("StreetPass"), value: BodyType.StreetPass, disabled: true },
     ]
   },
-  // TODO: Implement
-  // iconCameraPosition: {
-  //   type: "multi",
-  //   label: __("Icon Camera Position"),
-  //   description: __(
-  //     "This changes the camera position for all icons."
-  //   ),
-  //   default: BodyType.WiiU,
-  //   choices: [
-  //     { label: __("Wii U"), value: "variableiconbody" },
-  //     { label: __("Switch"), value: "fovy", disabled: true },
-  //     { label: __("Miitomo"), value: BodyType.Miitomo }
-  //     // { label: __("StreetPass"), value: BodyType.StreetPass, disabled: true },
-  //   ]
-  // },
-  bodyModelHands: {
-    type: "checkbox",
-    label: __("Color hands to skin tone"),
-    default: false,
-    description: __("The hands of the body will match the Mii's skin tone."),
-    condition: (settings: any) => settings.bodyModel !== "wiiu"
-  },
   customRenderGreenScreen: {
-    type: "multi",
+    type: SettingsType.Multi,
     label: __("Use background in custom render"),
     default: "off",
     description: __("The custom render will have a solid color background."),
@@ -174,21 +237,25 @@ export const settingsInfo: Record<string, any> = {
     ]
   },
   personalMii: {
-    type: "non-settings-multi",
+    type: SettingsType.NonConfigMulti,
     label: __("Personal Mii"),
     description: __("Manage your choice of Personal Mii."),
     choices: [
       {
         label: __("Choose"),
-        async select() {}
+        async select() {
+          const miis = await getAllMiis();
+          await choosePersonalMii(miis, true);
+        }
       }
-    ]
-    // render(html: Html) {
-    //   html.text("REAL");
-    // }
+    ],
+    render(html: Html) {
+      // TODO: Make this show a preview of your current mii
+      html.append(new Html("div").text("REAL"));
+    }
   },
   saveData: {
-    type: "non-settings-multi",
+    type: SettingsType.NonConfigMulti,
     label: __("Save Data"),
     description: __("Not implemented yet."),
     choices: [
@@ -268,7 +335,7 @@ export const settingsInfo: Record<string, any> = {
     ]
   },
   updateNotices: {
-    type: "non-settings-multi",
+    type: SettingsType.NonConfigMulti,
     label: __("Update Notices"),
     description: __("View the last update notice if you missed it."),
     choices: [
@@ -288,7 +355,7 @@ export const getSetting = async (key: string) => {
   const result = await localforage.getItem("settings_" + key);
   // Null fix
   if (result === null) {
-    if (settingsInfo[key]) return settingsInfo[key].default;
+    if (settingsInfo[key]) return (settingsInfo[key] as any).default;
     else return null;
   } else return result;
 };

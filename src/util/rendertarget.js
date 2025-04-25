@@ -1,4 +1,5 @@
-import * as THREE from "three";
+import { _THREE } from "./PrepareThree";
+const THREE = _THREE();
 import { getIdentCamera } from "../external/ffl.js/ffl";
 
 // Web Worker shenanigans
@@ -7,6 +8,14 @@ if (typeof window === 'undefined') {
 	isWorker = true
 }
 
+/**
+ * 
+ * @param {import('three').RenderTarget} renderTarget 
+ * @param {import('three').WebGLRenderer} renderer 
+ * @param {boolean} flipY 
+ * @param {boolean} blob 
+ * @returns 
+ */
 export function renderTargetToDataURL(renderTarget, renderer, flipY = false, blob = true) {
 	return new Promise((resolve) => {
 	// Create a new scene using a full-screen quad.

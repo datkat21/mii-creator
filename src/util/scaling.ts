@@ -1,4 +1,8 @@
-import * as THREE from "three";
+import { _THREE } from "./PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
+
 export function streetpassHandScaling(
   body: THREE.Object3D,
   scaleMul: number = 1

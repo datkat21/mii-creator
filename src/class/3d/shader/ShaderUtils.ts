@@ -1,34 +1,14 @@
-import * as THREE from "three";
-import {
-  cLightAmbientFFLIconWithBody,
-  cLightDiffuseFFLIconWithBody,
-  cLightDirFFLIconWithBody,
-  cLightSpecularFFLIconWithBody,
-  cMaterialName,
-  FFLBlinnMaterial,
-  FFLToonMaterial
-} from "./fflShaderConst";
-import { switchFragmentShader, switchVertexShader } from "./SwitchShader";
-import {
-  cBeardMaterials,
-  cBodyMaterials,
-  cFacelineMaterials,
-  cGlassMaterial,
-  cHairMaterials,
-  cHatMaterials,
-  cMaskMaterial,
-  cNoseMaterials,
-  cPantsMaterials,
-  FFLI_NN_MII_COMMON_COLOR_MASK,
-  type DrawParamMaterial
-} from "./SwitchShaderMaterials";
+import { _THREE } from "../../../util/PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 // import type Mii from "../../../external/mii-js/mii";
-import type Mii from "../../../class/MiiData";
 import { ShaderType } from "../../../constants/BodyShaderTypes";
 import FFLShaderMaterial from "../../../external/ffl.js/FFLShaderMaterial";
 import LUTShaderMaterial from "../../../external/ffl.js/LUTShaderMaterial";
 import localforage from "localforage";
 import {
+  CustomToonMaterial,
   FFLShaderBlinnMaterial,
   FFLShaderBrightMaterial,
   FFLShaderLightDisabledMaterial,
@@ -229,7 +209,7 @@ export async function getShaderMaterialFromShaderType(type?: string) {
     case ShaderType.MiitomoBasic:
       return LUTShaderPretendoMaterial;
     case ShaderType.ThreeToon:
-      return THREE.MeshToonMaterial;
+      return CustomToonMaterial;
     case ShaderType.ThreePhong:
       return THREE.MeshPhongMaterial;
   }

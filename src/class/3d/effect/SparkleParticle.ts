@@ -1,4 +1,7 @@
-import * as THREE from "three";
+import { _THREE } from "../../../util/PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 
 export class SparkleParticle {
   scene: any;

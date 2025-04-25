@@ -1,5 +1,12 @@
-export const css = /*css*/ `* {
-    font-family: 'nintendo_NTLG-DB_001' !important;
+export const css = (root: string) => /*css*/ `
+@font-face {
+    font-family: "NTLG";
+    src: url("${root}/assets/fonts/NTLG.woff2");
+    font-display: swap;
+}
+
+#mii-creator-selector-modal * {
+    font-family: 'NTLG' !important;
     --default-selector-width: 750px;
     --default-selector-height: 520px;
 }
@@ -64,12 +71,12 @@ export const css = /*css*/ `* {
     border: 2px solid #ecf8f0;
     box-sizing: border-box;
     position: relative;
-    animation: slideUp 0.55s ease-in-out;
+    animation: slideUp 0.35s ease-in-out;
     overflow: hidden;
 }
 
 #mii-creator-selector-modal .selector.finish {
-    animation: slideDown 0.55s ease-in-out forwards !important;
+    animation: slideDown 0.35s ease-in-out forwards !important;
 }
 
 #mii-creator-selector-modal .button-navi {
@@ -88,7 +95,6 @@ export const css = /*css*/ `* {
     width: 55px;
     border: 1.5px solid #68776d;
     cursor: pointer;
-    transition: 0.02s;
     background: linear-gradient(#d3e1d3, #95aa95);
 }
 
@@ -98,6 +104,14 @@ export const css = /*css*/ `* {
     color: #fff;
     border-color: #3e5846;
     width: 50px;
+    box-shadow: none;
+    left: -2px;
+    scale: 0.98;
+}
+
+#mii-creator-selector-modal .button-navi button.next:active:not(:disabled) {
+    right: -2px;
+    left: auto;
 }
 
 #mii-creator-selector-modal .button-navi button.prev{
@@ -197,34 +211,38 @@ export const css = /*css*/ `* {
     }
 }
 
-#mii-creator-selector-modal .selector .mii-container.guest {
-    padding-left: 32%;
-    box-sizing: border-box;
-}
-
 #mii-creator-selector-modal .selector .mii-container.transition {
     top: -60%;
     left: 100%;
     margin-top: 0;
 }
 
-#mii-creator-selector-modal .selector .mii-container.guest .guest-label{
-    width: 230px;
-    height: 280px;
-    text-align: center;
-    display: flex
-;
-    background: #e2f3e0;
-    border-radius: 10px;
+
+#mii-creator-selector-modal .selector .mii-guest-button {
     position: absolute;
     left: 0;
-    top: auto;
+    top: 75%;
+    font-size: 23px;
     margin-top: 15px;
-    margin-left: 55px;
-    color: #505050;
-    justify-content: center;
-    font-size: 30px;
-    align-items: center;
+    height: 43px;
+    padding: 5px 14px;
+    margin-left: 30px;
+    box-sizing: border-box;
+    border: 0;
+    color: #292929;
+    text-shadow: 0px 1px #dce7d8;
+    border-radius: 6px;
+    box-shadow: 0px 1px 3px 1px rgba(255, 255, 255, 0.80) inset, 0px 0px 0px 2px rgb(0 0 0 / 33%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.10);
+}
+#mii-creator-selector-modal .selector .mii-guest-button.selected {
+text-shadow: 0px -2px #ced8ca;
+    background: rgb(0 0 0 / 22%);
+    box-shadow: 0px 1px 4px 2px rgb(150 150 150 / 71%) inset, 0px 0px 0px 2px rgb(86 86 86), 0px 0px 0px 5px #00c6f6;
+}
+#mii-creator-selector-modal .selector .mii-guest-button:active {
+transform: scale(1.1)
 }
 
 #mii-creator-selector-modal .selector .mii-page-counter {
@@ -238,7 +256,7 @@ export const css = /*css*/ `* {
     padding: 0px 20px;
     border-radius: 8px;
     font-size: 28px;
-    box-shadow: -2px -2px 3px 1px rgba(255, 255, 255, 0.80) inset, 1px 1px 3px 1px rgb(0 0 0 / 22%) inset, 0px 0px 0px 1px rgb(0 0 0 / 33%);
+    box-shadow: -2px -2px 3px 1px rgba(255, 255, 255, 0.80) inset, 1px 1px 3px 1px rgb(0 0 0 / 22%) inset, 0px 0px 0px 2px rgb(0 0 0 / 33%);
     text-align: center;
     background: rgba(0, 0, 0, 0.10);
 }
@@ -258,6 +276,11 @@ export const css = /*css*/ `* {
     border-radius: 10px;
     position: relative;
     cursor: pointer;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii:not([data-mii-index]):not([data-guest-mii-index]) {
+background: #f5f9f6;
+border-color: #dae0d9;
 }
 
 #mii-creator-selector-modal .selector .mii-container .mii:focus-visible {
@@ -283,20 +306,18 @@ export const css = /*css*/ `* {
 }
 
 #mii-creator-selector-modal .selector .mii-container .mii>img {
-    /* width: 120px; */
     position: absolute;
-    /* left: -5px; */
     bottom: 0;
     pointer-events: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-user-drag: none;
     user-select: none;
+    image-rendering: pixelated !important;
     outline: none;
     animation: fadeIn 0.15s ease-in-out forwards;
-    transform: translate(-50%, 0);
+    transform: scale(1.0);
     width: 100%;
     height: 100%;
-    left: 50%;
     object-fit: cover;
 }
 
@@ -309,17 +330,13 @@ export const css = /*css*/ `* {
     }
 }
 
-#mii-creator-selector-modal .selector .mii-container .mii>p svg {
-    width: 36px;
-    height: 36px;
-}
 #mii-creator-selector-modal .selector .mii-container .mii>p {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 8px;
     position: absolute;
-    top: -35px;
+    top: -35%;
     left: 50%;
     transform: translateX(-50%);
     margin: auto;
@@ -331,7 +348,7 @@ export const css = /*css*/ `* {
     padding: 3px 16px;
     z-index: 10;
     box-shadow: 0px 0px 1px 1.5px #9e9e9e, inset 0px 0px 5px 0px #afafaf;
-    background: #fff;
+    background-color: #fff;
     -webkit-user-drag: none;
     user-select: none;
     z-index: 10;
@@ -339,9 +356,33 @@ export const css = /*css*/ `* {
     color:#233f2e;
 }
 
+#mii-creator-selector-modal .selector .mii-container .mii>p.favorite {
+background-image: url("data:image/svg+xml,%3Csvg width='49' height='48' viewBox='0 0 49 48' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9.87914 15.4237L8.93213 14.88L9.17184 15.9453L11.3207 25.4956C11.3414 26.5901 11.9723 27.4324 12.8675 28.0586C13.7703 28.6899 14.991 29.1411 16.3056 29.4641C18.9374 30.1108 22.0979 30.2798 24.2801 30.24C26.4624 30.2798 29.6229 30.1108 32.2547 29.4641C33.5692 29.1411 34.79 28.6899 35.6927 28.0586C36.588 27.4324 37.2189 26.5901 37.2396 25.4956L39.3884 15.9453L39.636 14.8448L38.6714 15.4295L31.0959 20.0206L24.6414 12.6439L24.2677 12.2169L23.9086 12.6561L17.8861 20.021L9.87914 15.4237ZM36.2778 29.0877L36.3668 28.1968L35.5756 28.6157C31.6139 30.7131 27.4083 30.72 24.2801 30.72C21.1482 30.72 16.7051 30.7124 12.7447 28.6157L11.9534 28.1968L12.0425 29.0877L12.2804 31.4661C12.2944 32.3073 12.9852 32.9508 13.7746 33.4207C14.6088 33.9172 15.7367 34.3315 16.9561 34.6577C19.3834 35.307 22.2989 35.6395 24.2801 35.5209C26.2612 35.6396 29.1178 35.3069 31.4871 34.6569C32.6773 34.3303 33.7761 33.9153 34.5885 33.4175C35.3606 32.9443 36.0263 32.3002 36.0399 31.466L36.2778 29.0877Z' fill='url(%23paint0_linear_1196_50)' stroke='white' stroke-width='0.96'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_1196_50' x1='24.2801' y1='12.96' x2='39.1601' y2='35.04' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23EC0000'/%3E%3Cstop offset='0.955263' stop-color='%23B50400'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: -1px -5px;
+    background-size: 60px;
+    padding-left: 60px;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii>p.special {
+background-image: url("data:image/svg+xml,%3Csvg width='49' height='48' viewBox='0 0 49 48' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10.3304 19.7505L9.36289 19.1592L9.61179 20.2654L11.7606 29.8157C11.7813 30.9102 12.4123 31.7525 13.3075 32.3786C14.2102 33.01 15.431 33.4611 16.7455 33.7842C19.3774 34.4309 22.5378 34.5999 24.7201 34.5601C26.9023 34.5999 30.0628 34.4309 32.6946 33.7842C34.0092 33.4611 35.2299 33.01 36.1327 32.3786C37.0279 31.7525 37.6588 30.9102 37.6796 29.8157L39.8284 20.2654L40.0693 19.1948L39.1196 19.7446L31.1139 24.3794L25.0924 16.9771L24.7325 16.5347L24.358 16.9649L17.9042 24.3789L10.3304 19.7505ZM36.7177 33.4078L36.8068 32.5169L36.0155 32.9358C32.0538 35.0332 27.8483 35.04 24.7201 35.04C21.5882 35.04 17.1451 35.0325 13.1847 32.9358L12.3934 32.5169L12.4825 33.4078L12.7203 35.7861C12.7343 36.6274 13.4252 37.2709 14.2146 37.7407C15.0488 38.2372 16.1766 38.6515 17.396 38.9777C19.8234 39.627 22.7389 39.9596 24.7201 39.8409C26.7011 39.9596 29.5578 39.627 31.9271 38.9769C33.1173 38.6504 34.216 38.2354 35.0284 37.7375C35.8005 37.2643 36.4663 36.6203 36.4799 35.7861L36.7177 33.4078Z' fill='url(%23paint0_linear_1196_45)' stroke='white' stroke-width='0.96'/%3E%3Ccircle cx='9.36001' cy='15.12' r='4.08' fill='%23F48700' stroke='white' stroke-width='0.96'/%3E%3Ccircle cx='24.7199' cy='12.2399' r='4.08' fill='%23F79400' stroke='white' stroke-width='0.96'/%3E%3Ccircle cx='40.08' cy='15.12' r='4.08' fill='%23FCC000' stroke='white' stroke-width='0.96'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_1196_45' x1='20.1601' y1='24' x2='37.9201' y2='41.76' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23F78E00'/%3E%3Cstop offset='0.11' stop-color='%23FCBA00'/%3E%3Cstop offset='0.42' stop-color='%23FCBA00'/%3E%3Cstop offset='0.63' stop-color='%23EF4D00'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 3px -2px;
+    background-size: 53px;
+    padding-left: 60px;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii>p.personal {
+background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M22.5392 21.4997L22.6353 21.1837L22.3747 20.981L13.7347 14.261L13.0734 13.7467L12.9641 14.5773L11.8588 22.9773L11.8133 23.3233L12.1284 23.4733L20.1936 27.3133L20.6969 27.5529L20.8592 27.0196L22.5392 21.4997ZM24.6653 20.981L24.4046 21.1837L24.5008 21.4997L26.1808 27.0196L26.3431 27.5529L26.8463 27.3133L34.9116 23.4733L35.2267 23.3233L35.1812 22.9773L34.0759 14.5773L33.9666 13.7467L33.3053 14.261L24.6653 20.981Z' fill='url(%23paint0_linear_1966_21)' stroke='white' stroke-width='0.96'/%3E%3Cpath d='M6.98724 18.5683L5.90574 17.8433L6.25786 19.0968L9.57319 30.899C9.599 32.0679 10.2815 32.9687 11.254 33.641C12.2385 34.3217 13.5725 34.8096 15.0136 35.1597C17.8986 35.8605 21.3655 36.0439 23.76 36.0007C26.1544 36.0439 29.6213 35.8605 32.5064 35.1597C33.9475 34.8096 35.2815 34.3217 36.2659 33.641C37.2384 32.9687 37.9209 32.0679 37.9468 30.899L41.2621 19.0968L41.6142 17.8433L40.5327 18.5683L30.7313 25.1386H30.3405L24.1568 16.0501L23.76 15.4668L23.3631 16.0501L17.1794 25.1386H16.7886L6.98724 18.5683ZM36.8906 34.7872L36.9804 33.9002L36.1905 34.3136C31.8267 36.5973 27.1951 36.6041 23.76 36.6041C20.3211 36.6041 15.4284 36.5966 11.0658 34.3136L10.276 33.9002L10.3657 34.7872L10.6271 37.3709C10.6414 38.2643 11.3834 38.9527 12.2474 39.4611C13.1581 39.9969 14.3919 40.4452 15.7291 40.7988C18.3922 41.503 21.5906 41.8632 23.76 41.7342C25.9292 41.8632 29.0628 41.503 31.662 40.798C32.967 40.4441 34.1688 39.9951 35.0554 39.4579C35.9 38.9462 36.6154 38.2572 36.6293 37.3709L36.8906 34.7872Z' fill='url(%23paint1_linear_1966_21)' stroke='white' stroke-width='0.96'/%3E%3Ccircle cx='5.5199' cy='14.64' r='3.6' fill='%23F48700' stroke='white' stroke-width='0.96'/%3E%3Ccircle cx='23.7599' cy='12.2401' r='3.6' fill='%23F79400' stroke='white' stroke-width='0.96'/%3E%3Ccircle cx='13.68' cy='12.7201' r='2.64' fill='%23EF9600' stroke='white' stroke-width='0.96'/%3E%3Ccircle cx='34.3199' cy='12.7201' r='2.64' fill='%23EF9600' stroke='white' stroke-width='0.96'/%3E%3Ccircle cx='41.9999' cy='15.12' r='3.6' fill='%23EF9600' stroke='white' stroke-width='0.96'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_1966_21' x1='20.2045' y1='18.6886' x2='29.2193' y2='30.9992' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23EF9600'/%3E%3Cstop offset='0.63' stop-color='%23EF9600'/%3E%3C/linearGradient%3E%3ClinearGradient id='paint1_linear_1966_21' x1='16.32' y1='22.0801' x2='32.4548' y2='38.1065' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23F4AD00'/%3E%3Cstop offset='0.29' stop-color='%23FADF00'/%3E%3Cstop offset='0.665' stop-color='%23FCE200'/%3E%3Cstop offset='1' stop-color='%23EC7900'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 5px -3px;
+    background-size: 51px;
+    padding-left: 60px;
+}
+
 #mii-creator-selector-modal .selector .mii-container .mii>p::before {
   content: "";
-  background-image: url("data:image/svg+xml,%3Csvg width='9' height='11' viewBox='0 0 9 11' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0.5 11L4.5 2L8.5 11H0.5Z' fill='url(%23paint0_linear_1939_2)'/%3E%3Cpath d='M4.49997 3.23111L8 11H9L4.49997 0.76889L0 11H1L4.49997 3.23111Z' fill='%23A0A0A0'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_1939_2' x1='4.5' y1='2' x2='4.5' y2='11' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0.865385' stop-color='white'/%3E%3Cstop offset='1' stop-color='%23AFAFAF'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%229%22%20height%3D%2211%22%20viewBox%3D%220%200%209%2011%22%20fill%3D%22none%22%3E%3Cpath%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20d%3D%22M0.5%2011L4.5%202L8.5%2011H0.5Z%22%20fill%3D%22%23ffff%22/%3E%3Cpath%20d%3D%22M4.49997%203.23111L8%2011H9L4.49997%200.76889L0%2011H1L4.49997%203.23111Z%22%20fill%3D%22%23A0A0A0%22/%3E%3C/svg%3E");
   position: absolute;
   width: 20px;
   height: 24px;
@@ -349,7 +390,7 @@ export const css = /*css*/ `* {
   left: 50%;
   transform: translateX(-50%) rotate(180deg);
   top: 100%;
-  z-index: -1;
+  z-index: 1;
 }
 
 #mii-creator-selector-modal .selector .mii-container .mii:nth-child(1)>p,
@@ -358,11 +399,22 @@ export const css = /*css*/ `* {
     transform: none;
 }
 
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(1)>p:before,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(6)>p:before {
+    left: 30%;
+}
+
 #mii-creator-selector-modal .selector .mii-container .mii:nth-child(5)>p,
 #mii-creator-selector-modal .selector .mii-container .mii:nth-child(10)>p {
     right: -10%;
     left: auto;
     transform: none;
+}
+
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(5)>p:before,
+#mii-creator-selector-modal .selector .mii-container .mii:nth-child(10)>p:before {
+    left: auto;
+    right: 15%;
 }
 
 
@@ -406,7 +458,7 @@ export const css = /*css*/ `* {
 #mii-creator-selector-modal .selector .mii-container .mii:nth-child(9)>p,
 #mii-creator-selector-modal .selector .mii-container .mii:nth-child(10)>p {
     top: auto;
-    bottom: -33px;
+    bottom: -38%;
 }
 
 #mii-creator-selector-modal .selector .mii-container .mii:nth-child(6)>p::before,
@@ -416,6 +468,53 @@ export const css = /*css*/ `* {
 #mii-creator-selector-modal .selector .mii-container .mii:nth-child(10)>p::before {
     transform: translateX(-50%) translateY(100%);
     top: -100%;
+}
+
+#mii-creator-selector-modal .selector .mii-container.guest {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+#mii-creator-selector-modal .selector .mii-container.guest .guest-label{
+    width: 190px !important;
+    height: 280px;
+    text-align: center;
+    display: flex;
+    background: #e2f3e0;
+    box-sizing: border-box;
+    border-radius: 10px;
+    position: relative;
+    margin-left: 15px;
+    margin-top: 15px;
+    margin-right: 10px;
+    color: #505050;
+    justify-content: center;
+    font-size: 28px;
+    align-items: center;
+}
+
+#mii-creator-selector-modal .selector .mii-container.guest .guest-miis{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 90%;
+    align-content: center;
+}
+
+#mii-creator-selector-modal .selector .mii-container.guest .guest-miis .mii>p{
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    top: -35%;
+    bottom: auto;
+}
+
+#mii-creator-selector-modal .selector .mii-container.guest .guest-miis .mii>p:before{
+    left: 50% ;
+    right: auto;
+    transform: translateX(-50%) rotate(180deg) ;
+    top: 100%;
 }
 
 #mii-creator-selector-modal .selector .button-container {
@@ -471,11 +570,78 @@ export const css = /*css*/ `* {
     text-shadow: none;
 }
 
-@media only screen and (max-width: 600px) {
-    #mii-creator-selector-modal .selector {
-        width: 90%;
+@media only screen and (max-width: 750px) {
+    * {
+        --default-selector-width: 95%;
     }
-}`;
+
+    #mii-creator-selector-modal .selector .mii-container {
+        align-content: normal;
+        padding: 15px 5px;
+        box-sizing: border-box;
+    }
+}
+
+@media only screen and (max-width: 751px) {
+    #mii-creator-selector-modal .selector .mii-container.guest {
+        overflow-y: scroll;
+        overflow-x: hidden;
+        border-radius: 12px;
+}
+
+#mii-creator-selector-modal .selector .mii-container.guest .guest-miis {
+        align-content: flex-start;
+        justify-content: center;
+        width: 80%;
+}
+
+    #mii-creator-selector-modal .selector .mii-container.guest .mii>p {
+        position: fixed!important;
+        width: 80%!important;
+        left: 10% !important;
+        right: auto !important;
+        top: 16% !important;
+        bottom: auto !important;
+        transform: none !important;
+    }
+
+    #mii-creator-selector-modal .selector .mii-container.guest .mii>p::before {
+        display: none;
+        opacity: 0;
+}
+}
+
+@media only screen and (max-width: 717px) {
+    #mii-creator-selector-modal .selector .mii-container {
+        overflow-y: scroll;
+        overflow-x: hidden;
+        border-radius: 12px;
+}
+
+    #mii-creator-selector-modal .selector .mii-container .mii>p {
+        position: fixed!important;
+        width: 80%!important;
+        left: 10% !important;
+        right: auto !important;
+        top: 16% !important;
+        bottom: auto !important;
+        transform: none !important;
+    }
+
+    #mii-creator-selector-modal .selector .button-container button {
+        font-size: 26px !important;
+    }
+
+    #mii-creator-selector-modal .selector>h1 {
+    font-size: 30px !important;
+    }
+
+#mii-creator-selector-modal .selector .mii-container .mii>p::before {
+        display: none;
+        opacity: 0;
+}
+}
+`;
 
 export const miiIconFavorite = `<svg width="49" height="48" viewBox="0 0 49 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.87914 15.4237L8.93213 14.88L9.17184 15.9453L11.3207 25.4956C11.3414 26.5901 11.9723 27.4324 12.8675 28.0586C13.7703 28.6899 14.991 29.1411 16.3056 29.4641C18.9374 30.1108 22.0979 30.2798 24.2801 30.24C26.4624 30.2798 29.6229 30.1108 32.2547 29.4641C33.5692 29.1411 34.79 28.6899 35.6927 28.0586C36.588 27.4324 37.2189 26.5901 37.2396 25.4956L39.3884 15.9453L39.636 14.8448L38.6714 15.4295L31.0959 20.0206L24.6414 12.6439L24.2677 12.2169L23.9086 12.6561L17.8861 20.021L9.87914 15.4237ZM36.2778 29.0877L36.3668 28.1968L35.5756 28.6157C31.6139 30.7131 27.4083 30.72 24.2801 30.72C21.1482 30.72 16.7051 30.7124 12.7447 28.6157L11.9534 28.1968L12.0425 29.0877L12.2804 31.4661C12.2944 32.3073 12.9852 32.9508 13.7746 33.4207C14.6088 33.9172 15.7367 34.3315 16.9561 34.6577C19.3834 35.307 22.2989 35.6395 24.2801 35.5209C26.2612 35.6396 29.1178 35.3069 31.4871 34.6569C32.6773 34.3303 33.7761 33.9153 34.5885 33.4175C35.3606 32.9443 36.0263 32.3002 36.0399 31.466L36.2778 29.0877Z" fill="url(#paint0_linear_1196_50)" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1196_50" x1="24.2801" y1="12.96" x2="39.1601" y2="35.04" gradientUnits="userSpaceOnUse"><stop stop-color="#EC0000"/><stop offset="0.955263" stop-color="#B50400"/></linearGradient></defs></svg>`;
 export const miiIconSpecial = `<svg width="49" height="48" viewBox="0 0 49 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.3304 19.7505L9.36289 19.1592L9.61179 20.2654L11.7606 29.8157C11.7813 30.9102 12.4123 31.7525 13.3075 32.3786C14.2102 33.01 15.431 33.4611 16.7455 33.7842C19.3774 34.4309 22.5378 34.5999 24.7201 34.5601C26.9023 34.5999 30.0628 34.4309 32.6946 33.7842C34.0092 33.4611 35.2299 33.01 36.1327 32.3786C37.0279 31.7525 37.6588 30.9102 37.6796 29.8157L39.8284 20.2654L40.0693 19.1948L39.1196 19.7446L31.1139 24.3794L25.0924 16.9771L24.7325 16.5347L24.358 16.9649L17.9042 24.3789L10.3304 19.7505ZM36.7177 33.4078L36.8068 32.5169L36.0155 32.9358C32.0538 35.0332 27.8483 35.04 24.7201 35.04C21.5882 35.04 17.1451 35.0325 13.1847 32.9358L12.3934 32.5169L12.4825 33.4078L12.7203 35.7861C12.7343 36.6274 13.4252 37.2709 14.2146 37.7407C15.0488 38.2372 16.1766 38.6515 17.396 38.9777C19.8234 39.627 22.7389 39.9596 24.7201 39.8409C26.7011 39.9596 29.5578 39.627 31.9271 38.9769C33.1173 38.6504 34.216 38.2354 35.0284 37.7375C35.8005 37.2643 36.4663 36.6203 36.4799 35.7861L36.7177 33.4078Z" fill="url(#paint0_linear_1196_45)" stroke="white" stroke-width="0.96"/><circle cx="9.36001" cy="15.12" r="4.08" fill="#F48700" stroke="white" stroke-width="0.96"/><circle cx="24.7199" cy="12.2399" r="4.08" fill="#F79400" stroke="white" stroke-width="0.96"/><circle cx="40.08" cy="15.12" r="4.08" fill="#FCC000" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1196_45" x1="20.1601" y1="24" x2="37.9201" y2="41.76" gradientUnits="userSpaceOnUse"><stop stop-color="#F78E00"/><stop offset="0.11" stop-color="#FCBA00"/><stop offset="0.42" stop-color="#FCBA00"/><stop offset="0.63" stop-color="#EF4D00"/></linearGradient></defs></svg>`;
@@ -485,5 +651,6 @@ export enum MiiSelectorMiiType {
   Regular,
   Favorite,
   Special,
-  Personal
+  Personal,
+  Guest
 }

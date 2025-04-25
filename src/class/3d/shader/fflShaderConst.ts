@@ -1,5 +1,8 @@
 // https://jsfiddle.net/arian_/8gvynrdu/7/
-import * as THREE from "three";
+import { _THREE } from "../../../util/PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 // import type { FFLMaterial } from "../../../external/ffl.js/FFLShaderMaterial";
 // Material table for FFLDefaultShader mapping to FFLModulateType
 // Reference: https://github.com/aboood40091/FFL-Testing/blob/master/src/Shader.cpp

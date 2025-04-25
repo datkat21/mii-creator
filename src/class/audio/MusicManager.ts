@@ -10,9 +10,11 @@ export class MusicManager {
 
   constructor() {
     this.SongBufs = {};
-    this.audioContext = new (window.AudioContext ||
+    this.audioContext = new (
+      window.AudioContext ||
       //@ts-ignore webkitaudiocontext exists
-      window.webkitAudioContext)();
+      window.webkitAudioContext
+    )();
     this.gainNode = this.audioContext.createGain();
     this.gainNode.connect(this.audioContext.destination);
     this.muted = false;

@@ -6,11 +6,40 @@ export const ExtHatNameList = [
   "Bow",
   "Cat Ears",
   "Straw Hat",
-  "Hijab",
+  "Pot",
   "Bike Helmet"
 ];
 
-export const ExtClothesList = ["LS+Pants", "SS+Shorts", "TT+Shorts"];
+export const ExtClothesList = [
+  "LS+Pants",
+  "SS+Shorts",
+  "TT+Shorts",
+  "LS+Pants"
+];
+export const ExtClothesMiitomoMeshAndTextureList = [
+  {
+    Shirt: "StudioLongShirt",
+    Pants: "StudioPants",
+    SkirtLong: "StudioLongSkirt"
+    // Skirt: "StudioShortSkirt"
+  },
+  {
+    Shirt: "StudioShortShirt",
+    Shorts: "StudioShorts",
+    Skirt: "StudioShortSkirt"
+  },
+  {
+    Shirt: "StudioTank",
+    Shorts: "StudioShorts_FlipFlops",
+    Skirt: "StudioShortSkirt"
+  },
+  {
+    Shirt: "StudioHoodieShirt",
+    Pants: "StudioHoodiePants",
+    SkirtMedium: "StudioMediumSkirt",
+    Hoodie: "StudioHood"
+  }
+];
 
 export enum HatType {
   HEAD,
@@ -35,7 +64,7 @@ export const HatTypeList = [
   HatType.SIDE, // Bow
   HatType.HEAD, // Cat Ears
   HatType.HAT, // Straw Hat
-  HatType.BALD, // Hijab
+  HatType.HAT, // Pot
   HatType.HAT // Bike Helmet
 ];
 

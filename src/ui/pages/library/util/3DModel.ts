@@ -1,15 +1,9 @@
-import {
-  CanvasTexture,
-  MeshBasicMaterial,
-  MeshPhysicalMaterial,
-  MeshStandardMaterial,
-  type Mesh,
-  type ShaderMaterial,
-  type Texture
-} from "three";
 import type { Mii3DScene } from "../../../../class/3DScene";
 // import { getSetting } from "../../../../util/SettingsHelper";
-import * as THREE from "three";
+import { _THREE } from "../../../../util/PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 import { ShaderType } from "../../../../constants/BodyShaderTypes";
 import { renderTargetToDataTexture } from "../../../../util/rendertarget";
 import { getSettingSafe } from "../../../../class/3d/shader/ShaderUtils";
@@ -26,24 +20,24 @@ export async function traverse3DMaterialFix(
 
     // count meshes (ai slop code ..)
     scene.getScene().traverse((o) => {
-      if ((o as Mesh).isMesh !== true) return;
-      const m = o as Mesh;
+      if ((o as THREE.Mesh).isMesh !== true) return;
+      const m = o as THREE.Mesh;
       if (m.material) {
         total++;
       }
     });
 
     scene.getScene().traverse(async (o) => {
-      if ((o as Mesh).isMesh !== true) return;
+      if ((o as THREE.Mesh).isMesh !== true) return;
 
-      const m = o as Mesh;
+      const m = o as THREE.Mesh;
 
       mats.set(count, m.material);
 
       console.log(m.name, m.geometry.userData);
 
       // this depends on shader setting..
-      let map: Texture | null = null;
+      let map: THREE.Texture | null = null;
       const userData = m.geometry.userData;
 
       if (
@@ -52,8 +46,9 @@ export async function traverse3DMaterialFix(
         shaderSetting === ShaderType.LightDisabled ||
         shaderSetting === ShaderType.Miitomo
       ) {
-        console.log(m.name, (m.material as MeshBasicMaterial).type);
-        if ((m.material as MeshBasicMaterial).type !== "ShaderMaterial") return;
+        console.log(m.name, (m.material as THREE.MeshBasicMaterial).type);
+        if ((m.material as THREE.MeshBasicMaterial).type !== "ShaderMaterial")
+          return;
 
         console.log("current map:", (m.material as any).map);
 
@@ -67,14 +62,15 @@ export async function traverse3DMaterialFix(
                 scene.getRenderer()
               );
 
-              (m.material as MeshBasicMaterial).map = texture;
-              const map2 = (m.material as MeshBasicMaterial).map as Texture;
+              (m.material as THREE.MeshBasicMaterial).map = texture;
+              const map2 = (m.material as THREE.MeshBasicMaterial)
+                .map as THREE.Texture;
               if (map2) {
                 map2.wrapS = THREE.MirroredRepeatWrapping;
                 map2.wrapT = THREE.MirroredRepeatWrapping;
               }
 
-              map = (m.material as MeshBasicMaterial).map;
+              map = (m.material as THREE.MeshBasicMaterial).map;
               mapFixed = true;
             }
             break;
@@ -86,9 +82,9 @@ export async function traverse3DMaterialFix(
                 scene.getRenderer()
               );
 
-              (m.material as MeshBasicMaterial).map = texture;
+              (m.material as THREE.MeshBasicMaterial).map = texture;
 
-              map = (m.material as MeshBasicMaterial).map;
+              map = (m.material as THREE.MeshBasicMaterial).map;
               mapFixed = true;
             }
             break;
@@ -201,8 +197,8 @@ export async function traverse3DMaterialFix(
         // Can't remember what the uniform for texture is on switch
       } else {
         // Prevent warning by assigning map to null if it is null
-        if ((m.material as MeshStandardMaterial).map !== null)
-          map = (m.material as MeshStandardMaterial).map;
+        if ((m.material as THREE.MeshStandardMaterial).map !== null)
+          map = (m.material as THREE.MeshStandardMaterial).map;
 
         // if (bodyModelHands) {
         //   if (m.name === "hands_m" || m.name === "hands_f") {
@@ -236,7 +232,7 @@ export async function traverse3DMaterialFix(
       THREE.ColorManagement.enabled = false;
 
       // define params for the model material export
-      let color: THREE.ColorRepresentation | undefined = new THREE.Color(
+      let color: THREE.Color | undefined = new THREE.Color(
           userData.modulateColor.x,
           userData.modulateColor.y,
           userData.modulateColor.z
@@ -273,7 +269,7 @@ export async function traverse3DMaterialFix(
         color.convertSRGBToLinear();
       }
 
-      var mat = new MeshPhysicalMaterial({
+      var mat = new THREE.MeshPhysicalMaterial({
         color,
         metalness,
         roughness,

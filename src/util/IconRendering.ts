@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import {
   CharModel,
   createAndRenderToTarget,
@@ -49,10 +48,30 @@ import {
 import { ViewType, getCameraForViewType } from "./camera";
 import { renderTargetToDataURL } from "./rendertarget";
 import { ShaderType } from "../constants/BodyShaderTypes";
-import { SkeletonUtils } from "three/examples/jsm/Addons.js";
+import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 import { colorMixTexture } from "../class/3d/shader/ColorMix";
 import { loadBlobTextureWorker } from "../ui/pages/library/util/3DModel";
 import FFLShaderMaterial from "../external/ffl.js/FFLShaderMaterial";
+//@ts-expect-error shhhhhhh
+import type * as THREE from "three";
+import { _THREE } from "./PrepareThree";
+import { clothingUpdate } from "../class/3d/ClothingHelper";
+
+export const getAdditionalInfoFromMii = (miiData: Mii) =>
+  ({
+    hatCommonColor: miiData.hatCommonColor,
+    hatFavoriteColor: miiData.hatFavoriteColor,
+    hatType: miiData.hatType,
+    pantsColor: miiData.pantsColor,
+    shirtColor: miiData.shirtColor,
+    favorite: miiData.favorite,
+    special: miiData.special,
+    temporary: miiData.temporary,
+    eyeSclera: miiData.eyeSclera,
+    clothesType: miiData.clothesType,
+    shoesColor: miiData.shoesColor,
+    wigType: miiData.wigType
+  }) as MiiCreatorAdditionalData;
 
 export const defaultParams: Partial<RenderRequest> = {
   type: ViewType.Face,
@@ -62,15 +81,25 @@ export const defaultParams: Partial<RenderRequest> = {
   drawBody: true
 };
 
+const THREE = _THREE();
+let renderer = new THREE.WebGLRenderer({
+  alpha: true,
+  powerPreference: "high-performance",
+  antialias: false,
+  stencil: false,
+  depth: false
+});
+export const iconRenderer = () => renderer;
+
 export interface RenderRequest {
   type: ViewType;
   expression: number | number[];
   data: Uint8Array | string;
   size: number;
-  characterYRotate: number;
-  modelFlag: any;
+  characterYRotate?: number;
+  modelFlag?: any;
   renderer: THREE.WebGLRenderer;
-  textureRenderer: THREE.WebGLRenderer;
+  textureRenderer?: THREE.WebGLRenderer;
   drawBody: boolean;
   module: any;
   additionalInfo?: MiiCreatorAdditionalData;
@@ -189,7 +218,7 @@ export function createMiiRender(
     );
 
     // QUICKLY Replace the material
-    charModel._materialTextureClass = FFLShaderMaterial;
+    charModel._materialTextureClass = FFLShaderMaterial as any;
     charModel._materialClass = shaderMaterial;
 
     if (request.additionalInfo!.eyeSclera === 1 && mii.eyeColor !== 8) {
@@ -406,6 +435,7 @@ export function createMiiRender(
       if (bodyModelHands) bodyModelHands.material = bodyModelBody.material;
 
       var pantsColor = cPantsColorGray;
+      var shoesColor: number[] = [1, 1, 1];
 
       // favorite/special check
       if (request.additionalInfo!.favorite === 1) {
@@ -424,6 +454,14 @@ export function createMiiRender(
       ) {
         pantsColor =
           SwitchMiiColorTableSRGB[request.additionalInfo!.pantsColor];
+      }
+
+      if (
+        request.additionalInfo!.shoesColor !== -1 &&
+        !ForbiddenShirtPantColors.includes(request.additionalInfo!.shoesColor)
+      ) {
+        shoesColor =
+          SwitchMiiColorTableSRGB[request.additionalInfo!.shoesColor];
       }
 
       modulate = isUsingShader
@@ -448,120 +486,34 @@ export function createMiiRender(
         request.additionalInfo!.clothesType !== undefined &&
         request.additionalInfo!.clothesType !== -1 &&
         request.bodyModelType !== IconBodyModelType.low &&
-        getLoadedBodyModelName() === "wiiu" &&
+        (getLoadedBodyModelName() === "wiiu" ||
+          getLoadedBodyModelName() === "miitomo") &&
         request.additionalInfo!.clothesType < ExtClothesList.length
       ) {
-        console.log("clothing update");
-        let shirtTexture: THREE.Texture,
-          pantsTexture: THREE.Texture | null = null;
-
-        const suffix = mii.gender == 1 ? "F" : "";
-        let key = `${getLoadedBodyModelName()}_${
-          ExtClothesList[request.additionalInfo!.clothesType]
-        }${suffix}`;
-        let shirtKey = key;
-        if (getLoadedBodyModelName() === "miitomo") {
-          shirtKey = key + "_Top";
-        }
-
-        let shoesColor =
-          request.additionalInfo!.shoesColor !== -1 &&
-          request.additionalInfo!.shoesColor < 100
-            ? SwitchMiiColorTableSRGB[request.additionalInfo!.shoesColor]
-            : [1, 1, 1];
-        switch (ClothesTypeList[request.additionalInfo!.clothesType]) {
-          case ClothesType.COLOR_MIXED: {
-            const colorMixR = new THREE.Vector4(...shirtColor, 1),
-              colorMixG = new THREE.Vector4(...shoesColor, 1),
-              colorMixB = new THREE.Vector4(...pantsColor, 1),
-              colorMixA = charModel
-                ? request.clothingLinearColors !== true
-                  ? charModel!.facelineColor
-                  : charModel!.facelineColor.convertSRGBToLinear()
-                : 0xff0000;
-
-            // console.log("Shirt Texture Key:", shirtKey);
-            let tex = await colorMixTexture(
-              getClothesTextures()[shirtKey],
-              colorMixR,
-              colorMixG,
-              colorMixB,
-              colorMixA,
-              request.textureRenderer || request.renderer,
-              request.texResolution
-            );
-            // console.log("omg i got the shirt texture");
-            shirtTexture = await loadBlobTextureWorker(
-              tex,
-              request.texResolution,
-              request.texResolution
-            );
-
-            // console.log("loaded shirt texture!");
-
-            // if (this.bodyModel === "miitomo") {
-            //   const pantsKey = key + "_Bot";
-            //   let tex = await colorMixTexture(
-            //     this.clothingTextures[pantsKey],
-            //     colorMixR,
-            //     colorMixG,
-            //     colorMixB,
-            //     colorMixA
-            //   );
-            //   pantsTexture = await loadBlobTexture(tex);
-            // }
-            break;
-          }
-          case ClothesType.TEXTURE_COLOR: {
-            shirtTexture = getClothesTextures()[shirtKey + suffix];
-            break;
-          }
-          default:
-            alert("Something isn't right here");
-            throw "???";
-        }
-        request.renderer.initTexture(shirtTexture);
-
-        let nBodyMat = nBody.material as any;
-        let nLegsMat = nLegs.material as any;
-
-        nBodyMat.dispose();
-        nLegsMat.dispose();
-
-        let modulate = isUsingShader
-          ? {
-              modulateType: 9,
-              modulateMode: 1,
-              color: new THREE.Color(0x000000)
-            }
-          : { color: new THREE.Color(0xffffff) };
-        const params = {
-          ...modulate,
-          map: shirtTexture
-        };
-        const newBodyMat = new (await getShaderMaterialFromShaderType(
-          request.shaderType
-        ))(params);
-        // const newBodyMat = new THREE.MeshBasicMaterial(params);
-        if (getLoadedBodyModelName() !== "miitomo") {
-          nBody.material = newBodyMat as any;
-          nLegs.material = newBodyMat as any;
-        }
-
-        // if (this.bodyModel === "miitomo" && pantsTexture !== null) {
-        //   const params = {
-        //     modulateType: 9,
-        //     modulateMode: 1,
-        //     map: pantsTexture
-        //   };
-        //   const newLegsMat = new (await getShaderMaterialFromShaderType())(
-        //     params
-        //   );
-        //   nLegs.material = newLegsMat as any;
-        // } else {
-        // }
-
-        console.log("mat changed!", newBodyMat, nBody, nLegs);
+        console.log("LOADED BODY IS", getLoadedBodyModelName());
+        await clothingUpdate({
+          gender: mii.gender,
+          clothesType: request.additionalInfo!.clothesType,
+          renderer: request.textureRenderer || request.renderer,
+          bodyModel: getLoadedBodyModelName(),
+          shirtColor,
+          pantsColor,
+          shoesColor,
+          facelineColor: charModel.facelineColor,
+          clothesTextures: getClothesTextures(),
+          nBody: bodyModelBody,
+          nLegs: bodyModelLegs,
+          bodyGroup: bodyModel,
+          originalMaterial: charModel._materialClass,
+          texResolution
+        });
+      } else {
+        bodyModel.traverse((m) => {
+          if ((m as THREE.Mesh).isMesh !== true) return;
+          m.visible = false;
+        });
+        bodyModelBody.visible = true;
+        bodyModelLegs.visible = true;
       }
 
       if (isTemporary) {
@@ -586,7 +538,7 @@ export function createMiiRender(
       }
 
       if (isStreetPass()) {
-        console.log("is streetpass");
+        // console.log("is streetpass");
 
         var scaleVec = new THREE.Vector3();
         bodyModel.getWorldScale(scaleVec);
@@ -601,7 +553,7 @@ export function createMiiRender(
           .scale.set(handScaleX, handScaleY, handScaleX);
         // streetpassHandScaling(bodyModel, );
       } else {
-        console.log("not streetpass");
+        // console.log("not streetpass");
       }
     }
 

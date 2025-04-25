@@ -29,6 +29,10 @@ import { getMiiIcon } from "../../Library";
 import { parseHexOrB64ToUint8Array } from "../../../../external/ffl.js/ffl";
 
 import { _ } from "../../../../util/Lang";
+import { createMiiRender } from "../../../../helper";
+import { ViewType } from "../../../../util/camera";
+import { getFFL } from "../../../../util/FFLLoader";
+import { getAdditionalInfoFromMii } from "../../../../util/IconRendering";
 const __ = _();
 
 enum ExpressionModifier {
@@ -106,7 +110,12 @@ const expressionTable: {
 
 export async function customRender(miiData: Mii) {
   const modal = Modal.modal("Custom Render", "", "body", {
-    text: "Cancel"
+    text: "Cancel",
+    callback(e) {
+      scene.shutdown();
+      icons.forEach((i) => URL.revokeObjectURL(i));
+      parent.cleanup();
+    }
   });
   const body = modal.qs(".modal-body")!.classOn("responsive-row-lg").clear();
   modal.qs(".modal-content")!.styleJs({
@@ -136,6 +145,14 @@ export async function customRender(miiData: Mii) {
     .classOn("tab-content")
     .style({ flex: "1", height: "100%", overflow: "auto", gap: "0.5rem" })
     .appendTo(body);
+
+  // Init scene early so its renderer can be used by the expression icons
+  const scene = new Mii3DScene(
+    miiData,
+    parentBox.elm,
+    SetupType.Screenshot,
+    (renderer) => {}
+  );
 
   let configuration = {
     fov: 30,
@@ -302,6 +319,7 @@ export async function customRender(miiData: Mii) {
         new Html("a").text(__("Click here")).on("click", (e) => {
           // goodbye custom render :(
           scene.shutdown();
+          icons.forEach((i) => URL.revokeObjectURL(i));
           parent.cleanup();
           modal.qs("button")?.elm.click();
 
@@ -350,6 +368,8 @@ export async function customRender(miiData: Mii) {
     }
   };
 
+  let icons: string[] = [];
+
   expressionTable.forEach(async (k) => {
     let iconTag;
 
@@ -360,17 +380,31 @@ export async function customRender(miiData: Mii) {
         k.id
       }&type=fflmakeicon&verifyCharInfo=0" title="${k.name}">`;
     } else {
-      const icon = await getMiiIcon(
-        miiData,
-        "customRender",
-        "fflmakeicon",
-        128,
-        k.id,
-        false
-      ).catch((e) => {
-        console.error("oh noes, Icon didnt Load", e);
+      const icon = await createMiiRender({
+        data: miiData.export("studioData"),
+        drawBody: false,
+        type: ViewType.MakeIcon,
+        expression: k.id,
+        module: getFFL(),
+        renderer: scene.getRenderer(),
+        size: 96,
+        additionalInfo: getAdditionalInfoFromMii(miiData)
       });
-      iconTag = `<img class="lazy" width=128 height=128 data-src="${icon}" title="${k.name}">`;
+
+      const iconURL = URL.createObjectURL(icon.result as Blob);
+      icons.push(iconURL);
+
+      // const icon = await getMiiIcon(
+      //   miiData,
+      //   "customRender",
+      //   "fflmakeicon",
+      //   128,
+      //   k.id,
+      //   false
+      // ).catch((e) => {
+      //   console.error("oh noes, Icon didnt Load", e);
+      // });
+      iconTag = `<img class="lazy" width=128 height=128 data-src="${iconURL}" title="${k.name}">`;
     }
 
     const expressionItem = {
@@ -453,12 +487,6 @@ export async function customRender(miiData: Mii) {
     resize();
   });
 
-  const scene = new Mii3DScene(
-    miiData,
-    parentBox.elm,
-    SetupType.Screenshot,
-    (renderer) => {}
-  );
   controls = scene.getControls();
 
   //@ts-expect-error testing
@@ -625,6 +653,7 @@ export async function customRender(miiData: Mii) {
         );
         if (shouldClose) {
           scene.shutdown();
+          icons.forEach((i) => URL.revokeObjectURL(i));
           parent.cleanup();
           modal.qs("button")?.elm.click();
         }
@@ -633,7 +662,8 @@ export async function customRender(miiData: Mii) {
   }
 
   async function save3DModel() {
-    alert("This option doesn't work at the moment, please try again later.");
+    // todo: ?????
+    alert("This option is only available when using Simple or Toon shader.");
     // const shaderSetting = await getSetting("shaderType");
 
     // if (shaderSetting === "none") {

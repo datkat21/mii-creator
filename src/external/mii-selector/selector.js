@@ -1,9 +1,6 @@
 //Assume the language is english
 import { createMiiRender, getAdditionalInfoFromMii, Mii } from "../../helper";
 import {
-  miiIconFavorite,
-  miiIconPersonal,
-  miiIconSpecial,
   MiiSelectorMiiType
 } from "./selector_misc";
 
@@ -15,7 +12,7 @@ function escapeHTML(str) {
 }
 
 //PLEASE ADD LOCALIZATION PROPERLY, MAKE IT GENERAL AND NOT REGION BASED.
-const lang = "es";
+const lang = "en";
 
 export var MiiSelector = {
   loc: {
@@ -56,18 +53,6 @@ export var MiiSelector = {
           type: MiiSelectorMiiType.Personal
         });
       }
-      let guestMiis = [];
-      if (selectorParam.guestData) {
-        guestMiis.push(
-          ...selectorParam.guestData.map((guest, index) => {
-            let guestMii = new Mii(guest);
-            guestMii.nickname = getLoc(8) + String.fromCharCode(65 + index);
-            return { miiData: guestMii.export() };
-          })
-        );
-      }
-      // test
-      miiArray.unshift(...guestMiis);
 
       function getLoc(index) {
         return MiiSelector.loc[lang][index];
@@ -86,13 +71,10 @@ export var MiiSelector = {
       console.log("canPreloadCharIcon: " + canPreloadCharIcon);
       var selectedMii = null;
 
-      //Check selector parameters
-      if (selectorParam) {
-        //user can specificy if disable preloading
-        //for performance reasons, i guess
-        if (selectorParam.preload === false) {
-          canPreloadCharIcon = false;
-        }
+      //user can specificy if disable preloading
+      //for performance reasons, i guess
+      if (selectorParam && selectorParam.preload === false) {
+        canPreloadCharIcon = false;
       }
 
       miiArray.forEach((mii, index) => {
@@ -101,71 +83,20 @@ export var MiiSelector = {
         }
       });
 
-      const container =
-        '<div id="mii-creator-selector-modal">' +
-        '<div class="selector" style="display: none;">' +
-        "<h1>" +
-        getLoc(0) +
-        "</h1>" +
-        '<div class="mii-container guest" style="display: none;">' +
-        '<div class="guest-label">' +
-        getLoc(1) +
-        "</div>" +
-        /*miiArray.map(mii =>
-          '<div class="mii">' +
-          '<img src="/renderTest.png" >' +
-          '<p>' + mii.miiName + '</p>' +
-          '</div>'
-        ).join('') +*/
-        "</div>" +
-        '<div class="mii-container">' +
-        "</div>" +
-        ' <div class="mii-container transition" style="display: none;">' +
-        '<div class="mii" tabindex="-1"></div>'.repeat(10) +
-        "</div>" +
-        '<div class="mii-page-counter">' +
-        "<span><b>1</b><span>/10</span></span>" +
-        "</div>" +
-        '<div class="button-navi">' +
-        '<button class="prev" style="display:none;">◀</button>' +
-        '<button class="next" style="display:none;">▶</button>' +
-        "</div>" +
-        '<div class="button-container">' +
-        '<button class="cancel">Cancel</button>' +
-        '<button disabled class="confirm">Confirm</button>' +
-        "</div>" +
-        "</div>" +
-        "</div>";
+      let guestMiis = [];
+      const guestMiiIcons = [];
+      //Init Guest Miis
+    if (selectorParam && selectorParam.allowGuest === true && selectorParam.guestData) {
+      if (selectorParam.guestData) {
+        guestMiis.push(
+          ...selectorParam.guestData.map((guest, index) => {
+            let guestMii = new Mii(guest);
+            guestMii.nickname = getLoc(8) + String.fromCharCode(65 + index);
+            return { miiData: guestMii.export() };
+          })
+        );
 
-      document.body.insertAdjacentHTML("beforeend", container);
-
-      //Check now is valid, good!
-      check = document.querySelector("#mii-creator-selector-modal");
-      var selCont = check.querySelector(".selector");
-
-      var pagesEl = check.querySelector(".mii-page-counter span>span");
-      var pagesCurEl = check.querySelector(".mii-page-counter span>b");
-      pagesEl.innerText = "/ " + pages;
-
-      var arrowLeft = check.querySelector(".prev");
-      var arrowRight = check.querySelector(".next");
-      var confirmButton = check.querySelector(".confirm");
-      var cancelButton = check.querySelector(".cancel");
-      var miiCoUser = check.querySelector(
-        ".mii-container:not(.transition):not(.guest)"
-      );
-      var miiTrs = check.querySelector(".mii-container.transition");
-
-      if (pages > 1) {
-        arrowRight.style.display = "block";
-      }
-
-      const dataArray = [];
-
-      //TO AVOID THE HUGE ASS LAG SPIKE AT THE BEGINNING!
-      if (canPreloadCharIcon) {
-        // Preload all Mii icons first
-        const iconPromises = miiArray.map((mii, index) => {
+        const iconPromises = guestMiis.map((mii, index) => {
           return new Promise(async (resolve) => {
             const miiData = new Mii(mii.miiData);
             const data = miiData.export("studioData");
@@ -175,6 +106,7 @@ export var MiiSelector = {
               drawBody: true,
               size: 124,
               module: fflModule,
+              expression: 13,
               additionalInfo: getAdditionalInfoFromMii(miiData),
               shaderType: "wiiu_blinn",
               renderer,
@@ -190,27 +122,150 @@ export var MiiSelector = {
             var iconURL = URL.createObjectURL(icon.result);
 
             // charModel.dispose();
-            resolve({ img: iconURL, name: miiData.nickname, type: mii.type });
+            resolve({ img: iconURL, name: miiData.nickname });
           });
         });
 
         Promise.all(iconPromises).then(async (icons) => {
-          console.log("REAL");
-          icons.forEach((e) => dataArray.push(e));
+          icons.forEach((e) => guestMiiIcons.push(e));
+          afterGuestMiiInit();
+        });
+      }
+    } else {
+      afterGuestMiiInit();
+    }
+
+      const container =
+        '<div id="mii-creator-selector-modal">' +
+        '<div class="selector" style="display: none;">' +
+        "<h1>" +
+        getLoc(0) +
+        "</h1>" +
+        '<div class="mii-container guest" style="display: none;">' +
+        '<div class="guest-label">' +
+        getLoc(1) +
+        "</div>" +
+        '<div class="guest-miis">' +
+        "</div>" +
+        "</div>" +
+        '<div class="mii-container">' +
+        "</div>" +
+        ' <div class="mii-container transition" style="display: none;">' +
+        '<div class="mii" tabindex="-1"></div>'.repeat(10) +
+        "</div>" +
+        '<div class="mii-page-counter">' +
+        "<span><b>1</b><span></span></span>" +
+        "</div>" +
+        '<button class="mii-guest-button" style="display: none;">' +
+        '<span>' + getLoc(1) + '</span>' +
+        '</button>' +
+        '<div class="button-navi">' +
+        '<button class="prev" style="display:none;">◀</button>' +
+        '<button class="next" style="display:none;">▶</button>' +
+        '</div>' +
+        '<div class="button-container">' +
+        '<button class="cancel">' + getLoc(2) + '</button>' +
+        '<button disabled class="confirm">' + getLoc(3) + '</button>' +
+        "</div>" +
+        "</div>" +
+        "</div>";
+
+      document.body.insertAdjacentHTML("beforeend", container);
+
+      //Check now is valid, good!
+      check = document.querySelector("#mii-creator-selector-modal");
+      var selCont = check.querySelector(".selector");
+
+      var pagesCounter = check.querySelector(".mii-page-counter");
+      var pagesEl = check.querySelector(".mii-page-counter span>span");
+      var pagesCurEl = check.querySelector(".mii-page-counter span>b");
+      pagesEl.innerText = "/ " + pages;
+
+      var guestButton = check.querySelector(".mii-guest-button");
+      var arrowButtonContainer = check.querySelector(".button-navi");
+      var arrowLeft = check.querySelector(".prev");
+      var arrowRight = check.querySelector(".next");
+      var confirmButton = check.querySelector(".confirm");
+      var cancelButton = check.querySelector(".cancel");
+      var miiCoUser = check.querySelector(
+        ".mii-container:not(.transition):not(.guest)"
+      );
+      var miiGuests = check.querySelector(".mii-container.guest");
+      var miiTrs = check.querySelector(".mii-container.transition");
+
+      if (pages > 1) {
+        arrowRight.style.display = "block";
+      }
+
+      if (selectorParam && selectorParam.allowGuest === true) {
+        guestButton.style.display = "block";
+      }
+
+      const dataArray = [];
+
+      //TO AVOID THE HUGE ASS LAG SPIKE AT THE BEGINNING!
+
+      //After making the guest mii icons
+      function afterGuestMiiInit() {
+
+        if (selectorParam && selectorParam.allowGuest === true && selectorParam.guestData) {
+        miiGuests.querySelector(".guest-miis").innerHTML += guestMiiIcons.map((guest, index) =>
+          '<div tabindex="0" class="mii guest" data-guest-mii-index="' + index + '">' +
+            '<img draggable="false" src="' + guest.img + '">' +
+            '<p style="display: none;">' + guest.name + '</p>' +
+          '</div>'
+        ).join('');
+      }
+
+        if (canPreloadCharIcon) {
+          // Preload all Mii icons first
+          const iconPromises = miiArray.map((mii, index) => {
+            return new Promise(async (resolve) => {
+              const miiData = new Mii(mii.miiData);
+              const data = miiData.export("studioData");
+  
+              const icon = await createMiiRender({
+                data,
+                drawBody: true,
+                size: 124,
+                module: fflModule,
+                additionalInfo: getAdditionalInfoFromMii(miiData),
+                shaderType: "wiiu_blinn",
+                renderer,
+                bodyModelType: "low",
+                texResolution: 128,
+                type: 0
+              });
+              // const charModel = createCharModel(data, null, FFLShaderMaterial, fflModule);
+  
+              // initCharModelTextures(charModel, renderer);
+              // const icon = createCharModelIcon(charModel, renderer, ViewType.MakeIcon, 200, 200);
+  
+              var iconURL = URL.createObjectURL(icon.result);
+  
+              // charModel.dispose();
+              resolve({ img: iconURL, name: miiData.nickname, type: mii.type });
+            });
+          });
+  
+          Promise.all(iconPromises).then(async (icons) => {
+            console.log("REAL");
+            icons.forEach((e) => dataArray.push(e));
+            fillMiiContainer(miiArray, currentPage).then((data) => {
+              miiCoUser.innerHTML = data;
+              selCont.style.display = "block";
+              updateMiiListener();
+              initButtonListener();
+            });
+          });
+        } else {
           fillMiiContainer(miiArray, currentPage).then((data) => {
             miiCoUser.innerHTML = data;
             selCont.style.display = "block";
             updateMiiListener();
             initButtonListener();
           });
-        });
-      } else {
-        fillMiiContainer(miiArray, currentPage).then((data) => {
-          miiCoUser.innerHTML = data;
-          selCont.style.display = "block";
-          updateMiiListener();
-          initButtonListener();
-        });
+        }
       }
 
       async function fillMiiContainer(miiArray, page) {
@@ -282,16 +337,17 @@ export var MiiSelector = {
             const dataAttr =
               mii.img && mii.name ? ` data-mii-index="${overallIndex}"` : "";
 
-            let icon = "";
+            let miiClass = "";
+
             switch (mii.type) {
               case MiiSelectorMiiType.Favorite:
-                icon = miiIconFavorite;
+                miiClass = "favorite";
                 break;
               case MiiSelectorMiiType.Special:
-                icon = miiIconSpecial;
+                miiClass = "special";
                 break;
               case MiiSelectorMiiType.Personal:
-                icon = miiIconPersonal;
+                miiClass = "personal";
                 break;
             }
 
@@ -299,9 +355,9 @@ export var MiiSelector = {
               `<div tabindex="0" class="mii"${dataAttr}>` +
               (mii.img ? `<img draggable="false" src="${mii.img}">` : "") +
               (mii.name
-                ? `<p style="display: none;">${icon}<span>${escapeHTML(
-                    mii.name
-                  )}</span></p>`
+                ? `<p class="${miiClass}" style="display: none;"><span>${escapeHTML(
+                  mii.name
+                )}</span></p>`
                 : "") +
               `</div>`
             );
@@ -325,10 +381,22 @@ export var MiiSelector = {
 
         target.classList.add("selected");
 
-        if (target.hasAttribute("data-mii-index")) {
+        if (target.hasAttribute("data-mii-index") || target.hasAttribute("data-guest-mii-index")) {
+
+          let data;
+          let index;
+          if (target.classList.contains("guest")) {
+            index = target.getAttribute("data-guest-mii-index")
+            data = guestMiis[parseInt(target.getAttribute("data-guest-mii-index"))]
+          } else {
+            index = target.getAttribute("data-mii-index")
+            data = miiArray[parseInt(target.getAttribute("data-mii-index"))]
+          }
+          
           selectedMii = {
-            index: target.getAttribute("data-mii-index"),
-            data: miiArray[parseInt(target.getAttribute("data-mii-index"))]
+            index: index,
+            data: data,
+            type: target.classList.contains("guest") ? "guest": "normal"
           };
 
           console.log(selectedMii);
@@ -416,6 +484,29 @@ export var MiiSelector = {
           );
         });
 
+        if (selectorParam && selectorParam.allowGuest === true && selectorParam.guestData) {
+
+          guestButton.addEventListener("click", function () {
+            if (selectorParam.soundManager) {
+              selectorParam.soundManager.playSound("3ds_mii_selector_select");
+            }
+            
+            if (miiGuests.style.display === "none") {
+              guestButton.classList.add("selected");
+              arrowButtonContainer.style.display = "none";
+              miiCoUser.style.display = "none";
+              miiGuests.style.display = "";
+              pagesCounter.style.display = "none";
+            } else {
+              guestButton.classList.remove("selected");
+              miiGuests.style.display = "none";
+              miiCoUser.style.display = "";
+              pagesCounter.style.display = "";
+              arrowButtonContainer.style.display = "";
+            }
+          });
+        }
+
         confirmButton.addEventListener("click", function onConfirm() {
           console.log("Confirm");
           if (selectorParam.soundManager) {
@@ -497,7 +588,8 @@ export var MiiSelector = {
           check.querySelector(
             '.mii[data-mii-index="' + selectedMii.index + '"]'
           ) &&
-          selectedMii.index
+          selectedMii.index &&
+          selectedMii.type === "normal"
         ) {
           check
             .querySelector('.mii[data-mii-index="' + selectedMii.index + '"]')
@@ -560,394 +652,6 @@ export var MiiExampleArray = [
     miiData:
       "AwEAIDVEgCveHCqDgP9wmbYmSnvSxQAAAQBEAGEAbgBpAAAAAAAAAAAAAAAAADs3AgBVCx1pRBpANEUURhIPxA4AAClTWsNEAAAAAAAAAAAAAAAAAAAAAAAAAAAAALVb"
   },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMEMonKDqgr79gP9wmedgoZvvAgAAABhCAGkAZwAgAEYAYQB0ACAARgB1AEBARpAkBlJoQxjSNEYUhBIRaA0AMCkgUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAANtQ"
-  },
-  {
-    miiData:
-      "AwEAMOFEOFJOyk8wgP9wmffiR6e5GwAAASRpACAAYQBtACAAcwB0AGUAdgBlAEBAAAQCBchoQxipNEcUYBIjaA0AKCkwUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMe4"
-  },
-  {
-    miiData:
-      "AwEAMCT6d7wwhGkPgP9wmYg62JEwZgAAASRXAEEAUwBIAEMATwBPAEMASABJAEBAAJAyDx5pRBrqNEYWaxQCaQ4AOC0gWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM8Z"
-  },
-  {
-    miiData:
-      "AwEAMIZ+TgOPLn3egP9wmYebz4QHawAAAQBmAHUAYwBrAG4AIABjAHUAbgB0AEBAFDAGCwdoRBhjNEcSYBICaQ0AGClTUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADB6"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMEMonKDqgr79gP9wmedgoZvvAgAAABhCAGkAZwAgAEYAYQB0ACAARgB1AEBARpAkBlJoQxjSNEYUhBIRaA0AMCkgUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAANtQ"
-  },
-  {
-    miiData:
-      "AwEAMOFEOFJOyk8wgP9wmffiR6e5GwAAASRpACAAYQBtACAAcwB0AGUAdgBlAEBAAAQCBchoQxipNEcUYBIjaA0AKCkwUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMe4"
-  },
-  {
-    miiData:
-      "AwEAMCT6d7wwhGkPgP9wmYg62JEwZgAAASRXAEEAUwBIAEMATwBPAEMASABJAEBAAJAyDx5pRBrqNEYWaxQCaQ4AOC0gWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM8Z"
-  },
-  {
-    miiData:
-      "AwEAMIZ+TgOPLn3egP9wmYebz4QHawAAAQBmAHUAYwBrAG4AIABjAHUAbgB0AEBAFDAGCwdoRBhjNEcSYBICaQ0AGClTUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADB6"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAMNP+ZeK58uHykq9hUiwQwQO+iQAAAVxmAGIAagBuAAAAAAAAAAAAAAAAAH8AAgCAARRrRBggNEYUgRKBaA0AACkFUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADbS"
-  },
-  {
-    miiData:
-      "AwEAIE4vaoCzgYpzgN8ZmnGioS4CKAAAAVxtAGkAbQBvAAAAAAAAAAAAAAAAAEBAEhA8ABhoYxw3NEYUJBYZJg0AACmDYkhQbQBpAG0AbwAAAAAAAAAAAAAAAAAAAIZa"
-  },
-  {
-    miiData:
-      "AwEAMBs8xqsHR9PC3MXz5YXEaBemLwAAVllEAGEAdgBpAGQAIABKAG8AYQBxAE0wABBXAAJoRBgTZEUUgRIZZg4AACkAaGdQYgBpAGcAIABzAGEAbAB0AHkAAAAAALpc"
-  },
-  {
-    miiData:
-      "AwEAMHpnKmJS2hyMmWzpBSwQwXjnewAAV10GJkQAYQBuAGkAAAAAAAAAAAAAAEM5AJhlBR1pRBogNWQQRhKZZg4AACnTUiVNbwB3AG8AAAAAAAAAAAAAAAAAAAAAAGUR"
-  },
-  {
-    miiData:
-      "AwEAIDVEgCveHCqDgP9wmbYmSnvSxQAAAQBEAGEAbgBpAAAAAAAAAAAAAAAAADs3AgBVCx1pRBpANEUURhIPxA4AAClTWsNEAAAAAAAAAAAAAAAAAAAAAAAAAAAAALVb"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMEMonKDqgr79gP9wmedgoZvvAgAAABhCAGkAZwAgAEYAYQB0ACAARgB1AEBARpAkBlJoQxjSNEYUhBIRaA0AMCkgUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAANtQ"
-  },
-  {
-    miiData:
-      "AwEAMOFEOFJOyk8wgP9wmffiR6e5GwAAASRpACAAYQBtACAAcwB0AGUAdgBlAEBAAAQCBchoQxipNEcUYBIjaA0AKCkwUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMe4"
-  },
-  {
-    miiData:
-      "AwEAMCT6d7wwhGkPgP9wmYg62JEwZgAAASRXAEEAUwBIAEMATwBPAEMASABJAEBAAJAyDx5pRBrqNEYWaxQCaQ4AOC0gWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM8Z"
-  },
-  {
-    miiData:
-      "AwEAMIZ+TgOPLn3egP9wmYebz4QHawAAAQBmAHUAYwBrAG4AIABjAHUAbgB0AEBAFDAGCwdoRBhjNEcSYBICaQ0AGClTUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADB6"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAMNP+ZeK58uHykq9hUiwQwQO+iQAAAVxmAGIAagBuAAAAAAAAAAAAAAAAAH8AAgCAARRrRBggNEYUgRKBaA0AACkFUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADbS"
-  },
-  {
-    miiData:
-      "AwEAIE4vaoCzgYpzgN8ZmnGioS4CKAAAAVxtAGkAbQBvAAAAAAAAAAAAAAAAAEBAEhA8ABhoYxw3NEYUJBYZJg0AACmDYkhQbQBpAG0AbwAAAAAAAAAAAAAAAAAAAIZa"
-  },
-  {
-    miiData:
-      "AwEAMBs8xqsHR9PC3MXz5YXEaBemLwAAVllEAGEAdgBpAGQAIABKAG8AYQBxAE0wABBXAAJoRBgTZEUUgRIZZg4AACkAaGdQYgBpAGcAIABzAGEAbAB0AHkAAAAAALpc"
-  },
-  {
-    miiData:
-      "AwEAMHpnKmJS2hyMmWzpBSwQwXjnewAAV10GJkQAYQBuAGkAAAAAAAAAAAAAAEM5AJhlBR1pRBogNWQQRhKZZg4AACnTUiVNbwB3AG8AAAAAAAAAAAAAAAAAAAAAAGUR"
-  },
-  {
-    miiData:
-      "AwEAIDVEgCveHCqDgP9wmbYmSnvSxQAAAQBEAGEAbgBpAAAAAAAAAAAAAAAAADs3AgBVCx1pRBpANEUURhIPxA4AAClTWsNEAAAAAAAAAAAAAAAAAAAAAAAAAAAAALVb"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMEMonKDqgr79gP9wmedgoZvvAgAAABhCAGkAZwAgAEYAYQB0ACAARgB1AEBARpAkBlJoQxjSNEYUhBIRaA0AMCkgUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAANtQ"
-  },
-  {
-    miiData:
-      "AwEAMCT6d7wwhGkPgP9wmYg62JEwZgAAASRXAEEAUwBIAEMATwBPAEMASABJAEBAAJAyDx5pRBrqNEYWaxQCaQ4AOC0gWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM8Z"
-  },
-  {
-    miiData:
-      "AwEAMIZ+TgOPLn3egP9wmYebz4QHawAAAQBmAHUAYwBrAG4AIABjAHUAbgB0AEBAFDAGCwdoRBhjNEcSYBICaQ0AGClTUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADB6"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAMNP+ZeK58uHykq9hUiwQwQO+iQAAAVxmAGIAagBuAAAAAAAAAAAAAAAAAH8AAgCAARRrRBggNEYUgRKBaA0AACkFUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADbS"
-  },
-  {
-    miiData:
-      "AwEAMCT6d7wwhGkPgP9wmYg62JEwZgAAASRXAEEAUwBIAEMATwBPAEMASABJAEBAAJAyDx5pRBrqNEYWaxQCaQ4AOC0gWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM8Z"
-  },
-  {
-    miiData:
-      "AwEAMIZ+TgOPLn3egP9wmYebz4QHawAAAQBmAHUAYwBrAG4AIABjAHUAbgB0AEBAFDAGCwdoRBhjNEcSYBICaQ0AGClTUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADB6"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAMNP+ZeK58uHykq9hUiwQwQO+iQAAAVxmAGIAagBuAAAAAAAAAAAAAAAAAH8AAgCAARRrRBggNEYUgRKBaA0AACkFUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADbS"
-  },
-  {
-    miiData:
-      "AwEAIE4vaoCzgYpzgN8ZmnGioS4CKAAAAVxtAGkAbQBvAAAAAAAAAAAAAAAAAEBAEhA8ABhoYxw3NEYUJBYZJg0AACmDYkhQbQBpAG0AbwAAAAAAAAAAAAAAAAAAAIZa"
-  },
-  {
-    miiData:
-      "AwEAMBs8xqsHR9PC3MXz5YXEaBemLwAAVllEAGEAdgBpAGQAIABKAG8AYQBxAE0wABBXAAJoRBgTZEUUgRIZZg4AACkAaGdQYgBpAGcAIABzAGEAbAB0AHkAAAAAALpc"
-  },
-  {
-    miiData:
-      "AwEAMHpnKmJS2hyMmWzpBSwQwXjnewAAV10GJkQAYQBuAGkAAAAAAAAAAAAAAEM5AJhlBR1pRBogNWQQRhKZZg4AACnTUiVNbwB3AG8AAAAAAAAAAAAAAAAAAAAAAGUR"
-  },
-  {
-    miiData:
-      "AwEAIDVEgCveHCqDgP9wmbYmSnvSxQAAAQBEAGEAbgBpAAAAAAAAAAAAAAAAADs3AgBVCx1pRBpANEUURhIPxA4AAClTWsNEAAAAAAAAAAAAAAAAAAAAAAAAAAAAALVb"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMEMonKDqgr79gP9wmedgoZvvAgAAABhCAGkAZwAgAEYAYQB0ACAARgB1AEBARpAkBlJoQxjSNEYUhBIRaA0AMCkgUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAANtQ"
-  },
-  {
-    miiData:
-      "AwEAMOFEOFJOyk8wgP9wmffiR6e5GwAAASRpACAAYQBtACAAcwB0AGUAdgBlAEBAAAQCBchoQxipNEcUYBIjaA0AKCkwUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMe4"
-  },
-  {
-    miiData:
-      "AwEAMCT6d7wwhGkPgP9wmYg62JEwZgAAASRXAEEAUwBIAEMATwBPAEMASABJAEBAAJAyDx5pRBrqNEYWaxQCaQ4AOC0gWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM8Z"
-  },
-  {
-    miiData:
-      "AwEAMIZ+TgOPLn3egP9wmYebz4QHawAAAQBmAHUAYwBrAG4AIABjAHUAbgB0AEBAFDAGCwdoRBhjNEcSYBICaQ0AGClTUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADB6"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAMNP+ZeK58uHykq9hUiwQwQO+iQAAAVxmAGIAagBuAAAAAAAAAAAAAAAAAH8AAgCAARRrRBggNEYUgRKBaA0AACkFUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADbS"
-  },
-  {
-    miiData:
-      "AwEAIE4vaoCzgYpzgN8ZmnGioS4CKAAAAVxtAGkAbQBvAAAAAAAAAAAAAAAAAEBAEhA8ABhoYxw3NEYUJBYZJg0AACmDYkhQbQBpAG0AbwAAAAAAAAAAAAAAAAAAAIZa"
-  },
-  {
-    miiData:
-      "AwEAMBs8xqsHR9PC3MXz5YXEaBemLwAAVllEAGEAdgBpAGQAIABKAG8AYQBxAE0wABBXAAJoRBgTZEUUgRIZZg4AACkAaGdQYgBpAGcAIABzAGEAbAB0AHkAAAAAALpc"
-  },
-  {
-    miiData:
-      "AwEAMHpnKmJS2hyMmWzpBSwQwXjnewAAV10GJkQAYQBuAGkAAAAAAAAAAAAAAEM5AJhlBR1pRBogNWQQRhKZZg4AACnTUiVNbwB3AG8AAAAAAAAAAAAAAAAAAAAAAGUR"
-  },
-  {
-    miiData:
-      "AwEAIDVEgCveHCqDgP9wmbYmSnvSxQAAAQBEAGEAbgBpAAAAAAAAAAAAAAAAADs3AgBVCx1pRBpANEUURhIPxA4AAClTWsNEAAAAAAAAAAAAAAAAAAAAAAAAAAAAALVb"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMCRqeFYxdlD/gP9wmSoBKL7iNwAAARBBAG4AbgBpAGUAAAAAAAAAAAAAAEBAApAuDUxpRBoNNEUUbRSjaA4AAC0hWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADy9"
-  },
-  {
-    miiData:
-      "AwEAIBpSeGOa3Cm8gN8ZmsP6/intuwAAARRFAG0AaQBsAHkAAAAAAAAAAAAAAEBAAphUAztpQxghNGMQYRKBZg0AACnRUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLB"
-  },
-  {
-    miiData:
-      "AwEAMG6DUOL5lfcpgP9wmWs/2Ob2SwAAAADhMKQwyTAgAKQw8zAgAO8w6jCqMEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQ4TCkMMkwIACkMPMwIADvMOowqjAAAM+R"
-  },
-  {
-    miiData:
-      "AwEAMEMonKDqgr79gP9wmedgoZvvAgAAABhCAGkAZwAgAEYAYQB0ACAARgB1AEBARpAkBlJoQxjSNEYUhBIRaA0AMCkgUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAANtQ"
-  },
-  {
-    miiData:
-      "AwEAMOFEOFJOyk8wgP9wmffiR6e5GwAAASRpACAAYQBtACAAcwB0AGUAdgBlAEBAAAQCBchoQxipNEcUYBIjaA0AKCkwUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMe4"
-  },
-  {
-    miiData:
-      "AwEAMCT6d7wwhGkPgP9wmYg62JEwZgAAASRXAEEAUwBIAEMATwBPAEMASABJAEBAAJAyDx5pRBrqNEYWaxQCaQ4AOC0gWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM8Z"
-  },
-  {
-    miiData:
-      "AwEAMIZ+TgOPLn3egP9wmYebz4QHawAAAQBmAHUAYwBrAG4AIABjAHUAbgB0AEBAFDAGCwdoRBhjNEcSYBICaQ0AGClTUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADB6"
-  },
-  {
-    miiData:
-      "AwEAMN4cKEquh8u9gP9wmaTiJXkY+AAAASxXAFcAVwBXAFcAVwBXAFcAVwBXAEBAImACB3toQxrtNEUWYBRRaA4AOC1AWkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMUM"
-  },
-  {
-    miiData:
-      "AwEAMNP+ZeK58uHykq9hUiwQwQO+iQAAAVxmAGIAagBuAAAAAAAAAAAAAAAAAH8AAgCAARRrRBggNEYUgRKBaA0AACkFUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAADbS"
-  }
 ];
 
 // var renderer = new THREE.WebGLRenderer({

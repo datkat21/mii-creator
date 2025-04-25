@@ -23,6 +23,7 @@ body {
   bottom: 0;
   right: 0;
   --root: #ffffffee;
+  --root-solid: #ffffff;
   --text: #000000;
   --label: #666666;
   --stroke: #dddddd;
@@ -68,6 +69,7 @@ body[data-theme=default] > body {
     --error-color: rgb(255, 96, 87);
     --gold-color: rgb(255, 191, 0);
     --root: #000000ee;
+    --root-solid: #000000;
     --text: #ffffff;
     --label: #cccccc;
     --stroke: #484848;
@@ -345,7 +347,7 @@ h6 {
 }
 .modal .modal-content .modal-body {
   padding: 16px 18px;
-  background-color: var(--root);
+  background-color: var(--root-solid);
   height: 100%;
   flex: 1;
   display: flex;
@@ -983,7 +985,7 @@ canvas.scene {
   aspect-ratio: 1/1;
   --scale: 0.1rem;
   --blur: 0;
-  --color: rgba(255,255,255);
+  --color: rgba(255, 255, 255);
 }
 .mii-library .library-list .library-list-mii span {
   width: 100%;
