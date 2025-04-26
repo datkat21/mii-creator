@@ -78,7 +78,7 @@ export class Mii2DRenderer {
           console.log("Body image loaded");
           resolve(true);
         };
-      }),
+      })
       // new Promise((resolve) => {
       //   this.#pantsImage.onload = () => {
       //     console.log("Pant image loaded");

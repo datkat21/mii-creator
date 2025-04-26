@@ -18,7 +18,7 @@ export function MiscTab(data: TabRenderInit) {
         padding: "1rem",
         display: "flex",
         "flex-direction": "column",
-        gap: "1rem",
+        gap: "1rem"
       })
       .appendMany(
         Input(

@@ -11,7 +11,7 @@ import { saveArrayBuffer } from "../../util/downloadLink";
 import { RandomInt } from "../../util/Numbers";
 import {
   cPantsColorGoldHex,
-  cPantsColorRedHex,
+  cPantsColorRedHex
 } from "../../class/3d/shader/fflShaderConst";
 import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
 import { getString as _ } from "../../l10n/manager";
@@ -19,7 +19,7 @@ import { replayUpdateNotice, Settings } from "./Settings";
 import {
   adjustShaderQuery,
   ShaderType,
-  BodyType,
+  BodyType
 } from "../../constants/BodyShaderTypes";
 import { getSetting } from "../../util/SettingsHelper";
 import { playSound } from "../../class/audio/SoundManager";
@@ -31,7 +31,7 @@ import {
   createCharModelIcon,
   initCharModelTextures,
   parseHexOrB64ToUint8Array,
-  ViewType,
+  ViewType
 } from "../../external/ffl.js/ffl";
 import { getFFL, getFFLWorkerExists, getFFLWorkerMakeIcon } from "../../main";
 import { WebGLRenderer } from "three";
@@ -192,14 +192,12 @@ export async function Library(highlightMiiId?: string) {
   const libraryList = new Html("div").class("library-list").appendTo(container);
 
   const miis = await Promise.all(
-    (
-      await localforage.keys()
-    )
+    (await localforage.keys())
       .filter((k) => k.startsWith("mii-"))
       .sort((a, b) => Number(a.split("-")[1]!) - Number(b.split("-")[1]!))
       .map(async (k) => ({
         id: k,
-        mii: (await localforage.getItem(k)) as string,
+        mii: (await localforage.getItem(k)) as string
       }))
   );
 
@@ -245,7 +243,7 @@ export async function Library(highlightMiiId?: string) {
       //   );
 
       miiContainer.style({
-        "--color": MiiFavoriteColorIconTable[miiData.favoriteColor].top,
+        "--color": MiiFavoriteColorIconTable[miiData.favoriteColor].top
       });
 
       let extraData = "";
@@ -313,16 +311,16 @@ export async function Library(highlightMiiId?: string) {
             "This Mii hasn't loaded correctly. Do you still want to try and manage it?",
             "body",
             {
-              text: "Cancel",
+              text: "Cancel"
             },
             {
               callback(e) {
                 miiEditCallback();
               },
-              text: "Yes",
+              text: "Yes"
             },
             {
-              text: "No",
+              text: "No"
             }
           );
           return;
@@ -337,7 +335,7 @@ export async function Library(highlightMiiId?: string) {
         // prevent looping error load
         if (hasMiiErrored === true) return;
         miiImage.attr({
-          src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error),
+          src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error)
         });
         hasMiiErrored = true;
       });
@@ -361,7 +359,7 @@ export async function Library(highlightMiiId?: string) {
               top:
                 mc.getBoundingClientRect().top +
                 mc.getBoundingClientRect().height,
-              behavior: "smooth",
+              behavior: "smooth"
             });
           }
         }
@@ -373,7 +371,7 @@ export async function Library(highlightMiiId?: string) {
       miiErrorCount++;
 
       let miiImage = new Html("img").attr({
-        src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error),
+        src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error)
       });
       let miiName = new Html("span").text("?");
 
@@ -385,7 +383,7 @@ export async function Library(highlightMiiId?: string) {
           "This Mii might be corrupted. Choose an option below.",
           "body",
           {
-            text: "Cancel",
+            text: "Cancel"
           },
           {
             text: "Download a copy",
@@ -395,7 +393,7 @@ export async function Library(highlightMiiId?: string) {
                 Buffer.from(mii.mii, "base64").buffer,
                 mii.id + ".miic"
               );
-            },
+            }
           },
           {
             text: "Download a copy (Base64 encoded)",
@@ -405,7 +403,7 @@ export async function Library(highlightMiiId?: string) {
                 Buffer.from(mii.mii).buffer,
                 mii.id + ".miic.txt"
               );
-            },
+            }
           },
           {
             text: "Delete",
@@ -421,13 +419,13 @@ export async function Library(highlightMiiId?: string) {
                     Library();
                   },
                   text: "Yes",
-                  type: "danger",
+                  type: "danger"
                 },
                 {
-                  text: "No",
+                  text: "No"
                 }
               );
-            },
+            }
           }
         );
       });
@@ -463,7 +461,7 @@ export async function Library(highlightMiiId?: string) {
         .class("flex-group")
         .style({ width: "100%" })
         .appendMany(
-          AddButtonSounds(new Html("button").text("More Options")),
+          AddButtonSounds(new Html("button").text("More Options"))
           // AddButtonSounds(
           //   new Html("button")
           //     .text("Credits")
@@ -645,7 +643,7 @@ export async function Library(highlightMiiId?: string) {
         .style({ cursor: "pointer" })
         .on("click", () => {
           replayUpdateNotice();
-        }),
+        })
       // new Html("a")
       //   .text(`Privacy Policy`)
       //   .style({ cursor: "pointer" })

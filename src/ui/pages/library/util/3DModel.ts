@@ -5,7 +5,7 @@ import {
   MeshStandardMaterial,
   type Mesh,
   type ShaderMaterial,
-  type Texture,
+  type Texture
 } from "three";
 import type { Mii3DScene } from "../../../../class/3DScene";
 import { getSetting } from "../../../../util/SettingsHelper";
@@ -196,7 +196,7 @@ export async function traverse3DMaterialFix(
         metalness,
         roughness,
         map: map,
-        side: THREE.FrontSide,
+        side: THREE.FrontSide
       });
 
       switch (userData.modulateType) {

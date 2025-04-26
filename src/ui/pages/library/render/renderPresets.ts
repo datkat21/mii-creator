@@ -2,7 +2,7 @@ import type Mii from "../../../../external/mii-js/mii";
 import { downloadLink } from "../../../../util/downloadLink";
 import {
   getMiiRender,
-  MiiCustomRenderType,
+  MiiCustomRenderType
 } from "../../../../util/miiImageUtils";
 import Modal from "../../../components/Modal";
 import type { MiiLocalforage } from "../../Library";
@@ -23,7 +23,7 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
           renderImage.src,
           `${miiData.miiName}_render_headshot_${Date.now()}.png`
         );
-      },
+      }
     },
     {
       text: "Focus on full body",
@@ -36,7 +36,7 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
           renderImage.src,
           `${miiData.miiName}_render_body_${Date.now()}.png`
         );
-      },
+      }
     },
     {
       text: "Head only",
@@ -49,10 +49,10 @@ export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
           renderImage.src,
           `${miiData.miiName}_render_head_only_${Date.now()}.png`
         );
-      },
+      }
     },
     {
-      text: "Cancel",
+      text: "Cancel"
     }
   );
 };

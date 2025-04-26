@@ -20,13 +20,13 @@ export const miiCreateDialog = () => {
       type: "primary",
       callback: () => {
         newFromScratch();
-      },
+      }
     },
     {
       text: "QR Code",
       callback: () => {
         newFromQRCode();
-      },
+      }
     },
     {
       text: "FFSD/MiiCreator data",
@@ -40,13 +40,13 @@ export const miiCreateDialog = () => {
             text: "Cancel",
             callback: () => {
               miiCreateDialog();
-            },
+            }
           },
           {
             text: "Confirm",
             callback() {
               Library(id);
-            },
+            }
           }
         );
         modal
@@ -86,7 +86,7 @@ export const miiCreateDialog = () => {
               };
             })
         );
-      },
+      }
     },
     {
       text: "Enter NNID/PNID",
@@ -96,37 +96,37 @@ export const miiCreateDialog = () => {
           "Select a service to look up",
           "body",
           {
-            text: "Cancel",
+            text: "Cancel"
           },
           {
             text: "Enter Nintendo Network ID",
             callback(e) {
               newFromNNID();
-            },
+            }
           },
           {
             text: "Enter Pretendo Network ID",
             callback(e) {
               newFromPNID();
-            },
+            }
           }
         );
-      },
+      }
     },
     {
       text: "Choose a look-alike",
       callback: () => {
         newFromLookalike();
-      },
+      }
     },
     {
       text: "Random NNID",
       callback: () => {
         newFromRandonNNID();
-      },
+      }
     },
     {
-      text: "Cancel",
+      text: "Cancel"
     }
   );
   m.qs(".modal-body")!.styleJs({ maxWidth: "600px" });

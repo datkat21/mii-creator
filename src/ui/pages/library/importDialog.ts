@@ -14,10 +14,10 @@ export async function importMiiConfirmation(
     "",
     "body",
     {
-      text: "Cancel",
+      text: "Cancel"
     },
     {
-      text: "Don't Save",
+      text: "Don't Save"
     },
     {
       text: "Save",
@@ -26,7 +26,7 @@ export async function importMiiConfirmation(
         await localforage.setItem(id, mii.encode().toString("base64"));
         _shutdown()();
         Library(id);
-      },
+      }
     }
   );
 
@@ -43,12 +43,12 @@ export async function importMiiConfirmation(
         .text(`${mii.miiName} has arrived!`),
       new Html("img")
         .attr({
-          src: miiIconUrl(mii, "qr_code", "all_body_sugar", 260),
+          src: miiIconUrl(mii, "qr_code", "all_body_sugar", 260)
         })
         .style({
           width: "260px",
           height: "260px",
-          "object-fit": "contain",
+          "object-fit": "contain"
         })
     );
 }

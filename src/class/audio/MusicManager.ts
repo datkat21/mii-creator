@@ -46,7 +46,7 @@ export class MusicManager {
     const theme =
       document.documentElement.dataset.theme !== undefined
         ? document.documentElement.dataset.theme
-        : await localforage.getItem("settings_theme") as string;
+        : ((await localforage.getItem("settings_theme")) as string);
     if (this.theme === theme) return;
     this.theme = theme;
 

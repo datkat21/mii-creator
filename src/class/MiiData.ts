@@ -3,7 +3,7 @@ import { Ver3StoreData } from "./struct/FFLStoreData";
 import { Ver3StoreDataToMiiCreatorV4Data as MiiCreatorV3DataToV4 } from "./struct/MiiCreatorV3Data";
 import {
   EmptyMiiCreatorV4Data,
-  type MiiCreatorV4Data,
+  type MiiCreatorV4Data
 } from "./struct/MiiCreatorV4Data";
 
 export default class Mii {

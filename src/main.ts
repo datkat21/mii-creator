@@ -9,7 +9,7 @@ import { Config } from "./config";
 import Modal, { buttonsOkCancel, closeModal } from "./ui/components/Modal";
 import {
   initializeFFLWithResource,
-  loadBodyModels,
+  loadBodyModels
 } from "./external/ffl.js/ffl.js";
 import type { FFLShaderMaterial } from "./external/ffl.js/FFLShaderMaterial.js";
 import type { LUTShaderMaterial } from "./external/ffl.js/LUTShaderMaterial.js";
@@ -40,7 +40,7 @@ window.LazyLoad = new LazyLoad();
 if (Config.apis.useSentry) {
   Sentry.init({
     dsn: Config.apis.sentryURL,
-    tracesSampleRate: 0.01,
+    tracesSampleRate: 0.01
   });
 }
 
@@ -59,7 +59,7 @@ export const getFFLWorkerMakeIcon = (data: Uint8Array, view: string) => {
     sendMessageToWorker({
       type: "MakeIcon",
       data,
-      view,
+      view
     } as FFLWorkerMessage)
       .then((resp) => resolve(resp))
       .catch((err) => reject(err));
@@ -116,7 +116,7 @@ if (Config.renderer.useRendererServer === false) {
         {
           type: "Init",
           resourcePath: Config.renderer.fflResourcePath,
-          offscreenCanvas,
+          offscreenCanvas
         } as FFLWorkerInitializeMessage,
         // transfer the offscreen canvas over
         [offscreenCanvas]

@@ -15,7 +15,7 @@ import {
   cRimPower,
   FFLBlinnMaterial,
   FFLGlossMaterial,
-  type FFLShaderMaterial,
+  type FFLShaderMaterial
 } from "./fflShaderConst";
 import { fflFragmentShader, fflVertexShader } from "./FFLShader";
 import { switchFragmentShader, switchVertexShader } from "./SwitchShader";
@@ -30,7 +30,7 @@ import {
   cNoseMaterials,
   cPantsMaterials,
   FFLI_NN_MII_COMMON_COLOR_MASK,
-  type DrawParamMaterial,
+  type DrawParamMaterial
 } from "./SwitchShaderMaterials";
 import type Mii from "../../../external/mii-js/mii";
 import { ShaderType } from "../../../constants/BodyShaderTypes";
@@ -133,7 +133,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         blendDstAlpha: THREE.OneFactor,
         transparent: originalMaterial.transparent,
         alphaTest: 0,
-        reflectivity: 0,
+        reflectivity: 0
       });
       node.material = nonShaderMaterial;
     } else if (
@@ -149,7 +149,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         transparent: originalMaterial.transparent,
         alphaTest: originalMaterial.alphaTest,
         metalness: 1,
-        roughness: 1,
+        roughness: 1
       });
       node.material = nonShaderMaterial;
     } else {
@@ -163,7 +163,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         alphaTest: originalMaterial.alphaTest,
         metalness: 1,
         roughness: 1,
-        reflectivity: 1,
+        reflectivity: 1
       });
       node.material = nonShaderMaterial;
     }
@@ -314,7 +314,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     uniforms["lightEnable"] = { value: true };
 
     uniforms["u_const1"] = {
-      value: modulateColor,
+      value: modulateColor
     };
 
     // mShader.setUniform(
@@ -327,7 +327,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         drawParamMaterial.sssColor[1],
         drawParamMaterial.sssColor[2],
         1.0
-      ),
+      )
     };
     // mShader.setUniform(
     //   drawParamMaterial.specular.color.r,
@@ -339,7 +339,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         drawParamMaterial.specular.color[1],
         drawParamMaterial.specular.color[2],
         1.0
-      ),
+      )
     };
     // mShader.setUniform(
     //   drawParamMaterial.rimLight.color.r,
@@ -351,7 +351,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         drawParamMaterial.rimLight.color[1],
         drawParamMaterial.rimLight.color[2],
         1.0
-      ),
+      )
     };
     // mShader.setUniform(
     //   drawParamMaterial.halfLambertFactor,
@@ -359,7 +359,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     //   mPixelUniformLocation[PIXEL_UNIFORM_HALF_LAMBERT_FACTOR]
     // );
     uniforms["u_HalfLambertFactor"] = {
-      value: drawParamMaterial.halfLambertFactor,
+      value: drawParamMaterial.halfLambertFactor
     };
     // mShader.setUniform(
     //   drawParamMaterial.sssSpecularBlendFactor,
@@ -367,7 +367,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     //   mPixelUniformLocation[PIXEL_UNIFORM_SSS_SPECULAR_FACTOR]
     // );
     uniforms["u_SssSpecularFactor"] = {
-      value: drawParamMaterial.sssSpecularBlendFactor,
+      value: drawParamMaterial.sssSpecularBlendFactor
     };
     // mShader.setUniform(
     //   drawParamMaterial.specular.factorA,
@@ -375,7 +375,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     //   mPixelUniformLocation[PIXEL_UNIFORM_SPECULAR_FACTOR_A]
     // );
     uniforms["u_SpecularFactorA"] = {
-      value: drawParamMaterial.specular.factorA,
+      value: drawParamMaterial.specular.factorA
     };
     // mShader.setUniform(
     //   drawParamMaterial.specular.factorB,
@@ -383,7 +383,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     //   mPixelUniformLocation[PIXEL_UNIFORM_SPECULAR_FACTOR_B]
     // );
     uniforms["u_SpecularFactorB"] = {
-      value: drawParamMaterial.specular.factorB,
+      value: drawParamMaterial.specular.factorB
     };
     // mShader.setUniform(
     //   drawParamMaterial.specular.shinness,
@@ -391,7 +391,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     //   mPixelUniformLocation[PIXEL_UNIFORM_SPECULAR_SHINNESS]
     // );
     uniforms["u_SpecularShinness"] = {
-      value: drawParamMaterial.specular.shinness,
+      value: drawParamMaterial.specular.shinness
     };
     // mShader.setUniform(
     //   drawParamMaterial.rimLight.power,
@@ -399,7 +399,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     //   mPixelUniformLocation[PIXEL_UNIFORM_RIM_POWER]
     // );
     uniforms["u_RimPower"] = {
-      value: drawParamMaterial.rimLight.power,
+      value: drawParamMaterial.rimLight.power
     };
     // mShader.setUniform(
     //   drawParamMaterial.rimLight.width,
@@ -407,7 +407,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     //   mPixelUniformLocation[PIXEL_UNIFORM_RIM_WIDTH]
     // );
     uniforms["u_RimWidth"] = {
-      value: drawParamMaterial.rimLight.width,
+      value: drawParamMaterial.rimLight.width
     };
 
     const cLightDir = new THREE.Vector4(
@@ -427,7 +427,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     enum DrawType {
       DRAW_TYPE_NORMAL = 0,
       DRAW_TYPE_FACELINE = 1,
-      DRAW_TYPE_HAIR = 2,
+      DRAW_TYPE_HAIR = 2
     }
     let drawType: number = 0;
 
@@ -454,14 +454,14 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
       fragmentShader: switchFragmentShader,
       uniforms: {
         // TODO
-        ...uniforms,
+        ...uniforms
       },
       defines: defines,
       side: side,
       blending: THREE.CustomBlending,
       blendDstAlpha: THREE.OneFactor,
       transparent: originalMaterial.transparent, // Handle transparency
-      alphaTest: originalMaterial.alphaTest, // Handle alpha testing
+      alphaTest: originalMaterial.alphaTest // Handle alpha testing
     });
   } else if (
     shaderSetting.startsWith("wiiu") ||
@@ -492,7 +492,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
       modulateType: modulateType,
       map: originalMaterial.map || undefined,
       side,
-      lightEnable: shaderSetting.startsWith("wiiu") ? true : false,
+      lightEnable: shaderSetting.startsWith("wiiu") ? true : false
     });
   } else if (shaderSetting === ShaderType.Miitomo) {
     finalMat = new LUTShaderMaterialInstance({
@@ -500,7 +500,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
       modulateMode,
       modulateType: modulateType,
       map: originalMaterial.map || undefined,
-      side,
+      side
     });
   } else {
     finalMat = new THREE.ShaderMaterial({
@@ -521,7 +521,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
         u_mode: { value: modulateMode },
         u_rim_color: { value: cRimColor },
         u_rim_power: { value: cRimPower },
-        s_texture: { value: originalMaterial.map },
+        s_texture: { value: originalMaterial.map }
       },
       defines: defines,
       side: side,
@@ -530,7 +530,7 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
       blending: THREE.CustomBlending,
       blendDstAlpha: THREE.OneFactor,
       transparent: originalMaterial.transparent, // Handle transparency
-      alphaTest: originalMaterial.alphaTest, // Handle alpha testing
+      alphaTest: originalMaterial.alphaTest // Handle alpha testing
     });
   }
 

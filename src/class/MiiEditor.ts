@@ -18,7 +18,7 @@ import {
   MiiFavoriteColorLookupTable,
   MiiGlassesColorIconTable,
   SwitchMiiColorTable,
-  SwitchMiiColorTableLip,
+  SwitchMiiColorTableLip
 } from "../constants/ColorTables";
 import { ScaleTab } from "../ui/tabs/Scale";
 import Modal from "../ui/components/Modal";
@@ -36,11 +36,11 @@ import { getSetting } from "../util/SettingsHelper";
 
 export enum MiiGender {
   Male,
-  Female,
+  Female
 }
 export enum RenderMode {
   Canvas2DRenderer,
-  Canvas3DScene,
+  Canvas3DScene
 }
 export type IconSet = {
   face: string[];
@@ -262,12 +262,12 @@ export class MiiEditor {
     if (this.mii.trueMouthColor > 6) {
       mouthColor = {
         top: SwitchMiiColorTableLip[this.mii.trueMouthColor - 5],
-        bottom: SwitchMiiColorTable[this.mii.trueMouthColor - 5],
+        bottom: SwitchMiiColorTable[this.mii.trueMouthColor - 5]
       };
     } else
       mouthColor = {
         top: SwitchMiiColorTableLip[this.mii.fflMouthColor + 19],
-        bottom: SwitchMiiColorTable[this.mii.fflMouthColor + 19],
+        bottom: SwitchMiiColorTable[this.mii.fflMouthColor + 19]
       };
 
     this.ui.base.style({
@@ -286,7 +286,7 @@ export class MiiEditor {
       "--icon-hat-stroke":
         MiiFavoriteColorIconTable[this.mii.favoriteColor].bottom,
       "--icon-glasses-fill": glassesColor,
-      "--icon-glasses-shade": glassesColor + "77",
+      "--icon-glasses-shade": glassesColor + "77"
     });
   }
   #setupTabs() {
@@ -308,7 +308,7 @@ export class MiiEditor {
           },
           icons: this.icons,
           mii: this.mii,
-          editor: this,
+          editor: this
         });
         if (this.ui.scene) this.ui.scene.resize();
       };
@@ -317,59 +317,59 @@ export class MiiEditor {
     const tabs = TabList([
       {
         icon: EditorIcons.head,
-        select: TabInit(HeadTab, CameraPosition.MiiHead),
+        select: TabInit(HeadTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.hair,
-        select: TabInit(HairTab, CameraPosition.MiiHead),
+        select: TabInit(HairTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.hat,
-        select: TabInit(ExtHatTab, CameraPosition.MiiHead),
+        select: TabInit(ExtHatTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.eyebrows,
-        select: TabInit(EyebrowTab, CameraPosition.MiiHead),
+        select: TabInit(EyebrowTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.eyes,
-        select: TabInit(EyeTab, CameraPosition.MiiHead),
+        select: TabInit(EyeTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.nose,
-        select: TabInit(NoseTab, CameraPosition.MiiHead),
+        select: TabInit(NoseTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.mouth,
-        select: TabInit(MouthTab, CameraPosition.MiiHead),
+        select: TabInit(MouthTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.facialHair,
-        select: TabInit(FacialHairTab, CameraPosition.MiiHead),
+        select: TabInit(FacialHairTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.mole,
-        select: TabInit(MoleTab, CameraPosition.MiiHead),
+        select: TabInit(MoleTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.glasses,
-        select: TabInit(GlassesTab, CameraPosition.MiiHead),
+        select: TabInit(GlassesTab, CameraPosition.MiiHead)
       },
       {
         icon: EditorIcons.scale,
-        select: TabInit(ScaleTab, CameraPosition.MiiFullBody),
+        select: TabInit(ScaleTab, CameraPosition.MiiFullBody)
       },
       {
         icon: EditorIcons.favoriteColor,
-        select: TabInit(FavoriteColorTab, CameraPosition.MiiFullBody),
+        select: TabInit(FavoriteColorTab, CameraPosition.MiiFullBody)
       },
       {
         icon: EditorIcons.gender,
-        select: TabInit(OptionsTab, CameraPosition.MiiFullBody),
+        select: TabInit(OptionsTab, CameraPosition.MiiFullBody)
       },
       {
         icon: EditorIcons.details,
-        select: TabInit(MiscTab, CameraPosition.MiiFullBody),
+        select: TabInit(MiscTab, CameraPosition.MiiFullBody)
       },
       {
         icon: EditorIcons.save + "<span>Save</span>",
@@ -387,16 +387,16 @@ export class MiiEditor {
                   if (getMii().normalMii === false)
                     getMii().disableSharing = true;
                   this.shutdown();
-                },
+                }
               },
               {
                 text: "Exit without Saving",
                 callback: () => {
                   this.shutdown(false);
-                },
+                }
               },
               {
-                text: "Cancel",
+                text: "Cancel"
               }
             );
           else
@@ -408,21 +408,21 @@ export class MiiEditor {
                 text: "Save & Exit",
                 callback: () => {
                   this.shutdown();
-                },
+                }
               },
               {
                 text: "Exit without Saving",
                 callback: () => {
                   this.shutdown(false);
-                },
+                }
               },
               {
-                text: "Cancel",
+                text: "Cancel"
               }
             );
         },
-        update: false,
-      },
+        update: false
+      }
     ]);
     this.ui.tabList = tabs.list;
     this.ui.tabContent = tabs.content;
@@ -468,7 +468,7 @@ export class MiiEditor {
               this.mii.extHatColor + Config.renderer.hatColorAdd
             }&miic=${encodeURIComponent(
               this.mii.encode().toString("base64")
-            )}&pantsColor=${pantsColor}`,
+            )}&pantsColor=${pantsColor}`
           });
         // this.ui.renderer.mii = this.mii;
         // this.ui.renderer.render();

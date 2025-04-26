@@ -10,7 +10,7 @@ export type ModalButton = {
 
 export const buttonsOkCancel = [
   { callback() {}, text: "Cancel" },
-  { callback() {}, text: "OK" },
+  { callback() {}, text: "OK" }
 ];
 
 function closingCallback(modal: Html) {
@@ -181,14 +181,14 @@ export default {
           callback: (_: any) => {
             res(true);
             Html.qs(".modal-selectable")?.cleanup();
-          },
+          }
         },
         {
           text: "Cancel",
           callback: (_: any) => {
             res(false);
             Html.qs(".modal-selectable")?.cleanup();
-          },
+          }
         }
       );
     });
@@ -207,15 +207,15 @@ export default {
         {
           text: "Yes",
           type: dangerous ? "danger" : "primary",
-          callback: (_: any) => res(true),
+          callback: (_: any) => res(true)
         },
         {
           text: "No",
-          callback: (_: any) => res(false),
+          callback: (_: any) => res(false)
         },
         {
           text: "Cancel",
-          callback: (_: any) => res(false),
+          callback: (_: any) => res(false)
         }
       );
       m.qs(".modal-body")!.classOn("flex-group");
@@ -240,11 +240,11 @@ export default {
           type: "primary",
           callback: (_: any) => {
             res((input.elm as HTMLInputElement).value);
-          },
+          }
         },
         {
           text: "Cancel",
-          callback: (_: any) => res(false),
+          callback: (_: any) => res(false)
         }
       );
 
@@ -253,7 +253,7 @@ export default {
         .attr({
           placeholder,
           value,
-          type: isPassword === true ? "password" : "text",
+          type: isPassword === true ? "password" : "text"
         })
         .on("keyup", (e) => {
           const ev = e as KeyboardEvent;
@@ -268,5 +268,5 @@ export default {
         })
         .appendTo(wrapper);
     });
-  },
+  }
 };

@@ -11,13 +11,13 @@ console.log(encoded.toString("base64"));
 
 // Get Mii Studio render URL
 let studioUrl = mii.studioUrl({
-  type: "all_body",
+  type: "all_body"
 });
 console.log(studioUrl);
 
 mii.height = 10;
 studioUrl = mii.studioUrl({
-  type: "all_body",
+  type: "all_body"
 });
 console.log(studioUrl);
 
@@ -27,7 +27,7 @@ mii.hairType = 2;
 // Render with custom options
 studioUrl = mii.studioUrl({
   width: 512,
-  bgColor: "131733FF",
+  bgColor: "131733FF"
 });
 console.log(studioUrl);
 

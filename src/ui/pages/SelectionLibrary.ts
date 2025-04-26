@@ -10,7 +10,7 @@ import { Config } from "../../config";
 import EditorIcons from "../../constants/EditorIcons";
 import {
   cPantsColorGoldHex,
-  cPantsColorRedHex,
+  cPantsColorRedHex
 } from "../../class/3d/shader/fflShaderConst";
 import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
 import { FFLiDatabaseRandom_Get } from "../../external/ffl/FFLiDatabaseRandom";
@@ -42,14 +42,12 @@ export function SelectionLibrary(highlightMiiId?: string): Promise<Mii> {
       .appendTo(container);
 
     const miis = await Promise.all(
-      (
-        await localforage.keys()
-      )
+      (await localforage.keys())
         .filter((k) => k.startsWith("mii-"))
         .sort((a, b) => Number(a.split("-")[1]!) - Number(b.split("-")[1]!))
         .map(async (k) => ({
           id: k,
-          mii: (await localforage.getItem(k)) as string,
+          mii: (await localforage.getItem(k)) as string
         }))
     );
 
@@ -88,7 +86,7 @@ export function SelectionLibrary(highlightMiiId?: string): Promise<Mii> {
         //   );
 
         let miiImage = new Html("img").class("lazy").attr({
-          "data-src": miiIconUrl(miiData),
+          "data-src": miiIconUrl(miiData)
         });
 
         // Special
@@ -114,7 +112,7 @@ export function SelectionLibrary(highlightMiiId?: string): Promise<Mii> {
             color:
               miiData.extHatColor !== 0
                 ? MiiFavoriteColorIconTable[miiData.extHatColor - 1].top
-                : MiiFavoriteColorIconTable[miiData.favoriteColor].top,
+                : MiiFavoriteColorIconTable[miiData.favoriteColor].top
           });
         }
 
@@ -130,10 +128,10 @@ export function SelectionLibrary(highlightMiiId?: string): Promise<Mii> {
               async callback() {
                 await shutdown();
                 resolve(miiData);
-              },
+              }
             },
             {
-              text: "Cancel",
+              text: "Cancel"
             }
           );
           modal
@@ -163,7 +161,7 @@ export function SelectionLibrary(highlightMiiId?: string): Promise<Mii> {
           // prevent looping error load
           if (hasMiiErrored === true) return;
           miiImage.attr({
-            src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error),
+            src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error)
           });
           hasMiiErrored = true;
         });
@@ -184,7 +182,7 @@ export function SelectionLibrary(highlightMiiId?: string): Promise<Mii> {
                 top:
                   mc.getBoundingClientRect().top +
                   mc.getBoundingClientRect().height,
-                behavior: "smooth",
+                behavior: "smooth"
               });
             }
           }
@@ -209,19 +207,19 @@ const miiCreateDialog = () => {
     "body",
     {
       text: "From Scratch",
-      callback: miiCreateFromScratch,
+      callback: miiCreateFromScratch
     },
     {
       text: "Enter PNID",
-      callback: miiCreatePNID,
+      callback: miiCreatePNID
     },
     {
       text: "Random Mii",
-      callback: miiCreateRandomFFL,
+      callback: miiCreateRandomFFL
     },
     {
       text: "Random NNID",
-      callback: miiCreateRandom,
+      callback: miiCreateRandom
     },
     {
       text: "Import FFSD/MiiCreator data",
@@ -233,13 +231,13 @@ const miiCreateDialog = () => {
           "body",
           {
             text: "Cancel",
-            callback: miiCreateDialog,
+            callback: miiCreateDialog
           },
           {
             text: "Confirm",
             callback() {
               SelectionLibrary(id);
-            },
+            }
           }
         );
         modal
@@ -278,11 +276,11 @@ const miiCreateDialog = () => {
               };
             })
         );
-      },
+      }
     },
     {
       text: "Cancel",
-      callback: () => SelectionLibrary(),
+      callback: () => SelectionLibrary()
     }
   );
 };
@@ -302,15 +300,15 @@ const miiCreateFromScratch = () => {
     "body",
     {
       text: "Male",
-      callback: cb(MiiGender.Male),
+      callback: cb(MiiGender.Male)
     },
     {
       text: "Female",
-      callback: cb(MiiGender.Female),
+      callback: cb(MiiGender.Female)
     },
     {
       text: "Cancel",
-      callback: () => miiCreateDialog(),
+      callback: () => miiCreateDialog()
     }
   );
 };
@@ -328,9 +326,7 @@ const miiCreatePNID = async () => {
 
   Loader.show();
 
-  let pnid = await fetch(
-    Config.apis.pnidFetchURL(encodeURIComponent(input))
-  );
+  let pnid = await fetch(Config.apis.pnidFetchURL(encodeURIComponent(input)));
 
   Loader.hide();
   if (!pnid.ok) {
@@ -349,9 +345,7 @@ const miiCreatePNID = async () => {
 };
 const miiCreateRandom = async () => {
   Loader.show();
-  let random = await fetch(Config.apis.nnidRandomURL).then((j) =>
-    j.json()
-  );
+  let random = await fetch(Config.apis.nnidRandomURL).then((j) => j.json());
   Loader.hide();
 
   new MiiEditor(

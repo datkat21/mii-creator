@@ -81,7 +81,7 @@ export class SparkleParticle {
       map: this.texture,
       transparent: true,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
+      depthWrite: false
     });
 
     // Create the particle system

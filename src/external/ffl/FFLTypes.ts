@@ -2,7 +2,7 @@ export function FFLiiGetEyebrowRotateOffset(type: number) {
   const ROTATE = [
     6, 6, 5, 7, 6, 7, 6, 7, 4, 7, 6, 8, 5, 5, 6, 6, 7, 7, 6, 6, 5, 6, 7, 5,
 
-    6, 6, 6, 6,
+    6, 6, 6, 6
   ];
   return 32 - ROTATE[type];
 }
@@ -20,7 +20,7 @@ export enum FFLFavoriteColor {
   FFL_FAVORITE_COLOR_BROWN = 9,
   FFL_FAVORITE_COLOR_WHITE = 10,
   FFL_FAVORITE_COLOR_BLACK = 11,
-  FFL_FAVORITE_COLOR_MAX = 12,
+  FFL_FAVORITE_COLOR_MAX = 12
 }
 
 export const FFL_PATH_MAX_LEN = 256;

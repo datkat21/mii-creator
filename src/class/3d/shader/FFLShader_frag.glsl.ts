@@ -1,4 +1,4 @@
-export default /*glsl*/`// https://jsfiddle.net/arian_/8gvynrdu/7/
+export default /*glsl*/ `// https://jsfiddle.net/arian_/8gvynrdu/7/
 //
 //  定数定義ファイル
 //

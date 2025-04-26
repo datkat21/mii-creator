@@ -1,19 +1,19 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
 import {
   MiiMouthColorTable,
-  SwitchMiiColorTable,
+  SwitchMiiColorTable
 } from "../../constants/ColorTables";
 import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
 import type Mii from "../../external/mii-js/mii";
 
@@ -35,8 +35,8 @@ export function MouthTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.mouth[k],
-            part: RenderPart.Face,
-          })),
+            part: RenderPart.Face
+          }))
         },
         mouthColor: {
           label: EditorIcons.color,
@@ -53,7 +53,7 @@ export function MouthTab(data: TabRenderInit) {
               value: k,
               color: MiiMouthColorTable[k],
               part: RenderPart.Face,
-              property: "fflMouthColor",
+              property: "fflMouthColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
@@ -63,11 +63,11 @@ export function MouthTab(data: TabRenderInit) {
                 color: SwitchMiiColorTable[k],
                 // icon: `<span style="display:flex;justify-content:center;align-items:center;position:relative;z-index:1;">${k}</span>`,
                 part: RenderPart.Face,
-                property: "extMouthColor",
+                property: "extMouthColor"
               })),
               MiiSwitchColorTable
-            ),
-          ],
+            )
+          ]
         },
         mouthPosition: {
           label: "Position",
@@ -93,7 +93,7 @@ export function MouthTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 8,
-              part: RenderPart.Face,
+              part: RenderPart.Face
             },
             {
               type: FeatureSetType.Range,
@@ -104,11 +104,11 @@ export function MouthTab(data: TabRenderInit) {
               soundEnd: "vert_stretch_up",
               min: 0,
               max: 6,
-              part: RenderPart.Face,
-            },
-          ],
-        },
-      },
+              part: RenderPart.Face
+            }
+          ]
+        }
+      }
     })
   );
 }

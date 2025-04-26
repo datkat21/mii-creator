@@ -1,6 +1,6 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
@@ -20,7 +20,7 @@ export function MoleTab(data: TabRenderInit) {
               iconOff: "Disable",
               iconOn: "Enable",
               property: "moleEnabled",
-              part: RenderPart.Face,
+              part: RenderPart.Face
             },
             {
               type: FeatureSetType.Range,
@@ -43,7 +43,7 @@ export function MoleTab(data: TabRenderInit) {
               soundEnd: "move_apart",
               min: 0,
               max: 16,
-              part: RenderPart.Face,
+              part: RenderPart.Face
             },
             {
               type: FeatureSetType.Range,
@@ -54,11 +54,11 @@ export function MoleTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 7,
-              part: RenderPart.Face,
-            },
-          ],
-        },
-      },
+              part: RenderPart.Face
+            }
+          ]
+        }
+      }
     })
   );
 }

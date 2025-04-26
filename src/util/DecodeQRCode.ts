@@ -6,7 +6,7 @@ import { Buffer } from "../../node_modules/buffer";
 // unused temporarily because it isn't loading the extra data correctly from TL qr codes from my testing
 import {
   MiiTLHairSprayToSwitchColor,
-  SwitchMiiColorTable,
+  SwitchMiiColorTable
 } from "../constants/ColorTables.js";
 import Modal from "../ui/components/Modal.js";
 import { getSetting } from "./SettingsHelper.js";
@@ -33,10 +33,10 @@ export function QrScannerError(message: string) {
     message,
     "body",
     {
-      text: "Cancel",
+      text: "Cancel"
     },
     {
-      text: "OK",
+      text: "OK"
     }
   );
   m.qs(".modal-content")!.styleJs({ minWidth: "360px" });
@@ -166,7 +166,7 @@ function decryptAesCcm(
   return new Uint8Array([
     ...decryptedSlice.slice(0, 12),
     ...nonce,
-    ...decryptedSlice.slice(12),
+    ...decryptedSlice.slice(12)
   ]);
 }
 
@@ -290,7 +290,7 @@ export async function startScanner(camList: HTMLElement) {
         console.log("QR scan error:", error);
       },
       highlightScanRegion: true,
-      highlightCodeOutline: true,
+      highlightCodeOutline: true
     }
   );
 
@@ -402,7 +402,7 @@ export async function initQrCam(
 export enum QrScanDataType {
   GenericWiiU3ds,
   ExtraDataTL,
-  ExtraDataMiiC,
+  ExtraDataMiiC
 }
 
 var qrCallback: (data: Buffer, type: QrScanDataType) => any;

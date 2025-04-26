@@ -34,7 +34,7 @@ export const MiiFavoriteColorLookupTable: MiiLookupTableHex = {
   /** White */
   10: 0xe0e0e0,
   /** Black */
-  11: 0x181814,
+  11: 0x181814
 };
 
 export const MiiFavoriteColorVec3Table: MiiLookupTableVec3 = {
@@ -49,7 +49,7 @@ export const MiiFavoriteColorVec3Table: MiiLookupTableVec3 = {
   8: [0.45098039215686275, 0.1568627450980392, 0.6784313725490196],
   9: [0.2823529411764706, 0.2196078431372549, 0.09411764705882353],
   10: [0.8784313725490196, 0.8784313725490196, 0.8784313725490196],
-  11: [0.09411764705882353, 0.09411764705882353, 0.0784313725490196],
+  11: [0.09411764705882353, 0.09411764705882353, 0.0784313725490196]
 };
 
 export const MiiFavoriteColorIconTable: MiiLookupTableSpecial = {
@@ -76,7 +76,7 @@ export const MiiFavoriteColorIconTable: MiiLookupTableSpecial = {
   /** White */
   10: { top: "#e0e0e0", bottom: "#696969" },
   /** Black */
-  11: { top: "#181814", bottom: "#0b0b09" },
+  11: { top: "#181814", bottom: "#0b0b09" }
 };
 
 export const MiiSkinColorTable: MiiLookupTableString = {
@@ -89,7 +89,7 @@ export const MiiSkinColorTable: MiiLookupTableString = {
   6: "#ffbea5",
   7: "#ffc58f",
   8: "#8c3c23",
-  9: "#3c2d23",
+  9: "#3c2d23"
 };
 export const MiiHairColorTable: MiiLookupTableString = {
   0: "#000000",
@@ -99,7 +99,7 @@ export const MiiHairColorTable: MiiLookupTableString = {
   4: "#787880",
   5: "#4E3E11",
   6: "#875917",
-  7: "#D0A049",
+  7: "#D0A049"
 };
 export const MiiEyeColorTable: MiiLookupTableString = {
   0: "#000000",
@@ -107,21 +107,21 @@ export const MiiEyeColorTable: MiiLookupTableString = {
   2: "#663C2C",
   3: "#686537",
   4: "#4B58A8",
-  5: "#387059",
+  5: "#387059"
 };
 export const MiiMouthColorTable: MiiLookupTableString = {
   0: "#D04401",
   1: "#F30100",
   2: "#FD393A",
   3: "#F58862",
-  4: "#1F1D1D",
+  4: "#1F1D1D"
 };
 export const MiiMouthColorLipTable: MiiLookupTableSpecial = {
   0: { top: "#823018", bottom: "#D85209" },
   1: { top: "#780C0D", bottom: "#F00C09" },
   2: { top: "#882028", bottom: "#F54849" },
   3: { top: "#DC7751", bottom: "#F09A74" },
-  4: { top: "#461E0A", bottom: "#8C503F" },
+  4: { top: "#461E0A", bottom: "#8C503F" }
 };
 export const MiiGlassesColorTable: MiiLookupTableString = {
   0: "#000000",
@@ -129,7 +129,7 @@ export const MiiGlassesColorTable: MiiLookupTableString = {
   2: "#a01612",
   3: "#2e3969",
   4: "#a4601e",
-  5: "#766f67",
+  5: "#766f67"
 };
 export const MiiGlassesColorIconTable: MiiLookupTableSpecial = {
   0: { top: "#666666", bottom: "#606060" },
@@ -137,7 +137,7 @@ export const MiiGlassesColorIconTable: MiiLookupTableSpecial = {
   2: { top: "#a01612", bottom: "#ff9d99" },
   3: { top: "#b5c0f0", bottom: "#b5c0f0" },
   4: { top: "#a4601e", bottom: "#ffe7a5" },
-  5: { top: "#766f67", bottom: "#fdf6ee" },
+  5: { top: "#766f67", bottom: "#fdf6ee" }
 };
 
 export const SwitchMiiColorTable: MiiLookupTableColor = [
@@ -240,7 +240,7 @@ export const SwitchMiiColorTable: MiiLookupTableColor = [
   "#9b9b9b",
   "#bebebe",
   "#dcd7cd",
-  "#ffffff",
+  "#ffffff"
 ];
 
 export const SwitchMiiColorTableLip: MiiLookupTableColor = [
@@ -343,7 +343,7 @@ export const SwitchMiiColorTableLip: MiiLookupTableColor = [
   "#7c7c7c",
   "#ababab",
   "#c6c1b6",
-  "#d9d9d9",
+  "#d9d9d9"
 ];
 
 export const SwitchMiiColorTableSRGB: MiiLookupTableVec3 = [
@@ -446,7 +446,7 @@ export const SwitchMiiColorTableSRGB: MiiLookupTableVec3 = [
   [0.6078432, 0.6078432, 0.6078432],
   [0.7450981, 0.7450981, 0.7450981],
   [0.8627451, 0.8431373, 0.8039216],
-  [1.0, 1.0, 1.0],
+  [1.0, 1.0, 1.0]
 ];
 
 export const SwitchMiiColorTableLinear: MiiLookupTableVec3 = [
@@ -549,7 +549,7 @@ export const SwitchMiiColorTableLinear: MiiLookupTableVec3 = [
   [0.3277782, 0.3277782, 0.3277782],
   [0.5149179, 0.5149179, 0.5149179],
   [0.7156936, 0.6795427, 0.6104956],
-  [1.0, 1.0, 1.0],
+  [1.0, 1.0, 1.0]
 ];
 
 export const MiiSwitchSkinColorList: Record<number, string> = {
@@ -562,7 +562,7 @@ export const MiiSwitchSkinColorList: Record<number, string> = {
   6: "#ffbea5",
   7: "#ffc58f",
   8: "#8c3c23",
-  9: "#3c2d23",
+  9: "#3c2d23"
 };
 
 // todo: turn this into a lookup table??
@@ -577,7 +577,7 @@ export const MiiSwitchSkinColorSRGB: MiiLookupTableVec3 = [
   [1, 0.7450981140136719, 0.64705890417099],
   [1, 0.7725490927696228, 0.5607843995094299],
   [0.5490196943283081, 0.2352941930294037, 0.137254998087883],
-  [0.2352941930294037, 0.1764705926179886, 0.137254998087883],
+  [0.2352941930294037, 0.1764705926179886, 0.137254998087883]
 ];
 
 export const MiiSwitchSkinColorLinear: MiiLookupTableVec3 = [
@@ -590,7 +590,7 @@ export const MiiSwitchSkinColorLinear: MiiLookupTableVec3 = [
   [1, 0.5149179100990295, 0.3762623071670532],
   [1, 0.5583406090736389, 0.27467745542526245],
   [0.26225078105926514, 0.04518624022603035, 0.016807394102215767],
-  [0.04518624022603035, 0.026241222396492958, 0.016807394102215767],
+  [0.04518624022603035, 0.026241222396492958, 0.016807394102215767]
 ];
 
 // The actual palettes aren't shown here, only a lookup table
@@ -601,34 +601,34 @@ export const MiiTLHairSprayToSwitchColor: MiiLookupTableQrColor = [
 
   92, 19, 20, 20, 15, 32, 35, 26,
 
-  38, 41, 43, 18, 95, 97, 97, 99,
+  38, 41, 43, 18, 95, 97, 97, 99
 ];
 
 export const ToVer3GlassTypeTable = [
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 1, 3, 7, 7, 6, 7, 8, 7, 7,
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 1, 3, 7, 7, 6, 7, 8, 7, 7
 ];
 export const ToVer3HairColorTable = [
   0, 1, 2, 3, 4, 5, 6, 7, 0, 4, 3, 5, 4, 4, 6, 2, 0, 6, 4, 3, 2, 2, 7, 3, 2, 2,
   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4, 4, 4, 4, 0, 0, 4, 4,
   4, 4, 4, 4, 0, 0, 0, 4, 4, 4, 4, 4, 4, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 5, 7, 5,
-  7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 7, 3, 7, 7, 7, 7, 7, 0, 4, 4, 4, 4,
+  7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 7, 3, 7, 7, 7, 7, 7, 0, 4, 4, 4, 4
 ];
 export const ToVer3EyeColorTable = [
   0, 2, 2, 2, 1, 3, 2, 3, 0, 1, 2, 3, 4, 5, 2, 2, 4, 2, 1, 2, 2, 2, 2, 2, 2, 2,
   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 4, 4, 4, 4, 4, 4, 4, 1, 0, 4, 4, 4,
   4, 4, 4, 4, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 3, 3,
-  3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 3, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1,
+  3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 3, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1
 ];
 export const ToVer3MouthColorTable = [
   4, 4, 4, 4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 0, 1, 2, 3, 4, 4, 2,
   3, 3, 4, 4, 4, 4, 1, 4, 4, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 4, 4, 4, 3,
   3, 3, 3, 3, 4, 4, 4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, 3,
-  3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 4, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3,
+  3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 4, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3
 ];
 export const ToVer3GlassColorTable = [
   0, 1, 1, 1, 5, 1, 1, 4, 0, 5, 1, 1, 3, 5, 1, 2, 3, 4, 5, 4, 2, 2, 4, 4, 2, 2,
   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
   3, 3, 3, 3, 0, 0, 0, 5, 5, 5, 5, 5, 5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-  5, 5, 5, 5, 5, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5,
+  5, 5, 5, 5, 5, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5
 ];
 export const ToVer3FacelineColorTable = [0, 1, 2, 3, 4, 5, 0, 1, 5, 5];

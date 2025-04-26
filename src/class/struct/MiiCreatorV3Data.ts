@@ -4,7 +4,7 @@ import { Ver3StoreData } from "./FFLStoreData";
 import {
   EmptyMiiCreatorV4Data,
   MiiCreatorOriginPlatform,
-  MiiCreatorV4Data,
+  MiiCreatorV4Data
 } from "./MiiCreatorV4Data";
 
 export const MiiCreatorV3Data = _.struct([
@@ -23,7 +23,7 @@ export const MiiCreatorV3Data = _.struct([
   _.uint8("ext_hat_type"),
   _.uint8("ext_hat_color"),
   _.uint8("ext_face_paint_color"),
-  _.uint8("ext_shirt_color"),
+  _.uint8("ext_shirt_color")
 ]) as Struct;
 
 export function Ver3StoreDataToMiiCreatorV4Data(

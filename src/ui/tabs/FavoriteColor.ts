@@ -1,6 +1,6 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import { MiiFavoriteColorLookupTable } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
@@ -21,10 +21,10 @@ export function FavoriteColorTab(data: TabRenderInit) {
             forceRender: true,
             value: k,
             color: numToHex(MiiFavoriteColorLookupTable[k]),
-            part: RenderPart.Head,
-          })),
-        },
-      },
+            part: RenderPart.Head
+          }))
+        }
+      }
     })
   );
 }

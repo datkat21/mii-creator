@@ -5,7 +5,13 @@ import { MiiEditor } from "../../../../class/MiiEditor";
 import { FFLiDatabaseRandom_Get } from "../../../../external/ffl/FFLiDatabaseRandom";
 import Mii from "../../../../external/mii-js/mii";
 import Modal from "../../../components/Modal";
-import { _shutdown, Library, miiIconUrl, newMiiId, playLoadSound } from "../../Library";
+import {
+  _shutdown,
+  Library,
+  miiIconUrl,
+  newMiiId,
+  playLoadSound
+} from "../../Library";
 import { miiCreateDialog } from "./_dialog";
 
 export const newFromLookalike = async () => {
@@ -17,10 +23,10 @@ export const newFromLookalike = async () => {
       text: "Cancel",
       callback(e) {
         miiCreateDialog();
-      },
+      }
     },
     {
-      text: "Confirm",
+      text: "Confirm"
     }
   );
   m.classOn("random-mii-grid");
@@ -45,7 +51,7 @@ export const newFromLookalike = async () => {
         color: "var(--text)",
         border: "1px solid var(--stroke)",
         "border-radius": "6px",
-        "flex-shrink": "0",
+        "flex-shrink": "0"
       })
       .text(
         // arian wrote this for me.. because i didn't want to offend anyone having "race" in my mii creator😭
@@ -77,13 +83,13 @@ export const newFromLookalike = async () => {
       new Option("(Random)", "-1"),
       new Option("Black", "0"),
       new Option("White", "1"),
-      new Option("Asian", "2"),
+      new Option("Asian", "2")
     ]),
     makeSelect("gender", [
       new Option("Gender", "-1", true, true),
       new Option("(Random)", "-1"),
       new Option("Male", "0"),
-      new Option("Female", "1"),
+      new Option("Female", "1")
     ]),
     makeSelect("hairColor", [
       new Option("Hair color", "-1", true, true),
@@ -95,7 +101,7 @@ export const newFromLookalike = async () => {
       new Option("Gray", "4"),
       new Option("Green", "5"),
       new Option("Dirty blonde", "6"),
-      new Option("Blonde", "7"),
+      new Option("Blonde", "7")
     ]),
     makeSelect("favoriteColor", [
       new Option("Favorite color", "-1", true, true),
@@ -111,7 +117,7 @@ export const newFromLookalike = async () => {
       new Option("Purple", "8"),
       new Option("Brown", "9"),
       new Option("White", "10"),
-      new Option("Black", "11"),
+      new Option("Black", "11")
     ]),
     makeSelect("eyeColor", [
       new Option("Eye color", "-1", true, true),
@@ -121,14 +127,14 @@ export const newFromLookalike = async () => {
       new Option("Brown", "2"),
       new Option("Hazel", "3"),
       new Option("Blue", "4"),
-      new Option("Green", "5"),
+      new Option("Green", "5")
     ]),
     makeSelect("age", [
       new Option("Age", "-1", true, true),
       new Option("(Random)", "-1"),
       new Option("Child", "0"),
       new Option("Adult", "1"),
-      new Option("Elder", "2"),
+      new Option("Elder", "2")
     ])
   );
 

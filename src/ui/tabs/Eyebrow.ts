@@ -1,10 +1,10 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiHairColorTable,
-  SwitchMiiColorTable,
+  SwitchMiiColorTable
 } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -13,7 +13,7 @@ import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
 import type Mii from "../../external/mii-js/mii";
 
@@ -34,8 +34,8 @@ export function EyebrowTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.eyebrows[k],
-            part: RenderPart.Face,
-          })),
+            part: RenderPart.Face
+          }))
         },
         eyebrowColor: {
           label: EditorIcons.color,
@@ -52,7 +52,7 @@ export function EyebrowTab(data: TabRenderInit) {
               value: k,
               color: MiiHairColorTable[k],
               part: RenderPart.Face,
-              property: "fflEyebrowColor",
+              property: "fflEyebrowColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
@@ -61,11 +61,11 @@ export function EyebrowTab(data: TabRenderInit) {
                 value: k + 8,
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Face,
-                property: "extEyebrowColor",
+                property: "extEyebrowColor"
               })),
               MiiSwitchColorTable
-            ),
-          ],
+            )
+          ]
         },
         eyebrowPosition: {
           label: "Position",
@@ -91,7 +91,7 @@ export function EyebrowTab(data: TabRenderInit) {
               soundEnd: "move_apart",
               min: 0,
               max: 12,
-              part: RenderPart.Face,
+              part: RenderPart.Face
             },
             {
               type: FeatureSetType.Range,
@@ -114,7 +114,7 @@ export function EyebrowTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 8,
-              part: RenderPart.Face,
+              part: RenderPart.Face
             },
             {
               type: FeatureSetType.Range,
@@ -125,11 +125,11 @@ export function EyebrowTab(data: TabRenderInit) {
               soundEnd: "vert_stretch_up",
               min: 0,
               max: 6,
-              part: RenderPart.Face,
-            },
-          ],
-        },
-      },
+              part: RenderPart.Face
+            }
+          ]
+        }
+      }
     })
   );
 }

@@ -6,9 +6,7 @@ import { _shutdown, Library, newMiiId } from "../../Library";
 
 export const newFromRandonNNID = async () => {
   Loader.show();
-  let random = await fetch(Config.apis.nnidRandomURL).then((j) =>
-    j.json()
-  );
+  let random = await fetch(Config.apis.nnidRandomURL).then((j) => j.json());
   Loader.hide();
 
   _shutdown()();

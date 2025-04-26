@@ -1,6 +1,6 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import EditorIcons from "../../constants/EditorIcons";
 import { SwitchMiiColorTable } from "../../constants/ColorTables";
@@ -11,7 +11,7 @@ import {
   makeSeparatorFSI,
   MiiHairTable,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
 import type Mii from "../../external/mii-js/mii";
 
@@ -33,10 +33,10 @@ export function HairTab(data: TabRenderInit) {
               type: FeatureSetType.Icon,
               value: k,
               icon: data.icons.hair[k], // `<img src="./assets/images/hair/${k}.png" width="84" height="84" />`,
-              part: RenderPart.Head,
+              part: RenderPart.Head
             })),
             MiiHairTable
-          ),
+          )
         },
         hairColor: {
           label: EditorIcons.color,
@@ -53,7 +53,7 @@ export function HairTab(data: TabRenderInit) {
               value: k,
               color: SwitchMiiColorTable[k],
               part: RenderPart.Head,
-              property: "fflHairColor",
+              property: "fflHairColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
@@ -62,11 +62,11 @@ export function HairTab(data: TabRenderInit) {
                 value: k + 8,
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Head,
-                property: "extHairColor",
+                property: "extHairColor"
               })),
               MiiSwitchColorTable
-            ),
-          ],
+            )
+          ]
         },
         hairPosition: {
           label: "Position",
@@ -76,11 +76,11 @@ export function HairTab(data: TabRenderInit) {
               iconOff: EditorIcons.positionHairFlip,
               iconOn: EditorIcons.positionHairFlipped,
               property: "flipHair",
-              part: RenderPart.Head,
-            },
-          ],
-        },
-      },
+              part: RenderPart.Head
+            }
+          ]
+        }
+      }
     })
   );
 }

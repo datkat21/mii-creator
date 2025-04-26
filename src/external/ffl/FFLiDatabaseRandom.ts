@@ -10,13 +10,13 @@ import {
   RANDOM_PARTS_ARRAY_HAIR_COLOR,
   RANDOM_PARTS_ARRAY_HAIR_TYPE,
   RANDOM_PARTS_ARRAY_MOUTH_TYPE,
-  RANDOM_PARTS_ARRAY_NOSE_TYPE,
+  RANDOM_PARTS_ARRAY_NOSE_TYPE
 } from "./RandomParts";
 import Mii from "../mii-js/mii";
 import {
   FFL_MOUTH_COLOR_MAX,
   FFLFavoriteColor,
-  FFLiiGetEyebrowRotateOffset,
+  FFLiiGetEyebrowRotateOffset
 } from "./FFLTypes";
 
 function DetermineParam(
@@ -42,8 +42,8 @@ function DetermineParam(
       rnd < 4
         ? FFLAge.FFL_AGE_CHILD
         : rnd < 8
-        ? FFLAge.FFL_AGE_ADULT
-        : FFLAge.FFL_AGE_ELDER;
+          ? FFLAge.FFL_AGE_ADULT
+          : FFLAge.FFL_AGE_ELDER;
   }
 
   if (pRace == FFLRace.FFL_RACE_MAX) {
@@ -53,8 +53,8 @@ function DetermineParam(
       rnd < 4
         ? FFLRace.FFL_RACE_ASIAN
         : rnd < 8
-        ? FFLRace.FFL_RACE_WHITE
-        : FFLRace.FFL_RACE_BLACK;
+          ? FFLRace.FFL_RACE_WHITE
+          : FFLRace.FFL_RACE_BLACK;
   }
 
   return [gender, age, race];
@@ -64,18 +64,18 @@ export enum FFLAge {
   FFL_AGE_CHILD = 0,
   FFL_AGE_ADULT = 1,
   FFL_AGE_ELDER = 2,
-  FFL_AGE_MAX = 3,
+  FFL_AGE_MAX = 3
 }
 export enum FFLGender {
   FFL_GENDER_MALE = 0,
   FFL_GENDER_FEMALE = 1,
-  FFL_GENDER_MAX = 2,
+  FFL_GENDER_MAX = 2
 }
 export enum FFLRace {
   FFL_RACE_BLACK = 0,
   FFL_RACE_WHITE = 1,
   FFL_RACE_ASIAN = 2,
-  FFL_RACE_MAX = 3,
+  FFL_RACE_MAX = 3
 }
 
 function GetRandomGlassType(age: FFLAge) {
@@ -93,7 +93,7 @@ export function GetRandomParts(array: any[]) {
 const RANDOM_GLASS_TYPE: any[] = [
   [90, 94, 96, 100, 0, 0, 0, 0, 0],
   [83, 86, 90, 93, 94, 96, 98, 100, 0],
-  [78, 83, 0, 93, 0, 0, 98, 100, 0],
+  [78, 83, 0, 93, 0, 0, 98, 100, 0]
 ];
 
 // set these fields to "lock in" options when generating a random Mii
@@ -118,7 +118,7 @@ export function FFLiDatabaseRandom_Get(
   let [pGender, pAge, pRace] = [
     FFLGender.FFL_GENDER_MAX,
     FFLAge.FFL_AGE_MAX,
-    FFLRace.FFL_RACE_MAX,
+    FFLRace.FFL_RACE_MAX
   ];
   let [gender, age, race] = DetermineParam(pGender, pAge, pRace);
 

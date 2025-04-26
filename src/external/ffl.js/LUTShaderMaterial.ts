@@ -759,13 +759,13 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
     NONE: 0,
     DEFAULT_02: 1,
     SKIN_01: 2,
-    MAX: 3,
+    MAX: 3
   };
   static LUTFresnelTextureType = {
     NONE: 0,
     DEFAULT_02: 1,
     SKIN_01: 2,
-    MAX: 3,
+    MAX: 3
   };
 
   // LUT curve definitions:
@@ -773,7 +773,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
     specular: {
       [LUTShaderMaterial.LUTSpecularTextureType.NONE]: new HermitianCurve([
         { x: 0, y: 0, dx: 0, dy: 0 },
-        { x: 1, y: 0, dx: 0, dy: 0 },
+        { x: 1, y: 0, dx: 0, dy: 0 }
       ]),
       [LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02]: new HermitianCurve(
         [
@@ -783,9 +783,9 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
             x: 0.8,
             y: 0.038,
             dx: 0.157894736842105,
-            dy: 0.157894736842105,
+            dy: 0.157894736842105
           },
-          { x: 1, y: 0.11, dx: 0, dy: 0 },
+          { x: 1, y: 0.11, dx: 0, dy: 0 }
         ]
       ),
       [LUTShaderMaterial.LUTSpecularTextureType.SKIN_01]: new HermitianCurve([
@@ -793,64 +793,64 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
           x: 0,
           y: 0.03,
           dx: -0.105263157894737,
-          dy: -0.105263157894737,
+          dy: -0.105263157894737
         },
-        { x: 1, y: 0, dx: 0, dy: 0 },
-      ]),
+        { x: 1, y: 0, dx: 0, dy: 0 }
+      ])
     },
     fresnel: {
       [LUTShaderMaterial.LUTFresnelTextureType.NONE]: new HermitianCurve([
         { x: 0, y: 0, dx: 0, dy: 0 },
-        { x: 1, y: 0, dx: 0, dy: 0 },
+        { x: 1, y: 0, dx: 0, dy: 0 }
       ]),
       [LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02]: new HermitianCurve([
         {
           x: 0,
           y: 0.3,
           dx: -0.105263157894734,
-          dy: -0.105263157894734,
+          dy: -0.105263157894734
         },
         {
           x: 0.175,
           y: 0.23,
           dx: -0.626315789473681,
-          dy: -0.626315789473681,
+          dy: -0.626315789473681
         },
         {
           x: 0.6,
           y: 0.05,
           dx: -0.210526315789474,
-          dy: -0.210526315789474,
+          dy: -0.210526315789474
         },
         {
           x: 1,
           y: 0,
           dx: -0.105263157894737,
-          dy: -0.105263157894737,
-        },
+          dy: -0.105263157894737
+        }
       ]),
       [LUTShaderMaterial.LUTFresnelTextureType.SKIN_01]: new HermitianCurve([
         {
           x: 0.005,
           y: 0.35,
           dx: -0.105263157894734,
-          dy: -0.105263157894734,
+          dy: -0.105263157894734
         },
         {
           x: 0.173,
           y: 0.319,
           dx: -0.205263157894734,
-          dy: -0.205263157894734,
+          dy: -0.205263157894734
         },
         {
           x: 0.552,
           y: 0.051,
           dx: -0.210526315789474,
-          dy: -0.210526315789474,
+          dy: -0.210526315789474
         },
-        { x: 1, y: 0.001, dx: 0, dy: 0 },
-      ]),
-    },
+        { x: 1, y: 0.001, dx: 0, dy: 0 }
+      ])
+    }
   };
 
   // LUT lookup tables (indexed by modulate type)
@@ -865,7 +865,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
     LUTShaderMaterial.LUTSpecularTextureType.NONE, // 7: NOSELINE
     LUTShaderMaterial.LUTSpecularTextureType.NONE, // 8: GLASS
     LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02, // 9: CUSTOM (BODY)
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02, // 10: CUSTOM (PANTS)
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02 // 10: CUSTOM (PANTS)
   ];
   static modulateToLUTFresnel = [
     LUTShaderMaterial.LUTFresnelTextureType.SKIN_01, // 0: FACELINE
@@ -878,7 +878,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
     LUTShaderMaterial.LUTFresnelTextureType.NONE, // 7: NOSELINE
     LUTShaderMaterial.LUTFresnelTextureType.NONE, // 8: GLASS
     LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02, // 9: CUSTOM (BODY)
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02, // 10: CUSTOM (PANTS)
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02 // 10: CUSTOM (PANTS)
   ];
 
   // Cache LUT textures so we generate them only once.
@@ -966,7 +966,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
       return {
         blending: THREE.CustomBlending,
         blendSrcAlpha: THREE.SrcAlphaFactor,
-        blendDstAlpha: THREE.OneFactor,
+        blendDstAlpha: THREE.OneFactor
       };
     } else if (modulateType >= 6 && modulateType <= 8) {
       // Translucent (DrawXlu)
@@ -974,7 +974,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
         blending: THREE.CustomBlending,
         blendSrc: THREE.SrcAlphaFactor,
         blendDst: THREE.OneMinusSrcAlphaFactor,
-        blendDstAlpha: THREE.OneFactor,
+        blendDstAlpha: THREE.OneFactor
       };
     } else if (modulateType >= 9 && modulateType <= 13) {
       // Mask Textures
@@ -982,7 +982,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
         blending: THREE.CustomBlending,
         blendSrc: THREE.OneMinusDstAlphaFactor,
         blendSrcAlpha: THREE.SrcAlphaFactor,
-        blendDst: THREE.DstAlphaFactor,
+        blendDst: THREE.DstAlphaFactor
       };
     } else if (modulateType >= 14 && modulateType <= 17) {
       // Faceline Texture
@@ -991,7 +991,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
         blendSrc: THREE.SrcAlphaFactor,
         blendDst: THREE.OneMinusSrcAlphaFactor,
         blendSrcAlpha: THREE.OneFactor,
-        blendDstAlpha: THREE.OneFactor,
+        blendDstAlpha: THREE.OneFactor
       };
     } else {
       console.error(`Unknown modulate type: ${modulateType}.`);
@@ -1038,13 +1038,13 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
       colorUniforms = {
         u_const1: { value: options.modulateColor[0] },
         u_const2: { value: options.modulateColor[1] },
-        u_const3: { value: options.modulateColor[2] },
+        u_const3: { value: options.modulateColor[2] }
       };
     } else {
       colorUniforms = {
         u_const1: {
-          value: options.modulateColor || new THREE.Vector4(1, 1, 1, 1),
-        },
+          value: options.modulateColor || new THREE.Vector4(1, 1, 1, 1)
+        }
       };
     }
 
@@ -1064,36 +1064,34 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
       uHSLightGroundColor: {
         value:
           options.hslightGroundColor ||
-          LUTShaderMaterial.defaultHSLightGroundColor,
+          LUTShaderMaterial.defaultHSLightGroundColor
       },
       uHSLightSkyColor: {
         value:
-          options.hslightSkyColor || LUTShaderMaterial.defaultHSLightSkyColor,
+          options.hslightSkyColor || LUTShaderMaterial.defaultHSLightSkyColor
       },
       uDirLightColor0: {
-        value:
-          options.dirLightColor0 || LUTShaderMaterial.defaultDirLightColor0,
+        value: options.dirLightColor0 || LUTShaderMaterial.defaultDirLightColor0
       },
       uDirLightColor1: {
-        value:
-          options.dirLightColor1 || LUTShaderMaterial.defaultDirLightColor1,
+        value: options.dirLightColor1 || LUTShaderMaterial.defaultDirLightColor1
       },
       uDirLightCount: {
-        value: options.dirLightCount || LUTShaderMaterial.defaultDirLightCount,
+        value: options.dirLightCount || LUTShaderMaterial.defaultDirLightCount
       },
       uDirLightDirAndType0: {
         value:
           options.dirLightDirAndType0 ||
-          LUTShaderMaterial.defaultDirLightDirAndType0.clone(),
+          LUTShaderMaterial.defaultDirLightDirAndType0.clone()
       },
       uDirLightDirAndType1: {
         value:
           options.dirLightDirAndType1 ||
-          LUTShaderMaterial.defaultDirLightDirAndType1.clone(),
+          LUTShaderMaterial.defaultDirLightDirAndType1.clone()
       },
       uLightEnable: { value: lightEnable },
       uLightColor: {
-        value: options.lightColor || LUTShaderMaterial.defaultLightColor,
+        value: options.lightColor || LUTShaderMaterial.defaultLightColor
       },
       uMode: { value: modulateMode },
       // NOTE about uAlphaTest:
@@ -1104,7 +1102,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
       uAlphaTest: { value: alphaTest },
       uAlbedoTexture: { value: texture },
       uLUTSpecTexture: { value: lutSpecTexture },
-      uLUTFresTexture: { value: lutFresTexture },
+      uLUTFresTexture: { value: lutFresTexture }
     });
 
     super({
@@ -1116,7 +1114,7 @@ class LUTShaderMaterial extends THREE.ShaderMaterial {
       // Merge blend options, only if modulateMode is not 0/opqaue.
       ...(modulateMode !== 0
         ? LUTShaderMaterial.getBlendOptionsFromModulateType(modulateType)
-        : {}),
+        : {})
       // NOTE: ^^ Assumes that default blending is equivalent to constant blending (test faceline make?)
       //...getBlendOptionsFromModulateType(modulateType) // Merge blend options
     });

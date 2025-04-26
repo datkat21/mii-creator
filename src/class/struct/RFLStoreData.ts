@@ -2,7 +2,7 @@ import _ from "../../external/struct-fu/lib";
 import type { Field, Struct } from "../../external/struct-fu/types/Generic";
 
 export const RFLCreateID = _.struct([
-  _.uint8("data", 8), // RFL_CREATEID_LEN
+  _.uint8("data", 8) // RFL_CREATEID_LEN
 ]);
 
 // example RCD
@@ -148,13 +148,13 @@ export const RFLCharData = _.struct([
   _.ubit("padding_8", 1),
 
   //     wchar_t creatorName[RFL_CREATOR_LEN]; // at 0x36
-  _.char16be("creatorName", 0x14),
+  _.char16be("creatorName", 0x14)
   // } RFLiCharData;
 ]);
 
 export const RFLStoreData = _.struct("RFLStoreData", [
   _.struct([RFLCharData]),
-  _.uint16("checksum"),
+  _.uint16("checksum")
 ]) as Struct;
 
 export type RFLStoreData = {

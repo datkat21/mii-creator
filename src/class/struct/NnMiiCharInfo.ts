@@ -56,7 +56,7 @@ export const NnMiiCharInfo = _.struct([
   _.uint8("moleX"),
   _.uint8("moleY"),
   /* always zero */
-  _.uint8("reserved"),
+  _.uint8("reserved")
 ]) as Struct;
 export type NnMiiCharInfo = {
   createId: object;

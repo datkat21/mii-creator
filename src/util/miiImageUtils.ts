@@ -1,7 +1,7 @@
 import qrjs from "../external/mii-frontend/qrjs.min.js";
 import {
   convertDataToType,
-  supportedFormats,
+  supportedFormats
 } from "../external/mii-frontend/data-conversion.js";
 import { encryptAndEncodeVer3StoreDataToQRCodeFormat } from "./EncodeQRCode.js";
 import Mii from "../external/mii-js/mii.js";
@@ -44,7 +44,7 @@ const makeQrCodeImage = async (mii: string): Promise<HTMLImageElement> => {
 export enum MiiCustomRenderType {
   Head,
   HeadOnly,
-  Body,
+  Body
 }
 
 export const getMiiRender = async (
@@ -81,7 +81,7 @@ export const getMiiRender = async (
       .style({
         width: "720px",
         height: "720px",
-        opacity: "0",
+        opacity: "0"
         // position: "fixed",
       })
       .appendTo("body");
@@ -276,7 +276,7 @@ export function createMiiCard(
     .style({
       gap: "0",
       "justify-content": "flex-start",
-      "text-align": "left",
+      "text-align": "left"
     })
     .appendMany(
       new Html("img")
@@ -288,7 +288,7 @@ export function createMiiCard(
             `?data=${encodeURIComponent(
               studioData
             )}&type=variableiconbody&verifyCharInfo=0&shaderType=switch&width=96&source=credits&characterYRotate=8&bodyType=switch&` +
-            extra,
+            extra
         })
         .style({ width: "96px", height: "96px" }),
       new Html("div")
@@ -299,7 +299,7 @@ export function createMiiCard(
             .appendMany(
               new Html("span").text(name).style({
                 display: "inline",
-                width: "max-content",
+                width: "max-content"
               }),
               AddButtonSounds(
                 new Html("a")
@@ -332,7 +332,7 @@ export function createIconCard(
     .style({
       gap: "0",
       "justify-content": "flex-start",
-      "text-align": "left",
+      "text-align": "left"
     })
     .appendMany(
       new Html("div").html(icon).style({ width: "96px", height: "96px" }),
@@ -344,7 +344,7 @@ export function createIconCard(
             .appendMany(
               new Html("span").text(name).style({
                 display: "inline",
-                width: "max-content",
+                width: "max-content"
               })
             )
             .style({ display: "flex", gap: "8px" }),

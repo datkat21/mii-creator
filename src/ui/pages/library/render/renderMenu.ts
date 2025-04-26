@@ -5,7 +5,7 @@ import {
   MeshStandardMaterial,
   type Mesh,
   type ShaderMaterial,
-  type Texture,
+  type Texture
 } from "three";
 import { GLTFExporter } from "three/examples/jsm/Addons.js";
 import { Mii3DScene, SetupType } from "../../../../class/3DScene";
@@ -76,26 +76,26 @@ export const miiRender = (mii: MiiLocalforage, miiData: Mii) => {
               console.error("Oops, something went wrong:", error);
             },
             {
-              binary: true,
+              binary: true
             }
           );
         });
-      },
+      }
     },
     {
       text: "Render presets",
       async callback() {
         miiRenderPresets(mii, miiData);
-      },
+      }
     },
     {
       text: "Make your own render",
       async callback() {
         customRender(miiData);
-      },
+      }
     },
     {
-      text: "Cancel",
+      text: "Cancel"
     }
   );
 };

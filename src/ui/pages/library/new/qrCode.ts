@@ -6,7 +6,7 @@ import {
   QrScanDataType,
   QrScannerError,
   setQRCallback,
-  startScanner,
+  startScanner
 } from "../../../../util/DecodeQRCode";
 import { getSetting } from "../../../../util/SettingsHelper";
 import Modal from "../../../components/Modal";
@@ -20,7 +20,7 @@ export const newFromQRCode = async () => {
     callback: () => {
       m.qs("#stop-camera")!.elm.click();
       if (qrReturnToMenu) miiCreateDialog();
-    },
+    }
   });
 
   const mb = m.qs(".modal-body")!;
@@ -59,7 +59,7 @@ export const newFromQRCode = async () => {
       new Html("input").attr({
         type: "file",
         id: "file-input",
-        accept: "image/*",
+        accept: "image/*"
       })
     )
   );

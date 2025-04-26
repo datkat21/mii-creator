@@ -63,7 +63,7 @@ export const langManager = {
       return path as string;
     }
     return current as any as string;
-  },
+  }
 };
 export const getString = (
   path: string,

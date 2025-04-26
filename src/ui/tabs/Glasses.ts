@@ -1,10 +1,10 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiGlassesColorTable,
-  SwitchMiiColorTable,
+  SwitchMiiColorTable
 } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -13,7 +13,7 @@ import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
 import type Mii from "../../external/mii-js/mii";
 
@@ -34,8 +34,8 @@ export function GlassesTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.glasses[k],
-            part: RenderPart.Head,
-          })),
+            part: RenderPart.Head
+          }))
         },
         glassesColor: {
           label: EditorIcons.color,
@@ -52,7 +52,7 @@ export function GlassesTab(data: TabRenderInit) {
               value: k,
               color: MiiGlassesColorTable[k],
               part: RenderPart.Head,
-              property: "fflGlassesColor",
+              property: "fflGlassesColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
@@ -61,11 +61,11 @@ export function GlassesTab(data: TabRenderInit) {
                 value: k + 6,
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Head,
-                property: "extGlassColor",
+                property: "extGlassColor"
               })),
               MiiSwitchColorTable
-            ),
-          ],
+            )
+          ]
         },
         glassesPosition: {
           label: "Position",
@@ -91,11 +91,11 @@ export function GlassesTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 7,
-              part: RenderPart.Head,
-            },
-          ],
-        },
-      },
+              part: RenderPart.Head
+            }
+          ]
+        }
+      }
     })
   );
 }

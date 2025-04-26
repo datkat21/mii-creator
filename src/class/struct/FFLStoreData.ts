@@ -8,7 +8,7 @@ export const FFLiCreateID = _.struct([
   _.ubit("flag_3", 1),
   _.ubit("create_date1", 14), // 28-bit field
   _.ubit("create_date2", 14), // 28-bit field
-  _.byte("base", 6),
+  _.byte("base", 6)
 ]);
 export const date_timestamp = function (createID: any) {
   var val28 = (createID.create_date1 << 14) | createID.create_date2;
@@ -135,7 +135,7 @@ export const Ver3StoreData = _.struct([
   // FFLStoreData
   _.char16le("creator", 20),
   _.uint16le("padding_9"),
-  _.uint16("checksum"),
+  _.uint16("checksum")
 ]) as Struct;
 
 // Generate type data with this snippet

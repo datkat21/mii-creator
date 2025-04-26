@@ -37,7 +37,7 @@ export const encryptAndEncodeVer3StoreDataToQRCodeFormat = (
   const checksumContent = [
     ...data.slice(0, 12),
     ...nonce,
-    ...data.slice(20, -2),
+    ...data.slice(20, -2)
   ];
   console.log(
     "checksumContent:",
@@ -51,7 +51,7 @@ export const encryptAndEncodeVer3StoreDataToQRCodeFormat = (
 
   //const cipher =  new sjcl.cipher.aes(sjcl.codec.hex.toBits('59FC817E6446EA6190347B20E9BDCE52'));
   const cipher = new sjcl.cipher.aes([
-    1509720446, 1682369121, -1875608800, -373436846,
+    1509720446, 1682369121, -1875608800, -373436846
   ]);
 
   const paddedContent = new Uint8Array([...content, ...new Array(8).fill(0)]);

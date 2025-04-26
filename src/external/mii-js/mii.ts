@@ -11,7 +11,7 @@ import {
   ToVer3FacelineColorTable,
   ToVer3GlassColorTable,
   ToVer3GlassTypeTable,
-  ToVer3HairColorTable,
+  ToVer3HairColorTable
 } from "../../constants/ColorTables";
 import { RandomInt } from "../../util/Numbers";
 
@@ -37,7 +37,7 @@ const STUDIO_RENDER_DEFAULTS = {
   lightDirectionMode: "none",
   splitMode: "none",
   instanceCount: 1,
-  instanceRotationMode: "model",
+  instanceRotationMode: "model"
 };
 
 const STUDIO_RENDER_OUTPUT = ["png", "glb"];
@@ -63,7 +63,7 @@ const STUDIO_RENDER_EXPRESSIONS = [
   "wink_right_open_mouth",
   "like_wink_left",
   "like_wink_right",
-  "frustrated",
+  "frustrated"
 ];
 
 const STUDIO_RENDER_CLOTHES_COLORS = [
@@ -79,7 +79,7 @@ const STUDIO_RENDER_CLOTHES_COLORS = [
   "purple",
   "brown",
   "white",
-  "black",
+  "black"
 ];
 
 const STUDIO_RENDER_LIGHT_DIRECTION_MODES = [
@@ -88,14 +88,14 @@ const STUDIO_RENDER_LIGHT_DIRECTION_MODES = [
   "flipx",
   "camera",
   "offset",
-  "set",
+  "set"
 ];
 
 const STUDIO_SPLIT_MODES = [
   "none", // Not actually valid, returns 400
   "front",
   "back",
-  "both",
+  "both"
 ];
 
 const STUDIO_RENDER_INSTANCE_ROTATION_MODES = ["model", "camera", "both"];
@@ -397,7 +397,7 @@ export default class Mii {
           // MiiC v2 (switch colors, hat type and hat color)
           0x6a,
           // MiiC v3 (switch colors, hats, and shirt / face paint color)
-          0x6c,
+          0x6c
         ]
       ),
       `Invalid Mii data size. Got ${
@@ -1236,11 +1236,14 @@ export default class Mii {
     this.bitStream.bitSeek(0);
 
     // Write createID field (nn::mii::CreateId).
-    for (let i = 0; i < 16; i++) { // UUIDv4 length
+    for (let i = 0; i < 16; i++) {
+      // UUIDv4 length
       let r = RandomInt(255);
-      if (i == 8) { // If this is the 8th field...
+      if (i == 8) {
+        // If this is the 8th field...
         // Set bits checked by nn::mii::CreateId::IsValid() on Switch
-        r &= 0b00111111; r |= 0b10000000;
+        r &= 0b00111111;
+        r |= 0b10000000;
       }
       this.bitStream.writeUint8(r); // Write
     }
@@ -1364,7 +1367,7 @@ export default class Mii {
       ...STUDIO_RENDER_DEFAULTS,
       ...queryParams,
       data: this.encodeStudio().toString("hex"),
-      shaderType: "default",
+      shaderType: "default"
     };
 
     let fileExt = "png";

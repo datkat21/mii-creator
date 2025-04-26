@@ -11,7 +11,7 @@ export enum FeatureSetType {
   Range,
   Slider,
   Switch,
-  Misc,
+  Misc
 }
 export interface FeatureSetIconItem {
   type: FeatureSetType.Icon;
@@ -232,7 +232,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   .attr({
                     type: "range",
                     min: item.min,
-                    max: item.max,
+                    max: item.max
                   })
                   .id(id)
                   .appendTo(featureSliderItem);
@@ -304,7 +304,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   .attr({
                     type: "range",
                     min: item.min,
-                    max: item.max,
+                    max: item.max
                   })
                   .id(id);
 
@@ -436,7 +436,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
         }
 
         window.LazyLoad.update();
-      },
+      }
     });
   }
 

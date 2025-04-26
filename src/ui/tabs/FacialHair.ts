@@ -1,10 +1,10 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiHairColorTable,
-  SwitchMiiColorTable,
+  SwitchMiiColorTable
 } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -13,7 +13,7 @@ import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
 import type Mii from "../../external/mii-js/mii";
 
@@ -34,8 +34,8 @@ export function FacialHairTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.mustache[k],
-            part: RenderPart.Face,
-          })),
+            part: RenderPart.Face
+          }))
         },
         mustachePosition: {
           label: "Position",
@@ -61,9 +61,9 @@ export function FacialHairTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 8,
-              part: RenderPart.Face,
-            },
-          ],
+              part: RenderPart.Face
+            }
+          ]
         },
         beardType: {
           label: "Goatee",
@@ -71,8 +71,8 @@ export function FacialHairTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.goatee[k],
-            part: RenderPart.Head,
-          })),
+            part: RenderPart.Head
+          }))
         },
         facialHairColor: {
           label: EditorIcons.color,
@@ -89,7 +89,7 @@ export function FacialHairTab(data: TabRenderInit) {
               value: k,
               color: MiiHairColorTable[k],
               part: RenderPart.Head,
-              property: "fflHairColor",
+              property: "fflHairColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
@@ -98,13 +98,13 @@ export function FacialHairTab(data: TabRenderInit) {
                 value: k + 8,
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Head,
-                property: "extHairColor",
+                property: "extHairColor"
               })),
               MiiSwitchColorTable
-            ),
-          ],
-        },
-      },
+            )
+          ]
+        }
+      }
     })
   );
 }

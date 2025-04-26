@@ -1,6 +1,6 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
@@ -25,7 +25,7 @@ export function ScaleTab(data: TabRenderInit) {
               forceRender: false,
               part: RenderPart.Face,
               soundStart: "vert_stretch_down",
-              soundEnd: "vert_stretch_up",
+              soundEnd: "vert_stretch_up"
             },
             {
               type: FeatureSetType.Slider,
@@ -37,11 +37,11 @@ export function ScaleTab(data: TabRenderInit) {
               forceRender: false,
               part: RenderPart.Face,
               soundStart: "vert_stretch_down",
-              soundEnd: "vert_stretch_up",
-            },
-          ],
-        },
-      },
+              soundEnd: "vert_stretch_up"
+            }
+          ]
+        }
+      }
     })
   );
 }

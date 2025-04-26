@@ -491,7 +491,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.75, 0.75, 0.75) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.3, 0.3, 0.3) /*.convertSRGBToLinear()*/,
       specularPower: 1.2,
-      specularMode: 0,
+      specularMode: 0
     },
     {
       // FFL_MODULATE_TYPE_SHAPE_BEARD
@@ -499,7 +499,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.7, 0.7, 0.7) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.0, 0.0, 0.0) /*.convertSRGBToLinear()*/,
       specularPower: 40.0,
-      specularMode: 1,
+      specularMode: 1
     },
     {
       // FFL_MODULATE_TYPE_SHAPE_NOSE
@@ -507,7 +507,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.75, 0.75, 0.75) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.22, 0.22, 0.22) /*.convertSRGBToLinear()*/,
       specularPower: 1.5,
-      specularMode: 0,
+      specularMode: 0
     },
     {
       // FFL_MODULATE_TYPE_SHAPE_FOREHEAD
@@ -515,7 +515,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.75, 0.75, 0.75) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.3, 0.3, 0.3) /*.convertSRGBToLinear()*/,
       specularPower: 1.2,
-      specularMode: 0,
+      specularMode: 0
     },
     {
       // FFL_MODULATE_TYPE_SHAPE_HAIR
@@ -523,7 +523,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.7, 0.7, 0.7) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.35, 0.35, 0.35) /*.convertSRGBToLinear()*/,
       specularPower: 10.0,
-      specularMode: 1,
+      specularMode: 1
     },
     {
       // FFL_MODULATE_TYPE_SHAPE_CAP
@@ -531,7 +531,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.72, 0.72, 0.72) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.3, 0.3, 0.3) /*.convertSRGBToLinear()*/,
       specularPower: 1.5,
-      specularMode: 0,
+      specularMode: 0
     },
     {
       // FFL_MODULATE_TYPE_SHAPE_MASK
@@ -539,7 +539,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.7, 0.7, 0.7) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.0, 0.0, 0.0) /*.convertSRGBToLinear()*/,
       specularPower: 40.0,
-      specularMode: 1,
+      specularMode: 1
     },
     {
       // FFL_MODULATE_TYPE_SHAPE_NOSELINE
@@ -547,7 +547,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.7, 0.7, 0.7) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.0, 0.0, 0.0) /*.convertSRGBToLinear()*/,
       specularPower: 40.0,
-      specularMode: 1,
+      specularMode: 1
     },
     {
       // FFL_MODULATE_TYPE_SHAPE_GLASS
@@ -555,7 +555,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       diffuse: new THREE.Color(0.7, 0.7, 0.7) /*.convertSRGBToLinear()*/,
       specular: new THREE.Color(0.0, 0.0, 0.0) /*.convertSRGBToLinear()*/,
       specularPower: 40.0,
-      specularMode: 1,
+      specularMode: 1
     },
 
     {
@@ -576,7 +576,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
         0.24099
       ) /*.convertSRGBToLinear()*/,
       specularPower: 3.0,
-      specularMode: 0,
+      specularMode: 0
     },
     {
       // pants
@@ -596,8 +596,8 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
         0.2409
       ) /*.convertSRGBToLinear()*/,
       specularPower: 3.0,
-      specularMode: 0,
-    },
+      specularMode: 0
+    }
   ];
 
   // Material enum
@@ -608,7 +608,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       return {
         blending: THREE.CustomBlending,
         blendSrcAlpha: THREE.SrcAlphaFactor,
-        blendDstAlpha: THREE.OneFactor,
+        blendDstAlpha: THREE.OneFactor
       };
     } else if (modulateType >= 6 && modulateType <= 8) {
       // Translucent (DrawXlu)
@@ -616,7 +616,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
         blending: THREE.CustomBlending,
         blendSrc: THREE.SrcAlphaFactor,
         blendDst: THREE.OneMinusSrcAlphaFactor,
-        blendDstAlpha: THREE.OneFactor,
+        blendDstAlpha: THREE.OneFactor
       };
     } else if (modulateType >= 9 && modulateType <= 13) {
       // Mask Textures
@@ -624,7 +624,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
         blending: THREE.CustomBlending,
         blendSrc: THREE.OneMinusDstAlphaFactor,
         blendSrcAlpha: THREE.SrcAlphaFactor,
-        blendDst: THREE.DstAlphaFactor,
+        blendDst: THREE.DstAlphaFactor
       };
     } else if (modulateType >= 14 && modulateType <= 17) {
       // Faceline Texture
@@ -633,7 +633,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
         blendSrc: THREE.SrcAlphaFactor,
         blendDst: THREE.OneMinusSrcAlphaFactor,
         blendSrcAlpha: THREE.OneFactor,
-        blendDstAlpha: THREE.OneFactor,
+        blendDstAlpha: THREE.OneFactor
       };
     } else {
       console.error(`Unknown modulate type:`, modulateType);
@@ -677,13 +677,13 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       colorUniforms = {
         u_const1: { value: options.modulateColor[0] },
         u_const2: { value: options.modulateColor[1] },
-        u_const3: { value: options.modulateColor[2] },
+        u_const3: { value: options.modulateColor[2] }
       };
     } else {
       colorUniforms = {
         u_const1: {
-          value: options.modulateColor || new THREE.Vector4(1, 1, 1, 1),
-        },
+          value: options.modulateColor || new THREE.Vector4(1, 1, 1, 1)
+        }
       };
     }
 
@@ -698,13 +698,13 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
 
     const uniforms = Object.assign({}, colorUniforms, {
       u_light_ambient: {
-        value: options.lightAmbient || FFLShaderMaterial.defaultLightAmbient,
+        value: options.lightAmbient || FFLShaderMaterial.defaultLightAmbient
       },
       u_light_diffuse: {
-        value: options.lightDiffuse || FFLShaderMaterial.defaultLightDiffuse,
+        value: options.lightDiffuse || FFLShaderMaterial.defaultLightDiffuse
       },
       u_light_specular: {
-        value: options.lightSpecular || FFLShaderMaterial.defaultLightSpecular,
+        value: options.lightSpecular || FFLShaderMaterial.defaultLightSpecular
       },
       u_light_dir: { value: lightDir },
       u_light_enable: { value: lightEnable },
@@ -716,7 +716,7 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       u_mode: { value: modulateMode },
       u_rim_color: { value: FFLShaderMaterial.defaultRimColor },
       u_rim_power: { value: FFLShaderMaterial.defaultRimPower },
-      s_texture: { value: texture },
+      s_texture: { value: texture }
     });
 
     super({
@@ -726,7 +726,9 @@ class FFLShaderMaterial extends THREE.ShaderMaterial {
       side: options.side || THREE.FrontSide,
       // skinning: options.skinning || false, // Not needed with newer Three.js.
       // Merge blend options:
-      ...modulateMode !== 0 ? FFLShaderMaterial.getBlendOptionsFromModulateType(modulateType) : {}
+      ...(modulateMode !== 0
+        ? FFLShaderMaterial.getBlendOptionsFromModulateType(modulateType)
+        : {})
     });
     // Expose these properties.
     this.modulateMode = modulateMode;

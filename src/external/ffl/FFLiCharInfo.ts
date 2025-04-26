@@ -6,7 +6,7 @@ export function FFLiiGetEyeRotateOffset(type: number) {
     4, 3, 4, 4, 3, 4, 4, 4, 3, 3, 3, 4, 4, 3, 3, 3, 4, 4, 3, 3, 3, 3, 3, 3, 3,
     3, 3, 4, 4, 4, 4, 3, 4, 4, 3, 4, 4, 4, 4,
 
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
   ];
   return 32 - ROTATE[type];
 }
@@ -15,7 +15,7 @@ export function FFLiiGetEyebrowRotateOffset(type: number) {
   const ROTATE = [
     6, 6, 5, 7, 6, 7, 6, 7, 4, 7, 6, 8, 5, 5, 6, 6, 7, 7, 6, 6, 5, 6, 7, 5,
 
-    6, 6, 6, 6,
+    6, 6, 6, 6
   ];
   return 32 - ROTATE[type];
 }
@@ -115,7 +115,7 @@ export type FFLiCharInfo = {
 export enum FFLiOriginPosition {
   FFLI_ORIGIN_POSITION_CENTER = 0,
   FFLI_ORIGIN_POSITION_RIGHT = 1,
-  FFLI_ORIGIN_POSITION_LEFT = 2,
+  FFLI_ORIGIN_POSITION_LEFT = 2
 }
 
 export const MiiClassToFFLiCharInfo = (mii: Mii): FFLiCharInfo => ({
@@ -181,8 +181,8 @@ export const MiiClassToFFLiCharInfo = (mii: Mii): FFLiCharInfo => ({
     mustacheType: mii.mustacheType,
     nosePositionY: mii.noseYPosition,
     noseScale: mii.noseScale,
-    noseType: mii.noseType,
+    noseType: mii.noseType
   },
   regionMove: mii.regionLock,
-  slotIndex: mii.slotIndex,
+  slotIndex: mii.slotIndex
 });

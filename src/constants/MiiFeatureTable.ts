@@ -16,7 +16,7 @@ export const MiiEyeTable: Record<number, number> = {
   7: 36,
   8: 3,
   9: 16,
-  10: 45,
+  10: 45
 };
 export const MiiHairTable: Record<number, number> = {
   33: 0,
@@ -150,7 +150,7 @@ export const MiiHairTable: Record<number, number> = {
   28: 128,
   114: 129,
   126: 130,
-  111: 131,
+  111: 131
 };
 
 export const MiiSwitchColorTable = [
@@ -159,7 +159,7 @@ export const MiiSwitchColorTable = [
   23, 24, 25, 26, 27, 28, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
   45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 62, 63, 64, 65,
   66, 67, 68, 69, 71, 75, 76, 77, 78, 79, 82, 84, 85, 87, 88, 89, 92, 96, 97,
-  98, 99,
+  98, 99
 ];
 
 export const MiiSwitchSkinColorTable: Record<number, number> = {
@@ -172,7 +172,7 @@ export const MiiSwitchSkinColorTable: Record<number, number> = {
   3: 6,
   2: 7,
   8: 8,
-  9: 9,
+  9: 9
 };
 
 export function rearrangeArray(
@@ -197,22 +197,22 @@ export const makeSeparator = () => new Html("div").class("separator");
 export const makeSeparatorFSI: () => any = () => ({
   type: FeatureSetType.Misc,
   html: new Html("div").class("separator"),
-  select() {},
+  select() {}
 });
 export const makeSeparatorGapFSI: () => any = () => ({
   type: FeatureSetType.Misc,
   html: new Html("div").class("separator-gap"),
-  select() {},
+  select() {}
 });
 export const makeSeparatorGapThinFSI: () => any = () => ({
   type: FeatureSetType.Misc,
   html: new Html("div").class("separator-gap-thin"),
-  select() {},
+  select() {}
 });
 export const makeSeparatorGapThin = () =>
   new Html("div").class("separator-gap-thin");
 export const makeHeaderFSI = (text: string) => ({
   type: FeatureSetType.Misc,
   html: new Html("div").text(text),
-  select() {},
+  select() {}
 });

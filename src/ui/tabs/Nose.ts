@@ -1,6 +1,6 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -19,8 +19,8 @@ export function NoseTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.nose[k],
-            part: RenderPart.Head,
-          })),
+            part: RenderPart.Head
+          }))
         },
         nosePosition: {
           label: "Position",
@@ -46,11 +46,11 @@ export function NoseTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 8,
-              part: RenderPart.Head,
-            },
-          ],
-        },
-      },
+              part: RenderPart.Head
+            }
+          ]
+        }
+      }
     })
   );
 }

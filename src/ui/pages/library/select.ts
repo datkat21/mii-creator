@@ -6,7 +6,7 @@ import {
   _shutdown,
   Library,
   miiIconUrl,
-  type MiiLocalforage,
+  type MiiLocalforage
 } from "../Library";
 import Html from "@datkat21/html";
 import { miiRender } from "./render/renderMenu";
@@ -44,7 +44,7 @@ export const miiSelect = (
               mii.mii
             );
           }
-        },
+        }
       },
       {
         text: "Delete",
@@ -57,13 +57,13 @@ export const miiSelect = (
             reliefIconURL: string;
 
           scaredIcon = await (
-            await fetch(await miiIconUrl(miiData) + "&expression=10")
+            await fetch((await miiIconUrl(miiData)) + "&expression=10")
           ).blob();
           fearfulIcon = await (
-            await fetch(await miiIconUrl(miiData) + "&expression=30")
+            await fetch((await miiIconUrl(miiData)) + "&expression=30")
           ).blob();
           reliefIcon = await (
-            await fetch(await miiIconUrl(miiData) + "&expression=1")
+            await fetch((await miiIconUrl(miiData)) + "&expression=1")
           ).blob();
 
           scaredIconURL = URL.createObjectURL(scaredIcon);
@@ -112,7 +112,7 @@ export const miiSelect = (
               .on("click", () => {
                 destroy();
                 scaredMiiImage.attr({
-                  src: fearfulIconURL,
+                  src: fearfulIconURL
                 });
                 setTimeout(async () => {
                   closeModal();
@@ -142,49 +142,49 @@ export const miiSelect = (
             item!.on("pointerenter", () => {
               if (yes) {
                 scaredMiiImage.attr({
-                  src: fearfulIconURL,
+                  src: fearfulIconURL
                 });
               } else {
                 scaredMiiImage.attr({
-                  src: reliefIconURL,
+                  src: reliefIconURL
                 });
               }
             });
             item!.on("pointerleave", () => {
               scaredMiiImage.attr({
-                src: scaredIconURL,
+                src: scaredIconURL
               });
             });
           });
-        },
+        }
       },
       {
         text: "Export/Download Data",
         async callback() {
           miiExportData(mii, miiData);
-        },
+        }
       },
       {
         text: "Render",
         async callback() {
           miiRender(mii, miiData);
-        },
+        }
       },
       {
-        text: "Cancel",
+        text: "Cancel"
       }
     );
 
     modal.qs(".modal-body")?.prepend(
       new Html("img")
         .attr({
-          src: await miiIconUrl(miiData, "preview", "all_body_sugar", 240),
+          src: await miiIconUrl(miiData, "preview", "all_body_sugar", 240)
         })
         .style({
           "object-fit": "contain",
           width: "180px",
           height: "240px",
-          margin: "-18px auto 0 auto",
+          margin: "-18px auto 0 auto"
         })
     );
   };

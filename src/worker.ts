@@ -29,7 +29,7 @@ function initRenderer() {
   workerRenderer = new WebGLRenderer({
     antialias: true,
     alpha: true,
-    canvas: offscreenCanvas,
+    canvas: offscreenCanvas
   });
 }
 
@@ -61,7 +61,7 @@ self.onmessage = async (e) => {
       // Momentarily create CharModel
       let dataURL: { type: string; result: Blob | string } = {
           type: "dataURL",
-          result: "",
+          result: ""
         },
         model: any;
       try {
@@ -104,11 +104,7 @@ self.onmessage = async (e) => {
         // but they don't come by individually, instead all at once which feels..wrong.
         // At least it doesn't block the main thread.
 
-        log(
-          `Got it in ${(now - then).toFixed(
-            0
-          )}ms! Sending to main thread.`
-        );
+        log(`Got it in ${(now - then).toFixed(0)}ms! Sending to main thread.`);
 
         var url: string | undefined = undefined;
         if (dataURL.type === "blob") {

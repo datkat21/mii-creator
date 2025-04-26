@@ -1,10 +1,10 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiEyeColorTable,
-  SwitchMiiColorTable,
+  SwitchMiiColorTable
 } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -13,7 +13,7 @@ import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
 import type Mii from "../../external/mii-js/mii";
 
@@ -35,8 +35,8 @@ export function EyeTab(data: TabRenderInit) {
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.eyes[k],
-            part: RenderPart.Face,
-          })),
+            part: RenderPart.Face
+          }))
           // MiiEyeTable
           // ),
         },
@@ -55,7 +55,7 @@ export function EyeTab(data: TabRenderInit) {
               value: k,
               color: MiiEyeColorTable[k],
               part: RenderPart.Face,
-              property: "fflEyeColor",
+              property: "fflEyeColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
@@ -65,11 +65,11 @@ export function EyeTab(data: TabRenderInit) {
                 // icon: `<span style="display:flex;justify-content:center;align-items:center;position:relative;z-index:1;">${k}</span>`,
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Face,
-                property: "extEyeColor",
+                property: "extEyeColor"
               })),
               MiiSwitchColorTable
-            ),
-          ],
+            )
+          ]
         },
         eyePosition: {
           label: "Position",
@@ -95,7 +95,7 @@ export function EyeTab(data: TabRenderInit) {
               soundEnd: "move_apart",
               min: 0,
               max: 12,
-              part: RenderPart.Face,
+              part: RenderPart.Face
             },
             {
               type: FeatureSetType.Range,
@@ -118,7 +118,7 @@ export function EyeTab(data: TabRenderInit) {
               soundEnd: "scale_up",
               min: 0,
               max: 7,
-              part: RenderPart.Face,
+              part: RenderPart.Face
             },
             {
               type: FeatureSetType.Range,
@@ -129,11 +129,11 @@ export function EyeTab(data: TabRenderInit) {
               soundEnd: "vert_stretch_up",
               min: 0,
               max: 6,
-              part: RenderPart.Face,
-            },
-          ],
-        },
-      },
+              part: RenderPart.Face
+            }
+          ]
+        }
+      }
     })
   );
 }

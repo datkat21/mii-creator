@@ -8,7 +8,7 @@ import { getSetting, setSetting } from "../../util/SettingsHelper";
 import {
   adjustShaderQuery,
   ShaderType,
-  BodyType,
+  BodyType
 } from "../../constants/BodyShaderTypes";
 import { Config } from "../../config";
 
@@ -116,40 +116,40 @@ export const settingsInfo: Record<string, any> = {
     type: "checkbox",
     label: "Background Music",
     default: true,
-    description: "Toggle background music depending on the theme.",
+    description: "Toggle background music depending on the theme."
   },
   sfx: {
     type: "checkbox",
     label: "Sound Effects",
     default: true,
-    description: "Toggle sound effects for buttons and inputs.",
+    description: "Toggle sound effects for buttons and inputs."
   },
   cameraPan: {
     type: "checkbox",
     label: "Static camera in editor",
     default: false,
     description:
-      "The camera will be further away in the editor and cannot be moved.\nThis option is for if you want it to look like Mii Studio.",
+      "The camera will be further away in the editor and cannot be moved.\nThis option is for if you want it to look like Mii Studio."
   },
   autoCloseCustomRender: {
     type: "checkbox",
     label: "Auto-close custom render menu",
     default: true,
     description:
-      "The custom render menu will automatically close when pressing save.",
+      "The custom render menu will automatically close when pressing save."
   },
   autoCloseQrScan: {
     type: "checkbox",
     label: "Auto-close QR scan menu",
     default: true,
-    description: "The QR code scanner will disappear after a successful scan.",
+    description: "The QR code scanner will disappear after a successful scan."
   },
   allowQrCamera: {
     type: "checkbox",
     label: "Allow using camera in QR scanner",
     default: true,
     description:
-      "When this is disabled, the camera won't be used and some errors may not appear.",
+      "When this is disabled, the camera won't be used and some errors may not appear."
   },
 
   editMode: {
@@ -159,8 +159,8 @@ export const settingsInfo: Record<string, any> = {
     default: "3d",
     choices: [
       { label: "2D", value: "2d" },
-      { label: "3D (default)", value: "3d" },
-    ],
+      { label: "3D (default)", value: "3d" }
+    ]
   },
   theme: {
     type: "multi",
@@ -170,8 +170,8 @@ export const settingsInfo: Record<string, any> = {
       "When this is set to default, your device's color theme preferences will be used.",
     choices: [
       { label: "Default", value: "default" },
-      { label: "Wii U", value: "wiiu" },
-    ],
+      { label: "Wii U", value: "wiiu" }
+    ]
   },
   shaderType: {
     type: "multi",
@@ -187,15 +187,15 @@ export const settingsInfo: Record<string, any> = {
       { label: "Wii U (Blinn)", value: ShaderType.WiiUBlinn },
       { label: "Wii U (Alt)", value: ShaderType.WiiUFFLIconWithBody },
       { label: "Switch (WIP)", value: ShaderType.Switch, disabled: true },
-      { label: "Miitomo", value: ShaderType.Miitomo },
-    ],
+      { label: "Miitomo", value: ShaderType.Miitomo }
+    ]
   },
   simpleShaderLegacyColors: {
     type: "checkbox",
     label: "Use legacy colors for Simple shader",
     default: false,
     condition: (settings: any) => settings.shaderType === ShaderType.Simple,
-    description: "Bring back the old, brighter body and pants colors.",
+    description: "Bring back the old, brighter body and pants colors."
   },
   bodyModel: {
     type: "multi",
@@ -206,15 +206,15 @@ export const settingsInfo: Record<string, any> = {
     choices: [
       { label: "Wii U (default)", value: BodyType.WiiU },
       { label: "Switch", value: BodyType.Switch, disabled: true },
-      { label: "Miitomo", value: BodyType.Miitomo },
-    ],
+      { label: "Miitomo", value: BodyType.Miitomo }
+    ]
   },
   bodyModelHands: {
     type: "checkbox",
     label: "Color hands to skin tone",
     default: false,
     description:
-      "The hands of the body will match the Mii's skin tone.\n* Does not apply to 2D mode.",
+      "The hands of the body will match the Mii's skin tone.\n* Does not apply to 2D mode."
   },
   customRenderGreenScreen: {
     type: "multi",
@@ -227,8 +227,8 @@ export const settingsInfo: Record<string, any> = {
       { label: "Blue", value: "blue" },
       { label: "Black", value: "black" },
       { label: "White", value: "white" },
-      { label: "Custom", value: "custom", isColor: true },
-    ],
+      { label: "Custom", value: "custom", isColor: true }
+    ]
   },
   saveData: {
     type: "non-settings-multi",
@@ -274,7 +274,7 @@ export const settingsInfo: Record<string, any> = {
             reader.readAsText(input.files[0]);
           });
         },
-        disabled: true,
+        disabled: true
       },
       {
         label: "Export",
@@ -300,15 +300,15 @@ export const settingsInfo: Record<string, any> = {
             a.remove();
           });
         },
-        disabled: true,
+        disabled: true
       },
       {
         label: "Delete",
         type: "danger",
         async select() {},
-        disabled: true,
-      },
-    ],
+        disabled: true
+      }
+    ]
   },
   updateNotices: {
     type: "non-settings-multi",
@@ -319,10 +319,10 @@ export const settingsInfo: Record<string, any> = {
         label: "Review update notice",
         select() {
           replayUpdateNotice();
-        },
-      },
-    ],
-  },
+        }
+      }
+    ]
+  }
 };
 
 const prefix = "settings_";
@@ -334,7 +334,7 @@ for (const key in settingsInfo) {
 
 export async function Settings() {
   const modal = Modal.modal("Settings", "", "body", {
-    text: "Cancel",
+    text: "Cancel"
   });
 
   const modalBody = modal.qs(".modal-body")!.clear();
@@ -390,7 +390,7 @@ export async function Settings() {
                     checked:
                       (await localforage.getItem(prefixedKey)) === true
                         ? true
-                        : undefined,
+                        : undefined
                   })
                   .on("input", async (e) => {
                     prevSetting[key] = await localforage.getItem(prefixedKey);
@@ -425,11 +425,11 @@ export async function Settings() {
               colorSpan = new Html("span").style({
                 width: "1.2em",
                 height: "1.2em",
-                "border-radius": "6px",
+                "border-radius": "6px"
               });
               colorSpan.style({
                 "background-color": "var(--hover)",
-                border: "1px solid var(--stroke)",
+                border: "1px solid var(--stroke)"
               });
               const value = await localforage.getItem(prefixedKey)!;
               if (typeof value === "string") {
@@ -608,13 +608,13 @@ export async function displayUpdateNotice() {
         text: "OK",
         callback(e) {
           setSetting(`has-seen-${Config.version.string}`, true);
-        },
+        }
       },
       {
         text: "Cancel",
         callback(e) {
           setSetting(`has-seen-${Config.version.string}`, true);
-        },
+        }
       }
     );
 

@@ -36,7 +36,7 @@ export const Config = {
     hatColorAdd: newApiParams ? -1 : 0,
 
     // Enable/disable use of 3D mode in editor only
-    allow3DMode: true,
+    allow3DMode: true
   },
   apis: {
     // For fetching data from various sources.
@@ -47,10 +47,10 @@ export const Config = {
       `${nnidFetchOrigin}/mii_data/${pnid}?api_id=1`,
     // Configure Sentry here.
     useSentry: false,
-    sentryURL: "ENTER_SENTRY_URL_HERE",
+    sentryURL: "ENTER_SENTRY_URL_HERE"
   },
   mii: {
-    scalingMode: "scaleApply",
+    scalingMode: "scaleApply"
     // ^^ scaleLimit, scaleLimitClampY, scaleApply
   },
   version: {
@@ -188,6 +188,6 @@ export const Config = {
     </div>
 
     <p style="margin-bottom:0;text-align:center"><strong>You can view this message again in Settings, or by clicking the version string.</strong></p>
-    `,
-  },
+    `
+  }
 };

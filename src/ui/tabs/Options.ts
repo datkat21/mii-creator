@@ -1,6 +1,6 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
@@ -24,9 +24,9 @@ export function OptionsTab(data: TabRenderInit) {
               forceRender: false,
               part: RenderPart.Face,
               soundOff: "select_misc",
-              soundOn: "select_misc",
-            },
-          ],
+              soundOn: "select_misc"
+            }
+          ]
         },
         favorite: {
           label: "Favorite",
@@ -40,9 +40,9 @@ export function OptionsTab(data: TabRenderInit) {
               forceRender: false,
               part: RenderPart.Face,
               soundOff: "select_color",
-              soundOn: "select_color",
-            },
-          ],
+              soundOn: "select_color"
+            }
+          ]
         },
         isSpecial: {
           label: "Type",
@@ -56,11 +56,11 @@ export function OptionsTab(data: TabRenderInit) {
               forceRender: false,
               part: RenderPart.Face,
               soundOff: "select_color",
-              soundOn: "select_color",
-            },
-          ],
-        },
-      },
+              soundOn: "select_color"
+            }
+          ]
+        }
+      }
     })
   );
 }

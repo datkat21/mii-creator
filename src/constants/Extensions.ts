@@ -1,4 +1,3 @@
-
 export const ExtHatNameList = [
   "Cap",
   "Beanie",
@@ -8,14 +7,14 @@ export const ExtHatNameList = [
   "Cat Ears",
   "Straw Hat",
   "Hijab",
-  "Bike Helmet",
+  "Bike Helmet"
 ];
 
 export enum HatType {
   HEAD,
   HAT,
   FACE_ONLY,
-  BALD,
+  BALD
 }
 
 export const HatTypeList = [
@@ -28,7 +27,7 @@ export const HatTypeList = [
   HatType.HEAD, // Cat Ears
   HatType.HAT, // Straw Hat
   HatType.BALD, // Hijab
-  HatType.HAT, // Bike Helmet
+  HatType.HAT // Bike Helmet
 ];
 
 export const ExtHatFullHeadList = [4, 5, 6];

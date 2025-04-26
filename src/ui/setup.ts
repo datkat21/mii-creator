@@ -1,8 +1,6 @@
 import localforage from "localforage";
 import { getMusicManager } from "../class/audio/MusicManager";
-import {
-  getSoundManager,
-} from "../class/audio/SoundManager";
+import { getSoundManager } from "../class/audio/SoundManager";
 import Modal, { buttonsOkCancel } from "./components/Modal";
 import { Library } from "./pages/Library";
 import Mii from "../external/mii-js/mii";
@@ -10,7 +8,7 @@ import { MiiEditor } from "../class/MiiEditor";
 import {
   displayUpdateNotice,
   Settings,
-  updateSettings,
+  updateSettings
 } from "./pages/Settings";
 import { getMiiRender, MiiCustomRenderType } from "../util/miiImageUtils";
 import { Buffer } from "../../node_modules/buffer/index";
@@ -30,9 +28,17 @@ export async function setupUi() {
 
   displayUpdateNotice();
 
-  if (navigator.userAgent.includes("Firefox") && sessionStorage.getItem("seen-firefox-notice") === null) {
+  if (
+    navigator.userAgent.includes("Firefox") &&
+    sessionStorage.getItem("seen-firefox-notice") === null
+  ) {
     sessionStorage.setItem("seen-firefox-notice", "yes");
-    Modal.modal("Notice", "You're using Mii Creator under Firefox. The Firefox browser may have slowdowns.", "body", ...buttonsOkCancel)
+    Modal.modal(
+      "Notice",
+      "You're using Mii Creator under Firefox. The Firefox browser may have slowdowns.",
+      "body",
+      ...buttonsOkCancel
+    );
   }
 
   // for U theme
@@ -76,7 +82,6 @@ export async function setupUi() {
   }
 
   mm.initMusic();
-
 
   if (location.search !== "") {
     const searchParams = new URLSearchParams(location.search);
@@ -145,7 +150,7 @@ export async function setupUi() {
                 creator: miiData.creatorName,
                 headshot,
                 headOnly,
-                fullBody,
+                fullBody
               },
               searchParams.get("origin")!
             );
@@ -197,7 +202,7 @@ export async function setupUi() {
           creator: miiData.creatorName,
           headshot,
           headOnly,
-          fullBody,
+          fullBody
         },
         location.origin
       );
@@ -275,7 +280,7 @@ export async function setupUi() {
               getSoundManager().playSound(k);
               //@ts-expect-error used for debugging
               window.lastPlayedSound = k;
-            },
+            }
           }))
         )
           .qs(".modal-content")!

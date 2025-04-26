@@ -5,7 +5,7 @@ import Modal, { buttonsOkCancel } from "../../components/Modal";
 import {
   miiFFSDWarning,
   miiQRConversionWarning,
-  type MiiLocalforage,
+  type MiiLocalforage
 } from "../Library";
 import { QRCodeCanvas } from "../../../util/miiImageUtils";
 import { downloadLink } from "../../../util/downloadLink";
@@ -17,7 +17,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
     "How would you like to save the Mii?",
     "body",
     {
-      text: "Cancel",
+      text: "Cancel"
     },
     {
       text: "Save MiiCreator data",
@@ -40,7 +40,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
         setTimeout(() => {
           URL.revokeObjectURL(url);
         }, 2000);
-      },
+      }
     },
     {
       text: "Download other file types...",
@@ -53,7 +53,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
             text: "Cancel",
             callback(e) {
               miiExportData(mii, miiData);
-            },
+            }
           },
           {
             text: "Download FFSD file",
@@ -77,7 +77,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
               setTimeout(() => {
                 URL.revokeObjectURL(url);
               }, 2000);
-            },
+            }
           },
           {
             text: "Download CharInfo (Switch) file",
@@ -101,10 +101,10 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
               setTimeout(() => {
                 URL.revokeObjectURL(url);
               }, 2000);
-            },
+            }
           }
         );
-      },
+      }
     },
     {
       text: "Save Mii as QR Code",
@@ -119,7 +119,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
         ); // extendedColors
         await localforage.setItem("settings_shaderType", setting);
         downloadLink(qrCodeImage, `${miiData.miiName}_QR.png`);
-      },
+      }
     },
     {
       text: "Show other raw data formats",
@@ -168,7 +168,7 @@ export const miiExportData = async (mii: MiiLocalforage, miiData: Mii) => {
                 .text(miiData.encodeStudio().toString("hex"))
             )
           );
-      },
+      }
     }
   );
 };

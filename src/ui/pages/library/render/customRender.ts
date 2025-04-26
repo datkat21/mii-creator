@@ -6,7 +6,7 @@ import { Buffer } from "../../../../../node_modules/buffer";
 import {
   CameraPosition,
   Mii3DScene,
-  SetupType,
+  SetupType
 } from "../../../../class/3DScene";
 import { RenderPart } from "../../../../class/MiiEditor";
 import { Config } from "../../../../config";
@@ -18,7 +18,7 @@ import { getSetting } from "../../../../util/SettingsHelper";
 import {
   FeatureSetType,
   MiiPagedFeatureSet,
-  type FeatureSetEntry,
+  type FeatureSetEntry
 } from "../../../components/MiiPagedFeatureSet";
 import Modal from "../../../components/Modal";
 import { importMiiConfirmation } from "../importDialog";
@@ -27,7 +27,7 @@ import { cMaterialName } from "../../../../class/3d/shader/fflShaderConst";
 
 enum ExpressionModifier {
   HideNose,
-  HideNoseAndMask,
+  HideNoseAndMask
 }
 
 const expressionTable: {
@@ -95,19 +95,19 @@ const expressionTable: {
   { name: "Moved (aka pleading face)", id: "66" },
   { name: "Singing mouth small", id: "67" },
   { name: "Singing", id: "68" },
-  { name: "Stunned", id: "69" },
+  { name: "Stunned", id: "69" }
 ];
 
 export async function customRender(miiData: Mii) {
   const modal = Modal.modal("Custom Render", "", "body", {
-    text: "Cancel",
+    text: "Cancel"
   });
   const body = modal.qs(".modal-body")!.classOn("responsive-row-lg").clear();
   modal.qs(".modal-content")!.styleJs({
     width: "100%",
     height: "100%",
     maxWidth: "100%",
-    maxHeight: "100%",
+    maxHeight: "100%"
   });
   let parent = new Html("div")
     .style({
@@ -119,7 +119,7 @@ export async function customRender(miiData: Mii) {
       height: "100%",
       overflow: "hidden",
       "justify-content": "center",
-      "align-items": "center",
+      "align-items": "center"
     })
     .appendTo(body);
   let parentBox = new Html("div")
@@ -137,7 +137,7 @@ export async function customRender(miiData: Mii) {
     renderWidth: 720,
     renderHeight: 720,
     cameraPosition: 1,
-    animSpeed: 100,
+    animSpeed: 100
   };
 
   const base64Data = miiData.encodeStudio().toString("hex");
@@ -146,7 +146,7 @@ export async function customRender(miiData: Mii) {
     wii: 4,
     wiiu: 14,
     switch: 5,
-    miitomo: 16,
+    miitomo: 16
   };
 
   let bodyModelSetting = (await getSetting("bodyModel")) as string;
@@ -174,7 +174,7 @@ export async function customRender(miiData: Mii) {
           iconEnd: "",
           min: 5,
           max: 90,
-          part: RenderPart.Face,
+          part: RenderPart.Face
         },
         {
           type: FeatureSetType.Misc,
@@ -256,9 +256,9 @@ export async function customRender(miiData: Mii) {
               })
             )
           ),
-          select() {},
-        },
-      ],
+          select() {}
+        }
+      ]
     },
     // TODO
     // scene: {
@@ -315,8 +315,8 @@ export async function customRender(miiData: Mii) {
             : `<img src="assets/images/poses/${bodyModelSetting}/${String(
                 k
               ).padStart(2, "0")}.png" height=120>`,
-        part: RenderPart.Head,
-      })),
+        part: RenderPart.Head
+      }))
     },
     expression: {
       label: "Expression",
@@ -328,8 +328,8 @@ export async function customRender(miiData: Mii) {
         }?width=128&scale=1&data=${encodeURIComponent(base64Data)}&expression=${
           k.id
         }&type=fflmakeicon&verifyCharInfo=0" title="${k.name}">`,
-        part: RenderPart.Head,
-      })),
+        part: RenderPart.Head
+      }))
     },
     animation: {
       label: "Animation",
@@ -343,10 +343,10 @@ export async function customRender(miiData: Mii) {
           iconStart: "0x",
           iconEnd: "2x",
           min: 0,
-          max: 200,
-        },
-      ],
-    },
+          max: 200
+        }
+      ]
+    }
   };
 
   // very hacky way to use feature set to create tabs
@@ -359,7 +359,7 @@ export async function customRender(miiData: Mii) {
       updateConfiguration();
       // console.log("updated", configuration);
       oldConfiguration = Object.assign({}, configuration);
-    },
+    }
   })
     .style({ height: "auto" })
     .appendTo(tabsContent);
@@ -460,7 +460,7 @@ export async function customRender(miiData: Mii) {
     renderWidth: 720,
     renderHeight: 720,
     cameraPosition: 1,
-    animSpeed: 1,
+    animSpeed: 1
   };
 
   function updateConfiguration() {
@@ -650,7 +650,7 @@ export async function customRender(miiData: Mii) {
         console.error("Oops, something went wrong:", error);
       },
       {
-        binary: true,
+        binary: true
       }
     );
   }

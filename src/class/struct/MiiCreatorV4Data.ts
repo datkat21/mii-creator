@@ -65,7 +65,7 @@ export const MiiCreatorV4Data = _.struct([
   _.uint8("pantsColor"),
   _.uint8("regionMove"),
   _.uint8("shirtColor"),
-  _.uint8("special"),
+  _.uint8("special")
 ]) as Struct;
 
 //@ts-expect-error
@@ -145,7 +145,7 @@ export enum MiiCreatorOriginPlatform {
   CFL_3DS = 2,
   FFL_Wii_U = 3,
   nnmii_Switch = 4,
-  Mii_Creator = 5,
+  Mii_Creator = 5
 }
 
 // Uninitialized values will be -1 unless
@@ -213,5 +213,5 @@ export const EmptyMiiCreatorV4Data: MiiCreatorV4Data = {
   pantsColor: -1,
   regionMove: 0,
   shirtColor: -1,
-  special: 0,
+  special: 0
 };

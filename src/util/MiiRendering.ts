@@ -14,7 +14,7 @@ import {
   initCharModelTextures,
   setMaskTextureHook,
   StudioCharInfo,
-  updateCharModel,
+  updateCharModel
 } from "../external/ffl.js/ffl";
 import { getFFL } from "../main";
 import { getTempRenderer } from "../ui/pages/Library";
@@ -103,9 +103,9 @@ export async function getHeadModel(
   const asset = {
     extras: {
       partsTransform: {
-        hatTranslate: [0, 0, 0],
-      },
-    },
+        hatTranslate: [0, 0, 0]
+      }
+    }
   };
 
   let scene = new THREE.Group();
@@ -121,7 +121,7 @@ export async function getHeadModel(
     scene,
     scenes: [scene],
     userData: {},
-    CharModel: currentCharModel,
+    CharModel: currentCharModel
   } as GLTFLike as GLTF;
 }
 
@@ -156,7 +156,7 @@ export async function getMaskTex(
       getFFL(),
       false
     );
-    
+
     // weird workaround to promisify the texture outcome?
     img = await new Promise((resolve) => {
       setMaskTextureHook((dataURL: any) => {

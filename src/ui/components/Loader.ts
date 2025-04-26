@@ -16,5 +16,5 @@ export default {
   },
   hide() {
     if (loader) loader.classOff("active");
-  },
+  }
 };
