@@ -463,180 +463,181 @@ export async function Library(highlightMiiId?: string) {
         .class("flex-group")
         .style({ width: "100%" })
         .appendMany(
-          AddButtonSounds(
-            new Html("button")
-              .text("Credits")
-              .on("click", async () => {
-                var m = Modal.modal(
-                  "Credits",
-                  "",
-                  "body",
-                  { text: "Cancel" },
-                  { text: "OK" }
-                );
-                m.qs(".modal-body span")!.cleanup();
-                m.qs(".modal-content")!.style({
-                  "max-width": "100%",
-                  "max-height": "100%",
-                });
-                const mb = m.qs(".modal-body")!;
-                m.qs(".modal-content")!.style({ position: "relative" });
-                const container = new Html("div").class("col").prependTo(mb);
-                new Html("span")
-                  .text("Check out the people behind Mii Creator!")
-                  .style({
-                    "font-size": "20px",
-                    "flex-shrink": "0",
-                    "margin-bottom": "-16px",
-                  })
-                  .prependTo(mb);
+          AddButtonSounds(new Html("button").text("More Options")),
+          // AddButtonSounds(
+          //   new Html("button")
+          //     .text("Credits")
+          //     .on("click", async () => {
+          //       var m = Modal.modal(
+          //         "Credits",
+          //         "",
+          //         "body",
+          //         { text: "Cancel" },
+          //         { text: "OK" }
+          //       );
+          //       m.qs(".modal-body span")!.cleanup();
+          //       m.qs(".modal-content")!.style({
+          //         "max-width": "100%",
+          //         "max-height": "100%",
+          //       });
+          //       const mb = m.qs(".modal-body")!;
+          //       m.qs(".modal-content")!.style({ position: "relative" });
+          //       const container = new Html("div").class("col").prependTo(mb);
+          //       new Html("span")
+          //         .text("Check out the people behind Mii Creator!")
+          //         .style({
+          //           "font-size": "20px",
+          //           "flex-shrink": "0",
+          //           "margin-bottom": "-16px",
+          //         })
+          //         .prependTo(mb);
 
-                // hey stop snooping! you'll ruin the fun :(
-                new Html("a")
-                  .text("secret?")
-                  .style({
-                    "font-size": "10px",
-                    opacity: "0.3",
-                    cursor: "pointer",
-                    position: "absolute",
-                    bottom: "10px",
-                    right: "10px",
-                  })
-                  .on("click", (e) => {
-                    m.qs("button")?.elm.click();
+          //       // hey stop snooping! you'll ruin the fun :(
+          //       new Html("a")
+          //         .text("secret?")
+          //         .style({
+          //           "font-size": "10px",
+          //           opacity: "0.3",
+          //           cursor: "pointer",
+          //           position: "absolute",
+          //           bottom: "10px",
+          //           right: "10px",
+          //         })
+          //         .on("click", (e) => {
+          //           m.qs("button")?.elm.click();
 
-                    const mii = new Mii(
-                      Buffer.from(
-                        "A8EAwELycUHCpfBSXhcDbS/5Fhz6rQAAWS1KAGEAcwBtAGkAbgBlAAAAAAAAABw3ExB7ASFuQxwNZMcYAAgegg0AMEGzW4JtcwBvAHMAaQBnAG8AbgBhAGwAAAAAAMwDAAAAAAAAAAAAAAAA",
-                        "base64"
-                      )
-                    );
-                    importMiiConfirmation(mii, "Mii Creator (Special Mii)");
-                  })
-                  .appendTo(mb);
+          //           const mii = new Mii(
+          //             Buffer.from(
+          //               "A8EAwELycUHCpfBSXhcDbS/5Fhz6rQAAWS1KAGEAcwBtAGkAbgBlAAAAAAAAABw3ExB7ASFuQxwNZMcYAAgegg0AMEGzW4JtcwBvAHMAaQBnAG8AbgBhAGwAAAAAAMwDAAAAAAAAAAAAAAAA",
+          //               "base64"
+          //             )
+          //           );
+          //           importMiiConfirmation(mii, "Mii Creator (Special Mii)");
+          //         })
+          //         .appendTo(mb);
 
-                createMiiCard(
-                  container,
-                  "Austin☆²¹ / Kat21",
-                  "datkat21",
-                  "https://github.com/datkat21",
-                  "Author of Mii Creator",
-                  "00070e555d5863674e53666975777c767c7d848b9299989f9ea1a8a9b5bc89e1e9efececf6ecf6ece8f3faf7fbfdfe"
-                );
-                createMiiCard(
-                  container,
-                  "Arian",
-                  "ariankordi",
-                  "https://github.com/ariankordi",
-                  'Creator of <a target="_blank" href="https://mii-unsecure.ariankordi.net">Mii Renderer (REAL)</a> and was a big help with debugging many issues',
-                  "080037030d020531020c030105040a0209000001000a011004010b0100662f04000214031603140d04000a020109"
-                );
-                createMiiCard(
-                  container,
-                  "obj",
-                  "objecty",
-                  "https://x.com/objecty_twitt",
-                  "Composed the music for the site",
-                  "00070e3b3f3c4649555e5c6675777a7a7f7e818890979ea5b4b7bebbbac188bdc6ced4ccd6cccfe3f5f8fffcff0513"
-                );
-                createMiiCard(
-                  container,
-                  "Timothy",
-                  "Timimimi",
-                  "https://github.com/Timiimiimii",
-                  "Modeled many of the custom hats and helped with debugging",
-                  "00070e3c4554575c616c6872818b909da0b1b7bec3cad0d78f93a1b1c0c78ce8f0f8fdf2f8f3f7ebebf6fdfcfffffb"
-                );
-                createMiiCard(
-                  container,
-                  "David J.",
-                  "dwyazzo90",
-                  "https://x.com/dwyazzo90",
-                  "Helped with design and created the Wii U theme",
-                  "0800450308040402020c0308060406020a0001000006000804000a0800326702010314031304190d04000a040109"
-                );
-              })
-              .style({ flex: "1" })
-          ),
-          AddButtonSounds(
-            new Html("button")
-              .text("Help/Contact")
-              .on("click", async () => {
-                var m = Modal.modal(
-                  "Contact",
-                  "",
-                  "body",
-                  { text: "Cancel" },
-                  { text: "OK" }
-                );
-                m.qs(".modal-body span")!.cleanup();
-                m.qs(".modal-content")!.style({
-                  "max-width": "100%",
-                  "max-height": "100%",
-                });
-                const mb = m.qs(".modal-body")!;
-                m.qs(".modal-content")!.style({ position: "relative" });
-                const container = new Html("div")
-                  .class("col")
-                  .style({ gap: "0" })
-                  .prependTo(mb);
-                new Html("span")
-                  .text("Here's where you can contact the author, Kat21")
-                  .style({
-                    "font-size": "20px",
-                    "flex-shrink": "0",
-                    "margin-bottom": "-16px",
-                  })
-                  .prependTo(mb);
+          //       createMiiCard(
+          //         container,
+          //         "Austin☆²¹ / Kat21",
+          //         "datkat21",
+          //         "https://github.com/datkat21",
+          //         "Author of Mii Creator",
+          //         "00070e555d5863674e53666975777c767c7d848b9299989f9ea1a8a9b5bc89e1e9efececf6ecf6ece8f3faf7fbfdfe"
+          //       );
+          //       createMiiCard(
+          //         container,
+          //         "Arian",
+          //         "ariankordi",
+          //         "https://github.com/ariankordi",
+          //         'Creator of <a target="_blank" href="https://mii-unsecure.ariankordi.net">Mii Renderer (REAL)</a> and was a big help with debugging many issues',
+          //         "080037030d020531020c030105040a0209000001000a011004010b0100662f04000214031603140d04000a020109"
+          //       );
+          //       createMiiCard(
+          //         container,
+          //         "obj",
+          //         "objecty",
+          //         "https://x.com/objecty_twitt",
+          //         "Composed the music for the site",
+          //         "00070e3b3f3c4649555e5c6675777a7a7f7e818890979ea5b4b7bebbbac188bdc6ced4ccd6cccfe3f5f8fffcff0513"
+          //       );
+          //       createMiiCard(
+          //         container,
+          //         "Timothy",
+          //         "Timimimi",
+          //         "https://github.com/Timiimiimii",
+          //         "Modeled many of the custom hats and helped with debugging",
+          //         "00070e3c4554575c616c6872818b909da0b1b7bec3cad0d78f93a1b1c0c78ce8f0f8fdf2f8f3f7ebebf6fdfcfffffb"
+          //       );
+          //       createMiiCard(
+          //         container,
+          //         "David J.",
+          //         "dwyazzo90",
+          //         "https://x.com/dwyazzo90",
+          //         "Helped with design and created the Wii U theme",
+          //         "0800450308040402020c0308060406020a0001000006000804000a0800326702010314031304190d04000a040109"
+          //       );
+          //     })
+          //     .style({ flex: "1" })
+          // ),
+          // AddButtonSounds(
+          //   new Html("button")
+          //     .text("Help/Contact")
+          //     .on("click", async () => {
+          //       var m = Modal.modal(
+          //         "Contact",
+          //         "",
+          //         "body",
+          //         { text: "Cancel" },
+          //         { text: "OK" }
+          //       );
+          //       m.qs(".modal-body span")!.cleanup();
+          //       m.qs(".modal-content")!.style({
+          //         "max-width": "100%",
+          //         "max-height": "100%",
+          //       });
+          //       const mb = m.qs(".modal-body")!;
+          //       m.qs(".modal-content")!.style({ position: "relative" });
+          //       const container = new Html("div")
+          //         .class("col")
+          //         .style({ gap: "0" })
+          //         .prependTo(mb);
+          //       new Html("span")
+          //         .text("Here's where you can contact the author, Kat21")
+          //         .style({
+          //           "font-size": "20px",
+          //           "flex-shrink": "0",
+          //           "margin-bottom": "-16px",
+          //         })
+          //         .prependTo(mb);
 
-                // hey stop snooping! you'll ruin the fun :(
-                new Html("a")
-                  .text("secret?")
-                  .style({
-                    "font-size": "10px",
-                    opacity: "0.3",
-                    cursor: "pointer",
-                    position: "absolute",
-                    bottom: "10px",
-                    left: "10px",
-                  })
-                  .on("click", (e) => {
-                    m.qs("button")?.elm.click();
+          //       // hey stop snooping! you'll ruin the fun :(
+          //       new Html("a")
+          //         .text("secret?")
+          //         .style({
+          //           "font-size": "10px",
+          //           opacity: "0.3",
+          //           cursor: "pointer",
+          //           position: "absolute",
+          //           bottom: "10px",
+          //           left: "10px",
+          //         })
+          //         .on("click", (e) => {
+          //           m.qs("button")?.elm.click();
 
-                    const mii = new Mii(
-                      Buffer.from(
-                        "AwEAwAAAAAAAAAAAAP91dC/5Fhz6rQAAAChiAG8AbwBlAHkAAAAAAAAAAAAAABRvEwBJBBJvQxgNVGUUABoTqAoAACmwUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE8TAGMyCAAANgACC2QA",
-                        "base64"
-                      )
-                    );
-                    importMiiConfirmation(mii, "Mii Creator (Special Mii)");
-                  })
-                  .appendTo(mb);
+          //           const mii = new Mii(
+          //             Buffer.from(
+          //               "AwEAwAAAAAAAAAAAAP91dC/5Fhz6rQAAAChiAG8AbwBlAHkAAAAAAAAAAAAAABRvEwBJBBJvQxgNVGUUABoTqAoAACmwUUhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE8TAGMyCAAANgACC2QA",
+          //               "base64"
+          //             )
+          //           );
+          //           importMiiConfirmation(mii, "Mii Creator (Special Mii)");
+          //         })
+          //         .appendTo(mb);
 
-                createIconCard(
-                  container,
-                  "E-mail (Preferred)",
-                  "mailto:datkat21.yt@gmail.com",
-                  "datkat21.yt@gmail.com",
-                  EditorIcons.contact_email
-                );
-                createIconCard(
-                  container,
-                  "Discord",
-                  "",
-                  "kat21",
-                  EditorIcons.contact_discord
-                );
-                createIconCard(
-                  container,
-                  "File an issue on GitHub",
-                  "https://github.com/datkat21/mii-creator",
-                  "datkat21/mii-creator",
-                  EditorIcons.contact_github
-                );
-              })
-              .style({ flex: "1" })
-          )
+          //       createIconCard(
+          //         container,
+          //         "E-mail (Preferred)",
+          //         "mailto:datkat21.yt@gmail.com",
+          //         "datkat21.yt@gmail.com",
+          //         EditorIcons.contact_email
+          //       );
+          //       createIconCard(
+          //         container,
+          //         "Discord",
+          //         "",
+          //         "kat21",
+          //         EditorIcons.contact_discord
+          //       );
+          //       createIconCard(
+          //         container,
+          //         "File an issue on GitHub",
+          //         "https://github.com/datkat21/mii-creator",
+          //         "datkat21/mii-creator",
+          //         EditorIcons.contact_github
+          //       );
+          //     })
+          //     .style({ flex: "1" })
+          // )
         ),
       new Html("strong").text("This site is not affiliated with Nintendo."),
       new Html("small")
@@ -644,7 +645,64 @@ export async function Library(highlightMiiId?: string) {
         .style({ cursor: "pointer" })
         .on("click", () => {
           replayUpdateNotice();
-        })
+        }),
+      // new Html("a")
+      //   .text(`Privacy Policy`)
+      //   .style({ cursor: "pointer" })
+      //   .on("click", () => {
+      //     Modal.modal(
+      //       "Privacy Policy",
+      //       // half copied from another website and with some chat gpt lol
+      //       new Html("div").appendMany(
+      //         new Html("h2").text("User Data"),
+      //         new Html("ul").appendMany(
+      //           new Html("li").text(
+      //             "Mii Creator does not use cookies to store your Mii library"
+      //           ),
+      //           new Html("li").text(
+      //             "Your Mii Creator save data is stored locally on your computer"
+      //           ),
+      //           new Html("li").text(
+      //             "Mii Creator uses Cloudflare for anonymous site analytics"
+      //           ),
+      //           new Html("li").text(
+      //             "Mii Creator uses Sentry/GlitchTip for anonymous error reporting"
+      //           ),
+      //           new Html("li").text(
+      //             "User data such as IP address and user agent string is sent to Mii Creator's servers"
+      //           ),
+      //           new Html("li").text(
+      //             "Mii data sent to Mii Creator's servers are logged for analytics and archival purposes"
+      //           )
+      //         ),
+      //         new Html("h2").text("Security"),
+      //         new Html("ul").appendMany(
+      //           new Html("li").text(
+      //             "Insecure (HTTP) requests are upgraded to secure (HTTPS) requests on Cloudflare's end"
+      //           ),
+      //           new Html("li").text(
+      //             "Cloudflare may give users a page before accessing the website to ensure security"
+      //           )
+      //         ),
+      //         new Html("h2").text("Law"),
+      //         new Html("ul")
+      //           .style({ "margin-bottom": "0" })
+      //           .appendMany(
+      //             new Html("li").text(
+      //               "Mii Creator complies with all United States law including COPPA & DMCA, please use the contact e-mail to submit requests"
+      //             ),
+      //             new Html("li").text(
+      //               "Mii Creator has not been served any gag orders, warrants, or court orders"
+      //             ),
+      //             new Html("li").text(
+      //               "Mii Creator will never disclose user data to a third party unless required to do so by law"
+      //             )
+      //           )
+      //       ),
+      //       "body",
+      //       ...buttonsOkCancel
+      //     );
+      //   })
       // new Html("strong").text("Please send any feedback or bug reports either through GitHub issues or to my email: datkat21.yt@gmail.com"),
     )
   );

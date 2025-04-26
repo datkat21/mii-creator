@@ -606,26 +606,17 @@ export async function displayUpdateNotice() {
       "body",
       {
         text: "OK",
+        callback(e) {
+          setSetting(`has-seen-${Config.version.string}`, true);
+        },
+      },
+      {
+        text: "Cancel",
+        callback(e) {
+          setSetting(`has-seen-${Config.version.string}`, true);
+        },
       }
     );
-    const button = m.qs("button")!.elm as HTMLButtonElement;
-    button.disabled = true;
-
-    // trying not to be too pushy  but i need to make users fully aware of the new update
-    let timer = 10;
-
-    function update() {
-      if (timer !== 0) m.qs("button")!.text(`OK (${timer})`);
-      else {
-        clearInterval(i);
-        button.disabled = false;
-        button.innerText = "OK";
-
-        button.addEventListener("click", () => {
-          setSetting(`has-seen-${Config.version.string}`, true);
-        });
-      }
-    }
 
     m.qs(".modal-body span")!.cleanup();
     // free vulnerability for you
@@ -640,12 +631,5 @@ export async function displayUpdateNotice() {
       AddButtonSounds(b);
       b.attr({ target: "_blank" });
     });
-
-    update();
-    var i = setInterval(() => {
-      timer--;
-      update();
-    }, 1000);
-    // await setSetting(`has-seen-${Config.version.string}`, true);
   }
 }
