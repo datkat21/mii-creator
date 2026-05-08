@@ -1,11 +1,19 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
+import {
+  makeSeparatorGapThinDesktop,
+  MiiNoseTable,
+  rearrangeArray
+} from "../../constants/MiiFeatureTable";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function NoseTab(data: TabRenderInit) {
   data.container.append(
@@ -14,20 +22,24 @@ export function NoseTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         noseType: {
-          label: "Type",
-          items: ArrayNum(18).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            icon: data.icons.nose[k],
-            part: RenderPart.Head,
-          })),
+          label: __("Type"),
+          items: rearrangeArray(
+            ArrayNum(18).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k,
+              icon: data.icons.nose[k],
+              part: RenderPart.Head
+            })),
+            MiiNoseTable,
+            makeSeparatorGapThinDesktop
+          )
         },
         nosePosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
-              property: "noseYPosition",
+              property: "noseY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
@@ -35,7 +47,8 @@ export function NoseTab(data: TabRenderInit) {
               min: 0,
               max: 18,
               part: RenderPart.Head,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -47,10 +60,11 @@ export function NoseTab(data: TabRenderInit) {
               min: 0,
               max: 8,
               part: RenderPart.Head,
-            },
-          ],
-        },
-      },
+              label: data.useAccessibility ? __("Scale") : undefined
+            }
+          ]
+        }
+      }
     })
   );
 }

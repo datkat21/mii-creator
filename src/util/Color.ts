@@ -6,3 +6,7 @@ export function sRGB(c: number) {
     return 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
   }
 }
+
+export function sRGBToLinear(srgb: number) {
+  return srgb <= 0.04045 ? srgb / 12.92 : Math.pow((srgb + 0.055) / 1.055, 2.4);
+}

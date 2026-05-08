@@ -1,10 +1,11 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiGlassesColorTable,
   SwitchMiiColorTable,
+  Ver3GlassColorTable
 } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -12,67 +13,62 @@ import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
+  makeSeparatorGapThinLaptop,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
-import type Mii from "../../external/mii-js/mii";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function GlassesTab(data: TabRenderInit) {
-  let mii: Mii = data.mii;
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
       // hacky workaround for color palette
-      onChange: (newMii, forceRender, renderPart) => {
-        data.callback(newMii, forceRender, renderPart);
-        mii = newMii;
+      onChange: (newMii, forceRender, renderPart, updateType) => {
+        data.callback(newMii, forceRender, renderPart, updateType);
       },
       entries: {
-        glassesType: {
-          label: "Type",
+        glassType: {
+          label: __("Type"),
           items: ArrayNum(20).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.glasses[k],
-            part: RenderPart.Head,
-          })),
+            part: RenderPart.Head
+          }))
         },
         glassesColor: {
-          label: EditorIcons.color,
-          validationProperty: "trueGlassesColor",
-          // EXTREMELY HACKY but works..
-          validationFunction() {
-            if (mii.trueGlassesColor > 5) {
-              return mii.trueGlassesColor + 6;
-            } else return mii.trueGlassesColor;
-          },
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(6).map((k) => ({
               type: FeatureSetType.Icon,
-              value: k,
-              color: MiiGlassesColorTable[k],
+              value: Ver3GlassColorTable[k],
+              color: SwitchMiiColorTable[Ver3GlassColorTable[k]],
               part: RenderPart.Head,
-              property: "fflGlassesColor",
+              property: "glassColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
               ArrayNum(100).map((k) => ({
                 type: FeatureSetType.Icon,
-                value: k + 6,
+                value: k,
                 color: SwitchMiiColorTable[k],
                 part: RenderPart.Head,
-                property: "extGlassColor",
+                property: "glassColor"
               })),
-              MiiSwitchColorTable
-            ),
-          ],
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
+            )
+          ]
         },
         glassesPosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
-              property: "glassesYPosition",
+              property: "glassY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
@@ -80,11 +76,12 @@ export function GlassesTab(data: TabRenderInit) {
               min: 0,
               max: 20,
               part: RenderPart.Head,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
-              property: "glassesScale",
+              property: "glassScale",
               iconStart: EditorIcons.positionSizeDown,
               iconEnd: EditorIcons.positionSizeUp,
               soundStart: "scale_down",
@@ -92,10 +89,11 @@ export function GlassesTab(data: TabRenderInit) {
               min: 0,
               max: 7,
               part: RenderPart.Head,
-            },
-          ],
-        },
-      },
+              label: data.useAccessibility ? __("Scale") : undefined
+            }
+          ]
+        }
+      }
     })
   );
 }

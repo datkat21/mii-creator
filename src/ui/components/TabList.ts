@@ -10,7 +10,7 @@ export interface Tab {
 
 export enum TabListType {
   Square,
-  NotSquare,
+  NotSquare
 }
 export function TabList(tabs: Tab[], type: TabListType = TabListType.Square) {
   // const tabContainer = new Html("div").class("tab-container");

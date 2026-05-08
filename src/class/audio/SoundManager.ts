@@ -11,9 +11,11 @@ export class SoundManager {
 
   constructor() {
     this.soundBufs = {};
-    this.audioContext = new (window.AudioContext ||
+    this.audioContext = new (
+      window.AudioContext ||
       //@ts-ignore webkitaudiocontext exists
-      window.webkitAudioContext)();
+      window.webkitAudioContext
+    )();
     this.gainNode = this.audioContext.createGain();
     this.gainNode.connect(this.audioContext.destination);
     this.muted = false;
@@ -25,17 +27,17 @@ export class SoundManager {
     document.addEventListener("theme-change", () => {
       const theme = document.documentElement.dataset.theme;
       if (theme !== currentTheme) {
-        if (theme === "wiiu") {
-          loadBaseSounds("./assets/audio/miiMakerU.zip");
-          this.previousVolume = 0.75;
-          this.setVolume(0.75);
-          this.previousVolume = 0.75;
-        } else {
-          loadBaseSounds("./assets/audio/miiMakerSwitch.zip");
-          this.previousVolume = 0.28;
-          this.setVolume(0.28);
-          this.previousVolume = 0.28;
-        }
+        // if (theme === "wiiu") {
+        //   loadBaseSounds("./assets/audio/miiMakerU.zip");
+        //   this.previousVolume = 0.75;
+        //   this.setVolume(0.75);
+        //   this.previousVolume = 0.75;
+        // } else {
+        loadBaseSounds("./assets/audio/miiMakerSwitch.zip");
+        this.previousVolume = 0.28;
+        this.setVolume(0.28);
+        this.previousVolume = 0.28;
+        // }
       }
       currentTheme = theme;
     });
@@ -99,7 +101,8 @@ export class SoundManager {
 let sm: SoundManager = new SoundManager();
 
 export const loadBaseSounds = async (
-  path: string = "./assets/audio/miiMakerSwitch.zip"
+  path: string = "./assets/audio/miiMakerSwitch.zip",
+  smRef: SoundManager = sm
 ) => {
   const data = await fetch(path).then((j) => j.blob());
   const zip = await JSZip.loadAsync(data);
@@ -113,6 +116,6 @@ export const loadBaseSounds = async (
   for (let i = 0; i < fileList.length; i++) {
     const fileName = fileList[i].split(".");
     fileName.pop();
-    await sm.loadSoundBuffer(resolves[i], fileName.join("."));
+    await smRef.loadSoundBuffer(resolves[i], fileName.join("."));
   }
 };

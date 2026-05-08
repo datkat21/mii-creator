@@ -1,9 +1,10 @@
 import Html from "@datkat21/html";
-import Mii from "../../external/mii-js/mii";
+// import Mii from "../../external/mii-js/mii";
+import Mii from "../../class/MiiData";
 import { TabList, TabListType, type Tab } from "./TabList";
 import md5 from "md5";
 import { playSound } from "../../class/audio/SoundManager";
-import { RenderPart } from "../../class/MiiEditor";
+import { BodyUpdateType, MiiEditor, RenderPart } from "../../class/MiiEditor";
 
 export enum FeatureSetType {
   Icon,
@@ -11,7 +12,7 @@ export enum FeatureSetType {
   Range,
   Slider,
   Switch,
-  Misc,
+  Misc
 }
 export interface FeatureSetIconItem {
   type: FeatureSetType.Icon;
@@ -20,8 +21,11 @@ export interface FeatureSetIconItem {
   icon?: string;
   color?: string;
   value: number | string;
-  property?: string;
+  property?: string[] | string;
+  selectedCondition?: () => boolean;
+  preSelectCallback?: (tmpMii: Mii) => void;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
 }
 export interface FeatureSetTextItem {
   type: FeatureSetType.Text;
@@ -30,6 +34,7 @@ export interface FeatureSetTextItem {
   label: string;
   sound?: string;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
 }
 export interface FeatureSetRangeItem {
   type: FeatureSetType.Range;
@@ -43,6 +48,7 @@ export interface FeatureSetRangeItem {
   property: string;
   label?: string;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
   inverse?: boolean;
 }
 export interface FeatureSetSliderItem {
@@ -55,7 +61,9 @@ export interface FeatureSetSliderItem {
   min: number;
   max: number;
   property: string;
+  label?: string;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
 }
 export interface FeatureSetSwitchItem {
   type: FeatureSetType.Switch;
@@ -66,6 +74,7 @@ export interface FeatureSetSwitchItem {
   soundOn?: string;
   property: string;
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
   isNumber?: boolean;
 }
 export interface FeatureSetMiscItem {
@@ -74,6 +83,7 @@ export interface FeatureSetMiscItem {
   select(): any | Promise<any>;
   // added to prevent error because lazy
   forceRender?: boolean;
+  bodyUpdateType?: BodyUpdateType;
   part?: RenderPart;
 }
 
@@ -88,16 +98,18 @@ export interface FeatureSetEntry {
   label: string;
   header?: Html | string;
   headerIsHtml?: boolean;
-  validationProperty?: string;
-  // value
-  validationFunction?: Function;
   items: FeatureSetItem[];
 }
 
 export interface FeatureSet {
   mii?: any;
   miiIsNotMii?: boolean;
-  onChange: (mii: Mii, forceRender: boolean, part: RenderPart) => void;
+  onChange: (
+    mii: Mii,
+    forceRender: boolean,
+    part: RenderPart,
+    updateType: BodyUpdateType
+  ) => void;
   entries: Record<string, FeatureSetEntry>;
 }
 
@@ -107,7 +119,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
   let tmpMii: Mii | any;
   if (set.mii)
     if (set.miiIsNotMii === undefined || set.miiIsNotMii === false)
-      tmpMii = new Mii(set.mii.encode());
+      tmpMii = new Mii((set.mii as Mii).export());
     else tmpMii = set.mii;
   else tmpMii = {};
 
@@ -119,7 +131,6 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
     const entry = set.entries[key];
 
     let property = key;
-    if (entry.validationProperty) property = entry.validationProperty;
 
     tabListInit.push({
       icon: entry.label,
@@ -144,47 +155,98 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
           for (const item of entry.items) {
             const id = md5(String(Math.random() * 21412855));
 
-            let forceRender = true;
+            let forceRender = true,
+              updateType = BodyUpdateType.None;
 
             if (item.forceRender !== undefined) {
               if (item.forceRender === false) {
                 forceRender = false;
               }
             }
+            if (item.bodyUpdateType !== undefined) {
+              if (item.bodyUpdateType !== BodyUpdateType.None) {
+                updateType = item.bodyUpdateType;
+              }
+            }
 
             const update = () =>
-              set.onChange(tmpMii, forceRender, item.part || RenderPart.Head);
+              set.onChange(
+                tmpMii,
+                forceRender,
+                item.part || RenderPart.Head,
+                updateType
+              );
 
             // Used for true values (Switch colors usually use this to save time)
-            let value;
-            if (entry.validationFunction !== undefined) {
-              value = await entry.validationFunction();
-            } else {
-              value = (tmpMii as Record<string, any>)[property];
-            }
+            let value = (tmpMii as Record<string, any>)[property];
 
             switch (item.type) {
               case FeatureSetType.Icon:
-                let validationProperty = property;
-                if (item.property) validationProperty = item.property;
+                let iconSelected = false;
+
+                // js moment again
+                if (item.selectedCondition)
+                  if (item.selectedCondition() === true) iconSelected = true;
+                  else iconSelected = false;
+
+                if (item.property) {
+                  if (Array.isArray(item.property)) {
+                    let tmpValue = (tmpMii as Record<string, any>)[
+                      item.property[0]
+                    ];
+                    if (
+                      item.property
+                        .map((i) => tmpMii[i])
+                        .every((i) => i === tmpValue)
+                    )
+                      value = tmpValue;
+                    else {
+                      value = false;
+                      iconSelected = false;
+                    }
+                  } else value = (tmpMii as Record<string, any>)[item.property];
+                }
                 let featureItem = new Html("div")
                   .class("feature-item")
                   .on("pointerenter", playHoverSound)
                   .on("click", async () => {
                     let value;
-                    if (entry.validationFunction) {
-                      value = await entry.validationFunction(
-                        item.property,
-                        item.value
-                      );
-                    } else {
-                      value = (tmpMii as Record<string, any>)[
-                        validationProperty
-                      ];
+
+                    // i hate this
+                    if (MiiEditor.getCurrentEditor() !== null) {
+                      tmpMii = MiiEditor.getCurrentEditor()!.mii;
                     }
+
+                    value = (tmpMii as Record<string, any>)[property];
+                    const newValue = item.value;
+
+                    if (item.selectedCondition)
+                      if (item.selectedCondition() === true)
+                        iconSelected = true;
+                      else iconSelected = false;
+
+                    console.log(
+                      `condition check: value (${value}) === newValue (${newValue}), iconSelected (${iconSelected})`
+                    );
+
                     // PREVENT DUPLICATE UPDATES
-                    if (value === item.value) return;
-                    (tmpMii as Record<string, any>)[key] = item.value;
+                    if (value === newValue || iconSelected) return;
+
+                    if (item.preSelectCallback) item.preSelectCallback(tmpMii);
+
+                    if (item.property) {
+                      if (Array.isArray(item.property)) {
+                        for (const prop of item.property) {
+                          (tmpMii as Record<string, any>)[prop] = newValue;
+                        }
+                      } else {
+                        (tmpMii as Record<string, any>)[item.property] =
+                          newValue;
+                      }
+                    } else {
+                      (tmpMii as Record<string, any>)[key] = newValue;
+                    }
+
                     update();
                     if (item.sound) playSound(item.sound);
                     else if (item.color) playSound("select_color");
@@ -203,11 +265,27 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                     .classOn("is-color")
                     .style({ "--color": item.color });
                 }
-                if (value === item.value) {
+                if (value === item.value || iconSelected) {
+                  if (item.property) {
+                    if (Array.isArray(item.property))
+                      if (
+                        item.property
+                          .map((i) => tmpMii[i])
+                          .every((i) => i === value) === false
+                      ) {
+                        console.log("FAILED CHECK, skipping");
+                        debugger;
+                        continue;
+                      }
+                  }
                   featureItem.classOn("active");
                 }
                 break;
               case FeatureSetType.Slider:
+                if (item.label !== undefined) {
+                  new Html("span").text(item.label).appendTo(setList);
+                }
+
                 let featureSliderItem = new Html("div")
                   .class("feature-slider")
                   .on("pointerenter", playHoverSound)
@@ -217,6 +295,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   let frontIcon = new Html("span")
                     .html(item.iconStart)
                     .on("click", () => {
+                      // i hate this
+                      if (MiiEditor.getCurrentEditor() !== null) {
+                        tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                      }
+
                       featureSlider.val(Number(featureSlider.getValue()) - 1);
                       (tmpMii as Record<string, any>)[item.property] = Number(
                         featureSlider.getValue()
@@ -232,7 +315,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   .attr({
                     type: "range",
                     min: item.min,
-                    max: item.max,
+                    max: item.max
                   })
                   .id(id)
                   .appendTo(featureSliderItem);
@@ -241,6 +324,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   let backIcon = new Html("span")
                     .html(item.iconEnd)
                     .on("click", () => {
+                      // i hate this
+                      if (MiiEditor.getCurrentEditor() !== null) {
+                        tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                      }
+
                       featureSlider.val(Number(featureSlider.getValue()) + 1);
                       (tmpMii as Record<string, any>)[item.property] = Number(
                         featureSlider.getValue()
@@ -257,6 +345,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                 );
 
                 featureSlider.on("input", () => {
+                  // i hate this
+                  if (MiiEditor.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                  }
+
                   playSound("slider_tick");
                   (tmpMii as Record<string, any>)[item.property] = Number(
                     featureSlider.getValue()
@@ -282,6 +375,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   let frontIcon = new Html("span")
                     .html(item.iconStart)
                     .on("click", () => {
+                      // i hate this
+                      if (MiiEditor.getCurrentEditor() !== null) {
+                        tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                      }
+
                       featureRange.val(
                         Number(featureRange.getValue()) +
                           (item.inverse ? 1 : -1)
@@ -304,7 +402,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   .attr({
                     type: "range",
                     min: item.min,
-                    max: item.max,
+                    max: item.max
                   })
                   .id(id);
 
@@ -315,6 +413,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   let backIcon = new Html("span")
                     .html(item.iconEnd)
                     .on("click", () => {
+                      // i hate this
+                      if (MiiEditor.getCurrentEditor() !== null) {
+                        tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                      }
+
                       featureRange.val(
                         Number(featureRange.getValue()) +
                           (item.inverse ? -1 : 1)
@@ -342,6 +445,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                 );
 
                 featureRange.on("change", () => {
+                  // i hate this
+                  if (MiiEditor.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                  }
+
                   const newValue = item.inverse
                     ? item.max + item.min - Number(featureRange.getValue())
                     : Number(featureRange.getValue());
@@ -389,6 +497,11 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   .appendTo(featureSwitch);
 
                 const switchToggle = (value: boolean) => {
+                  // i hate this
+                  if (MiiEditor.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor.getCurrentEditor()!.mii;
+                  }
+
                   let valueToSet: boolean | number = value;
                   if (item.isNumber) {
                     valueToSet = Number(valueToSet);
@@ -436,12 +549,15 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
         }
 
         window.LazyLoad.update();
-      },
+      }
     });
   }
 
   if (Object.keys(set.entries).length === 1) {
-    tabListInit[0].select(setContainer);
+    let tabs = TabList(tabListInit, TabListType.NotSquare);
+    tabs.list.appendTo(setContainer);
+    tabs.content.appendTo(setContainer);
+    // tabListInit[0].select(setContainer);
   } else {
     let tabs = TabList(tabListInit, TabListType.NotSquare);
     tabs.list.appendTo(setContainer);

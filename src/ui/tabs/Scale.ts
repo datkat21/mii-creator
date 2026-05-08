@@ -1,10 +1,13 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
-import { RenderPart } from "../../class/MiiEditor";
+import { BodyUpdateType, RenderPart } from "../../class/MiiEditor";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function ScaleTab(data: TabRenderInit) {
   data.container.append(
@@ -13,7 +16,7 @@ export function ScaleTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         bodySize: {
-          label: "Scale",
+          label: __("Scale"),
           items: [
             {
               type: FeatureSetType.Slider,
@@ -23,9 +26,11 @@ export function ScaleTab(data: TabRenderInit) {
               min: 0,
               max: 127,
               forceRender: false,
-              part: RenderPart.Face,
+              part: RenderPart.Body,
+              bodyUpdateType: BodyUpdateType.RepositionCamera,
               soundStart: "vert_stretch_down",
               soundEnd: "vert_stretch_up",
+              label: data.useAccessibility ? __("Height") : undefined
             },
             {
               type: FeatureSetType.Slider,
@@ -35,13 +40,15 @@ export function ScaleTab(data: TabRenderInit) {
               min: 0,
               max: 127,
               forceRender: false,
-              part: RenderPart.Face,
+              part: RenderPart.Body,
+              bodyUpdateType: BodyUpdateType.RepositionCamera,
               soundStart: "vert_stretch_down",
               soundEnd: "vert_stretch_up",
-            },
-          ],
-        },
-      },
+              label: data.useAccessibility ? __("Build") : undefined
+            }
+          ]
+        }
+      }
     })
   );
 }

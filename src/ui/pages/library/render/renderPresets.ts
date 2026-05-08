@@ -1,58 +1,105 @@
-import type Mii from "../../../../external/mii-js/mii";
-import { downloadLink } from "../../../../util/downloadLink";
+import type Mii from "../../../../class/MiiData";
+import { downloadLink, saveBlob } from "../../../../util/downloadLink";
 import {
-  getMiiRender,
-  MiiCustomRenderType,
-} from "../../../../util/miiImageUtils";
+  createMiiRender,
+  type RenderRequest
+} from "../../../../util/IconRendering";
+
 import Modal from "../../../components/Modal";
 import type { MiiLocalforage } from "../../Library";
+import { getFFL } from "../../../../util/FFLLoader";
+
+import { _ } from "../../../../util/Lang";
+import { ViewType } from "../../../../util/camera";
+import { _THREE } from "../../../../util/PrepareThree";
+const __ = _();
+
+const { WebGLRenderer } = _THREE();
 
 export const miiRenderPresets = async (mii: MiiLocalforage, miiData: Mii) => {
+  const renderer = new WebGLRenderer({ alpha: true });
+  const miiRenderInfo: Omit<RenderRequest, "type" | "drawBody"> = {
+    data: miiData.export("studioData"),
+    module: getFFL(),
+    renderer,
+    characterYRotate: 0,
+    expression: 0,
+    modelFlag: 0,
+    size: 1440,
+    additionalInfo: {
+      favorite: miiData.favorite,
+      hatCommonColor: miiData.hatCommonColor,
+      hatFavoriteColor: miiData.hatFavoriteColor,
+      hatType: miiData.hatType,
+      pantsColor: miiData.pantsColor,
+      shirtColor: miiData.shirtColor,
+      special: miiData.special,
+      temporary: miiData.temporary,
+      eyeSclera: miiData.eyeSclera,
+      wigType: miiData.wigType,
+      clothesType: miiData.clothesType,
+      shoesColor: miiData.shoesColor
+    }
+  };
   Modal.modal(
-    `Render options: ${miiData.miiName}`,
-    "Choose a way to render this Mii",
+    // Render options: Mii name
+    __("Render options: %1", miiData.nickname),
+    __("Choose a way to render this Mii"),
     "body",
     {
       text: "Focus on head",
       async callback() {
-        const renderImage = await getMiiRender(
-          miiData,
-          MiiCustomRenderType.Head
+        const renderImage = await createMiiRender({
+          ...miiRenderInfo,
+          type: ViewType.Face,
+          drawBody: true
+        });
+        saveBlob(
+          renderImage.result as Blob,
+          // mii render (head) file name - e.g. 'Mii_render_headshot_2025-03-06T14:40:20.310Z.png'
+          __("%1_render_headshot_%2.png", miiData.nickname, new Date().toJSON())
         );
-        downloadLink(
-          renderImage.src,
-          `${miiData.miiName}_render_headshot_${Date.now()}.png`
-        );
-      },
+        renderer.dispose();
+      }
     },
     {
       text: "Focus on full body",
       async callback() {
-        const renderImage = await getMiiRender(
-          miiData,
-          MiiCustomRenderType.Body
+        const renderImage = await createMiiRender({
+          ...miiRenderInfo,
+          type: ViewType.AllBodySugar,
+          drawBody: true
+        });
+        saveBlob(
+          renderImage.result as Blob,
+          // mii render (body) file name - e.g. 'Mii_render_body_2025-03-06T14:40:20.310Z.png'
+          __("%1_render_body_%2.png", miiData.nickname, new Date().toJSON())
         );
-        downloadLink(
-          renderImage.src,
-          `${miiData.miiName}_render_body_${Date.now()}.png`
-        );
-      },
+        renderer.dispose();
+      }
     },
     {
       text: "Head only",
       async callback() {
-        const renderImage = await getMiiRender(
-          miiData,
-          MiiCustomRenderType.HeadOnly
+        const renderImage = await createMiiRender({
+          ...miiRenderInfo,
+          type: ViewType.MakeIcon,
+          drawBody: false
+        });
+        saveBlob(
+          renderImage.result as Blob,
+          // mii render (head only) file name - e.g. 'Mii_render_head_only_2025-03-06T14:40:20.310Z.png'
+          __(
+            "%1_render_head_only_%2.png",
+            miiData.nickname,
+            new Date().toJSON()
+          )
         );
-        downloadLink(
-          renderImage.src,
-          `${miiData.miiName}_render_head_only_${Date.now()}.png`
-        );
-      },
+        renderer.dispose();
+      }
     },
     {
-      text: "Cancel",
+      text: "Cancel"
     }
   );
 };

@@ -1,10 +1,14 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
-import { RenderPart } from "../../class/MiiEditor";
+import { BodyUpdateType, RenderPart } from "../../class/MiiEditor";
+import { makeSeparatorGapThinFSI } from "../../constants/MiiFeatureTable";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function OptionsTab(data: TabRenderInit) {
   data.container.append(
@@ -13,54 +17,55 @@ export function OptionsTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         gender: {
-          label: "Gender",
+          label: __("Gender"),
           items: [
             {
               type: FeatureSetType.Switch,
-              iconOff: EditorIcons.genderMale,
-              iconOn: EditorIcons.genderFemale,
+              iconOff: data.useAccessibility
+                ? __("Male")
+                : EditorIcons.genderMale,
+              iconOn: data.useAccessibility
+                ? __("Female")
+                : EditorIcons.genderFemale,
               property: "gender",
               isNumber: true,
-              forceRender: false,
-              part: RenderPart.Face,
+              forceRender: true,
+              part: RenderPart.Body,
+              bodyUpdateType: BodyUpdateType.ClothingUpdate,
               soundOff: "select_misc",
-              soundOn: "select_misc",
-            },
-          ],
+              soundOn: "select_misc"
+            }
+          ]
         },
         favorite: {
-          label: "Favorite",
+          label: __("Favorite/Special"),
           items: [
             {
               type: FeatureSetType.Switch,
-              iconOff: "No",
-              iconOn: "Yes",
+              iconOff: __("Normal"),
+              iconOn: __("Favorite"),
               property: "favorite",
-              isNumber: false,
+              isNumber: true,
               forceRender: false,
-              part: RenderPart.Face,
+              part: RenderPart.Body,
               soundOff: "select_color",
-              soundOn: "select_color",
+              soundOn: "select_color"
             },
-          ],
-        },
-        isSpecial: {
-          label: "Type",
-          items: [
+            makeSeparatorGapThinFSI(),
             {
               type: FeatureSetType.Switch,
-              iconOff: "Special",
-              iconOn: "Normal",
-              property: "normalMii",
-              isNumber: false,
+              iconOff: __("Normal"),
+              iconOn: __("Special"),
+              property: "special",
+              isNumber: true,
               forceRender: false,
-              part: RenderPart.Face,
+              part: RenderPart.Body,
               soundOff: "select_color",
-              soundOn: "select_color",
-            },
-          ],
-        },
-      },
+              soundOn: "select_color"
+            }
+          ]
+        }
+      }
     })
   );
 }

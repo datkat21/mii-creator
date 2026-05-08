@@ -1,26 +1,28 @@
 import Html from "@datkat21/html";
-import { Buffer } from "../../../../../node_modules/buffer";
-import Mii from "../../../../external/mii-js/mii";
+import Mii from "../../../../class/MiiData";
 import {
   initQrCam,
   QrScanDataType,
   QrScannerError,
   setQRCallback,
-  startScanner,
+  startScanner
 } from "../../../../util/DecodeQRCode";
 import { getSetting } from "../../../../util/SettingsHelper";
 import Modal from "../../../components/Modal";
 import { importMiiConfirmation } from "../importDialog";
 import { miiCreateDialog } from "./_dialog";
 
+import { _ } from "../../../../util/Lang";
+const __ = _();
+
 export const newFromQRCode = async () => {
   let qrReturnToMenu = true;
-  const m = Modal.modal("Scan QR Code", "", "body", {
+  const m = Modal.modal(__("Scan QR Code"), "", "body", {
     text: "Cancel",
     callback: () => {
       m.qs("#stop-camera")!.elm.click();
       if (qrReturnToMenu) miiCreateDialog();
-    },
+    }
   });
 
   const mb = m.qs(".modal-body")!;
@@ -34,32 +36,32 @@ export const newFromQRCode = async () => {
   mb.appendMany(
     // camera stuff container
     new Html("div").classOn("col").appendMany(
-      new Html("span").attr({ for: "cam-list" }).text("Select camera:"),
+      new Html("span").attr({ for: "cam-list" }).text(__("Select camera:")),
       new Html("select")
         .id("cam-list")
         .appendMany(
           new Html("option")
             .attr({ value: "environment", selected: "yes" })
-            .text("Back Camera (default)"),
+            .text(__("Back Camera (default)")),
           new Html("option")
             .attr({ value: "user" })
-            .text("User/Front Facing Camera"),
+            .text(__("User/Front Facing Camera")),
           new Html("option")
             .attr({ value: "device-camera", disabled: true })
-            .text("(Open the camera for more options)")
+            .text(__("(Open the camera for more options)"))
         ),
       new Html("div")
         .class("flex-group")
         .appendMany(
-          new Html("button").id("start-camera").text("Start camera"),
-          new Html("button").id("stop-camera").text("Stop camera")
+          new Html("button").id("start-camera").text(__("Start camera")),
+          new Html("button").id("stop-camera").text(__("Stop camera"))
         ),
       new Html("video").id("qr-video").styleJs({ maxWidth: "100%" }),
-      new Html("span").id("file-upload").text("Or upload an image:"),
+      new Html("span").id("file-upload").text(__("Or upload an image:")),
       new Html("input").attr({
         type: "file",
         id: "file-input",
-        accept: "image/*",
+        accept: "image/*"
       })
     )
   );
@@ -80,7 +82,7 @@ export const newFromQRCode = async () => {
     // prevent video element from taking up space
     mb.qs("video")!.style({ position: "fixed" });
     mb.qs("span#file-upload")!.text(
-      "Camera is disabled in settings.\n\nUpload an image:"
+      __("Camera is disabled in settings.\n\nUpload an image:")
     );
   }
 
@@ -92,36 +94,39 @@ export const newFromQRCode = async () => {
       qrReturnToMenu = false;
       m.qs(".modal-header button")?.elm.click();
     }
-    importMiiConfirmation(mii, source, "Mii QR Scanned");
+    importMiiConfirmation(mii, source, __("Mii QR Scanned"));
   }
 
   // initialize qr callback for data handling
-  setQRCallback((data: Buffer, dataType: QrScanDataType) => {
+  setQRCallback((data: Uint8Array, dataType: QrScanDataType) => {
     try {
       var mii: Mii;
       switch (dataType) {
         case QrScanDataType.GenericWiiU3ds:
           mii = new Mii(data);
-          qrImportConfirmation(mii, "3DS/Wii U QR Code");
-          mii = new Mii(data);
-          qrImportConfirmation(mii, "3DS/Wii U QR Code");
+          qrImportConfirmation(mii, __("3DS/Wii U QR Code"));
           break;
         case QrScanDataType.ExtraDataTL:
           Modal.alert(
-            "Notice",
+            __("Notice"),
             new Html("span").html(
-              'Tomodachi Life QR codes aren\'t supported yet. Use <a href="https://mii-unsecure.ariankordi.net" target="_blank">Mii Renderer (REAL)</a> to scan it.'
+              __(
+                'Tomodachi Life QR codes aren\'t supported yet. Use <a href="https://mii-unsecure.ariankordi.net" target="_blank">%1</a> to scan it.',
+                __("Mii Renderer (REAL)")
+              )
             )
           );
           break;
         case QrScanDataType.ExtraDataMiiC:
           mii = new Mii(data);
-          qrImportConfirmation(mii, "Mii Creator QR Code");
+          qrImportConfirmation(mii, __("Mii Creator QR Code"));
           break;
       }
     } catch (e) {
       QrScannerError(
-        "An error occurred when reading the data.\nPlease check the console for more information."
+        __(
+          "An error occurred when reading the data.\nPlease check the console for more information."
+        )
       );
       console.error(e);
     }

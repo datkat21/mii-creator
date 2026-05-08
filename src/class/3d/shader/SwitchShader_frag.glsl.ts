@@ -1,4 +1,4 @@
-export default /*glsl*/`
+export default /*glsl*/ `
 #define VARYING_QUALIFIER in
 #define VARYING_INSTANCE In
 

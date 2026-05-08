@@ -3,14 +3,17 @@ import { MiiEditor } from "../../../../class/MiiEditor";
 import { Config } from "../../../../config";
 import Loader from "../../../components/Loader";
 import Modal from "../../../components/Modal";
-import { _shutdown, Library, newMiiId } from "../../Library";
+import { _shutdown, Library, newMiiId, pushToServer } from "../../Library";
 import { miiCreateDialog } from "./_dialog";
+
+import { _ } from "../../../../util/Lang";
+const __ = _();
 
 export const newFromNNID = async () => {
   const input = await Modal.input(
-    "Nintendo Network ID",
-    "Enter NNID of user..",
-    "Username",
+    __("Nintendo Network ID"),
+    __("Enter NNID of user.."),
+    __("Username"),
     "body",
     false
   );
@@ -20,15 +23,13 @@ export const newFromNNID = async () => {
 
   Loader.show();
 
-  let nnid = await fetch(
-    Config.apis.nnidFetchURL(encodeURIComponent(input))
-  );
+  let nnid = await fetch(Config.apis.nnidFetchURL(encodeURIComponent(input)));
 
   const result = await nnid.json();
 
   Loader.hide();
   if (result.error !== undefined) {
-    await Modal.alert("Error", `Couldn't get Mii: ${result.error}`);
+    await Modal.alert(__("Error"), __("Couldn't get Mii: %1", result.error));
     return;
   }
 
@@ -37,6 +38,7 @@ export const newFromNNID = async () => {
     0,
     async (m, shouldSave) => {
       if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
+      await pushToServer();
       Library();
     },
     result.data
@@ -45,9 +47,9 @@ export const newFromNNID = async () => {
 
 export const newFromPNID = async () => {
   const input = await Modal.input(
-    "Pretendo Network ID",
-    "Enter PNID of user..",
-    "Username",
+    __("Pretendo Network ID"),
+    __("Enter PNID of user.."),
+    __("Username"),
     "body",
     false
   );
@@ -57,13 +59,14 @@ export const newFromPNID = async () => {
 
   Loader.show();
 
-  let pnid = await fetch(
-    Config.apis.pnidFetchURL(encodeURIComponent(input))
-  );
+  let pnid = await fetch(Config.apis.pnidFetchURL(encodeURIComponent(input)));
 
   Loader.hide();
   if (!pnid.ok) {
-    await Modal.alert("Error", `Couldn't get Mii: ${await pnid.text()}`);
+    await Modal.alert(
+      __("Error"),
+      __("Couldn't get Mii: %1", await pnid.text())
+    );
     return;
   }
 
@@ -72,6 +75,7 @@ export const newFromPNID = async () => {
     0,
     async (m, shouldSave) => {
       if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
+      await pushToServer();
       Library();
     },
     (await pnid.json()).data

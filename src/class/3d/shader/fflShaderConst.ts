@@ -1,5 +1,9 @@
 // https://jsfiddle.net/arian_/8gvynrdu/7/
-import * as THREE from "three";
+import { _THREE } from "../../../util/PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
+// import type { FFLMaterial } from "../../../external/ffl.js/FFLShaderMaterial";
 // Material table for FFLDefaultShader mapping to FFLModulateType
 // Reference: https://github.com/aboood40091/FFL-Testing/blob/master/src/Shader.cpp
 export enum cMaterialName {
@@ -13,156 +17,24 @@ export enum cMaterialName {
   FFL_MODULATE_TYPE_SHAPE_NOSELINE,
   FFL_MODULATE_TYPE_SHAPE_GLASS,
   FFL_MODULATE_TYPE_SHAPE_BODY,
-  FFL_MODULATE_TYPE_SHAPE_PANTS,
+  FFL_MODULATE_TYPE_SHAPE_PANTS
 }
 
-export const FFLBlinnMaterial: Partial<FFLShaderMaterial> = {
-  specularMode: 0,
+export const FFLBlinnMaterial = {
+  specularMode: 0
 };
-export const FFLGlossMaterial: Partial<FFLShaderMaterial> = {
-  ambient: new THREE.Vector4(0.8, 0.8, 0.8, 1),
-  diffuse: new THREE.Vector4(0.8, 0.8, 0.8, 1),
-  specular: new THREE.Vector4(0.1, 0.1, 0.1, 1),
+export const FFLToonMaterial = {
+  ambient: new THREE.Color(0.8, 0.8, 0.8),
+  diffuse: new THREE.Color(0.8, 0.8, 0.8),
+  specular: new THREE.Color(0.1, 0.1, 0.1),
   specularPower: 0.01,
-  specularMode: 0,
+  specularMode: 0
 };
 
-export type FFLShaderMaterial = {
-  ambient: THREE.Vector4;
-  diffuse: THREE.Vector4;
-  specular: THREE.Vector4;
-  specularPower: number;
-  specularMode: number;
-};
+export const cLightAmbientFFLIconWithBody = new THREE.Color(0.5, 0.5, 0.5);
+export const cLightDiffuseFFLIconWithBody = new THREE.Color(0.9, 0.9, 0.9);
+export const cLightSpecularFFLIconWithBody = new THREE.Color(1.0, 1.0, 1.0);
 
-export const cMaterialParam = [
-  {
-    // FFL_MODULATE_TYPE_SHAPE_FACELINE
-    ambient: new THREE.Vector4(0.85, 0.75, 0.75, 1.0),
-    diffuse: new THREE.Vector4(0.75, 0.75, 0.75, 1.0),
-    specular: new THREE.Vector4(0.3, 0.3, 0.3, 1.0),
-    specularPower: 1.2,
-    specularMode: 0,
-  },
-  {
-    // FFL_MODULATE_TYPE_SHAPE_BEARD
-    ambient: new THREE.Vector4(1.0, 1.0, 1.0, 1.0),
-    diffuse: new THREE.Vector4(0.7, 0.7, 0.7, 1.0),
-    specular: new THREE.Vector4(0.0, 0.0, 0.0, 1.0),
-    specularPower: 40.0,
-    specularMode: 1,
-  },
-  {
-    // FFL_MODULATE_TYPE_SHAPE_NOSE
-    ambient: new THREE.Vector4(0.9, 0.85, 0.85, 1.0),
-    diffuse: new THREE.Vector4(0.75, 0.75, 0.75, 1.0),
-    specular: new THREE.Vector4(0.22, 0.22, 0.22, 1.0),
-    specularPower: 1.5,
-    specularMode: 0,
-  },
-  {
-    // FFL_MODULATE_TYPE_SHAPE_FOREHEAD
-    ambient: new THREE.Vector4(0.85, 0.75, 0.75, 1.0),
-    diffuse: new THREE.Vector4(0.75, 0.75, 0.75, 1.0),
-    specular: new THREE.Vector4(0.3, 0.3, 0.3, 1.0),
-    specularPower: 1.2,
-    specularMode: 0,
-  },
-  {
-    // FFL_MODULATE_TYPE_SHAPE_HAIR
-    ambient: new THREE.Vector4(1.0, 1.0, 1.0, 1.0),
-    diffuse: new THREE.Vector4(0.7, 0.7, 0.7, 1.0),
-    specular: new THREE.Vector4(0.35, 0.35, 0.35, 1.0),
-    specularPower: 10.0,
-    specularMode: 1,
-  },
-  {
-    // FFL_MODULATE_TYPE_SHAPE_CAP
-    ambient: new THREE.Vector4(0.75, 0.75, 0.75, 1.0),
-    diffuse: new THREE.Vector4(0.72, 0.72, 0.72, 1.0),
-    specular: new THREE.Vector4(0.3, 0.3, 0.3, 1.0),
-    specularPower: 1.5,
-    specularMode: 0,
-  },
-  {
-    // FFL_MODULATE_TYPE_SHAPE_MASK
-    ambient: new THREE.Vector4(1.0, 1.0, 1.0, 1.0),
-    diffuse: new THREE.Vector4(0.7, 0.7, 0.7, 1.0),
-    specular: new THREE.Vector4(0.0, 0.0, 0.0, 1.0),
-    specularPower: 40.0,
-    specularMode: 1,
-  },
-  {
-    // FFL_MODULATE_TYPE_SHAPE_NOSELINE
-    ambient: new THREE.Vector4(1.0, 1.0, 1.0, 1.0),
-    diffuse: new THREE.Vector4(0.7, 0.7, 0.7, 1.0),
-    specular: new THREE.Vector4(0.0, 0.0, 0.0, 1.0),
-    specularPower: 40.0,
-    specularMode: 1,
-  },
-  {
-    // FFL_MODULATE_TYPE_SHAPE_GLASS
-    ambient: new THREE.Vector4(1.0, 1.0, 1.0, 1.0),
-    diffuse: new THREE.Vector4(0.7, 0.7, 0.7, 1.0),
-    specular: new THREE.Vector4(0.0, 0.0, 0.0, 1.0),
-    specularPower: 40.0,
-    specularMode: 1,
-  },
-
-  {
-    // body
-    ambient: new THREE.Vector4(0.95622, 0.95622, 0.95622, 1.0),
-    diffuse: new THREE.Vector4(0.49673, 0.49673, 0.49673, 1.0),
-    specular: new THREE.Vector4(0.24099, 0.24099, 0.24099, 1.0),
-    specularPower: 3.0,
-    specularMode: 0,
-  },
-  {
-    // pants
-    ambient: new THREE.Vector4(0.95622, 0.95622, 0.95622, 1.0),
-    diffuse: new THREE.Vector4(1.08497, 1.08497, 1.08497, 1.0),
-    specular: new THREE.Vector4(0.2409, 0.2409, 0.2409, 1.0),
-    specularPower: 3.0,
-    specularMode: 0,
-  },
-];
-
-// FFLDefaultShader default lighting parameters
-
-export const cLightAmbient = new THREE.Vector4(0.73, 0.73, 0.73, 1.0);
-export const cLightDiffuse = new THREE.Vector4(0.6, 0.6, 0.6, 1.0);
-export const cLightSpecular = new THREE.Vector4(0.7, 0.7, 0.7, 1.0);
-
-export const cLightAmbientFFLIconWithBody = new THREE.Vector4(
-  0.5,
-  0.5,
-  0.5,
-  1.0
-);
-export const cLightDiffuseFFLIconWithBody = new THREE.Vector4(
-  0.9,
-  0.9,
-  0.9,
-  1.0
-);
-export const cLightSpecularFFLIconWithBody = new THREE.Vector4(
-  1.0,
-  1.0,
-  1.0,
-  1.0
-);
-
-// NWF lighting
-// export const cLightAmbient = new THREE.Vector4(0.5, 0.5, 0.5, 1.0);
-// export const cLightDiffuse = new THREE.Vector4(0.9, 0.9, 0.9, 1.0);
-// export const cLightSpecular = new THREE.Vector4(1.0, 1.0, 1.0, 1.0);
-
-// Light direction derived from this vector: [-0.65, 0.36]
-export const cLightDir = new THREE.Vector3(
-  -0.4531539381,
-  0.4226179123,
-  0.7848858833
-);
 export const cLightDirGlossy = new THREE.Vector3(-0.35, 1, 0.8);
 export const cLightDirFFLIconWithBody = new THREE.Vector3(-0.5, 0.366, 0.785);
 // export const cLightDir = new THREE.Vector3(0, 0, 1);
@@ -184,16 +56,16 @@ export const cPantsColorGold: RGBColor = [0.75294, 0.62745, 0.18824];
 
 // Simple shader color fixing
 export const cPantsColorGrayLinear: RGBColor = [
-  0.05126930067255049, 0.061246141699984984, 0.07618418934386001,
+  0.05126930067255049, 0.061246141699984984, 0.07618418934386001
 ];
 export const cPantsColorRedLinear: RGBColor = [
-  0.1620327698875954, 0.014443805936996105, 0.0051820344376627735,
+  0.1620327698875954, 0.014443805936996105, 0.0051820344376627735
 ];
 export const cPantsColorBlueLinear: RGBColor = [
-  0.02121835054048093, 0.05126930067255049, 0.18782228580122498,
+  0.02121835054048093, 0.05126930067255049, 0.18782228580122498
 ];
 export const cPantsColorGoldLinear: RGBColor = [
-  0.5271132835871205, 0.3515313874944194, 0.02955820686563641,
+  0.5271132835871205, 0.3515313874944194, 0.02955820686563641
 ];
 
 export const cPantsColorGrayHex = "#40464e";
@@ -214,5 +86,5 @@ export const MiiFavoriteFFLColorLookupTable: Record<number, RGBColor> = {
   8: [0.451, 0.157, 0.678],
   9: [0.282, 0.22, 0.094],
   10: [0.878, 0.878, 0.878],
-  11: [0.094, 0.094, 0.078],
+  11: [0.094, 0.094, 0.078]
 };

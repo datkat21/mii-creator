@@ -1,29 +1,39 @@
 import qrjs from "../external/mii-frontend/qrjs.min.js";
-import {
-  convertDataToType,
-  supportedFormats,
-} from "../external/mii-frontend/data-conversion.js";
-import { encryptAndEncodeVer3StoreDataToQRCodeFormat } from "./EncodeQRCode.js";
-import Mii from "../external/mii-js/mii.js";
-import { Buffer as Buf } from "../../node_modules/buffer/index";
-import { CameraPosition, Mii3DScene, SetupType } from "../class/3DScene.js";
+import { encryptAndEncodeVer3StoreDataToQRCodeFormat } from "./EncodeQRCode";
+import Mii from "../class/MiiData";
+import { CameraPosition, Mii3DScene, SetupType } from "../class/3DScene";
 import Html from "@datkat21/html";
 import { Vector3 } from "three";
-import { AddButtonSounds } from "./AddButtonSounds.js";
-import { Config } from "../config.js";
+import { AddButtonSounds } from "./AddButtonSounds";
+import { Config } from "../config";
+import { getMiiIcon } from "../ui/pages/Library";
+import { parseHexOrB64ToUint8Array } from "../external/ffl.js/ffl";
+import EditorIcons from "../constants/EditorIcons";
+import { MiiCreatorV4AppendData } from "../class/struct/MiiCreatorV4Data";
+// import { getFFLWorkerMakeIcon } from "./FFLLoader";
+import { ViewType } from "./camera.js";
+import {
+  ToVer3EyeColorTable,
+  ToVer3FacelineColorTable,
+  ToVer3GlassColorTable,
+  ToVer3GlassTypeTable,
+  ToVer3HairColorTable,
+  ToVer3MouthColorTable,
+  Ver3EyeColorTable,
+  Ver3FacelineColorTable,
+  Ver3GlassColorTable,
+  Ver3HairColorTable,
+  Ver3MouthColorTable
+} from "../constants/ColorTables.js";
+import { createMiiRender, iconRenderer } from "./IconRendering.js";
+import { getFFL } from "./FFLLoader.js";
 
-const ver3Format = supportedFormats.find(
-  (f) => f.className === "Gen2Wiiu3dsMiitomo"
-)!;
-
-const makeQrCodeImage = async (mii: string): Promise<HTMLImageElement> => {
+const makeQrCodeImage = async (mii: Mii): Promise<HTMLImageElement> => {
   let convertedVer3Data: Uint8Array, ver3QRData: Uint8Array | any[];
 
-  const miiU8 = new Uint8Array(Buf.from(mii, "base64"));
+  const miiU8 = mii.export("ffsd_append_miic");
 
-  convertedVer3Data = new Uint8Array(
-    convertDataToType(miiU8, ver3Format, ver3Format.className, true)
-  );
+  convertedVer3Data = new Mii(miiU8).export("ffsd");
 
   ver3QRData = encryptAndEncodeVer3StoreDataToQRCodeFormat(convertedVer3Data);
   // Append any data after the first 96 bytes (fixed by the function above)
@@ -41,140 +51,11 @@ const makeQrCodeImage = async (mii: string): Promise<HTMLImageElement> => {
   });
 };
 
-export enum MiiCustomRenderType {
-  Head,
-  HeadOnly,
-  Body,
-}
-
-export const getMiiRender = async (
-  mii: Mii,
-  type: MiiCustomRenderType,
-  useExtendedColors: boolean = true,
-  useBlob: boolean = true
-): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    let tmpMii = new Mii(mii.encode());
-
-    if (useExtendedColors === false) {
-      tmpMii.trueEyeColor = tmpMii.fflEyeColor;
-      tmpMii.trueEyebrowColor = tmpMii.fflEyebrowColor;
-      tmpMii.trueFacialHairColor = tmpMii.fflFacialHairColor;
-      tmpMii.trueGlassesColor = tmpMii.fflGlassesColor;
-      tmpMii.trueGlassesType = tmpMii.fflGlassesType;
-      tmpMii.trueHairColor = tmpMii.fflHairColor;
-      tmpMii.trueMouthColor = tmpMii.fflMouthColor;
-      tmpMii.trueSkinColor = tmpMii.fflSkinColor;
-
-      tmpMii.extEyeColor = tmpMii.fflEyeColor + 8;
-      tmpMii.extHairColor = tmpMii.fflHairColor;
-      tmpMii.extFacelineColor = tmpMii.fflSkinColor;
-      tmpMii.extBeardColor = tmpMii.fflFacialHairColor;
-      tmpMii.extEyebrowColor = tmpMii.fflEyebrowColor;
-      tmpMii.extGlassColor = 0;
-      tmpMii.extGlassType = tmpMii.fflGlassesType;
-      tmpMii.extHatColor = 0;
-      tmpMii.extHatType = 0;
-    }
-
-    let parent = new Html("div")
-      .style({
-        width: "720px",
-        height: "720px",
-        opacity: "0",
-        // position: "fixed",
-      })
-      .appendTo("body");
-    const scene = new Mii3DScene(tmpMii, parent.elm, SetupType.Screenshot);
-    scene.init().then(async () => {
-      await scene.updateBody();
-      await scene.updateMiiHead();
-      // swap pose for render
-      scene.anim.forEach((a) => {
-        a.timeScale = 0;
-        // a.stop();
-        // a.reset();
-      });
-      scene.swapAnimation("Pose.01");
-
-      let scn = scene.getScene()!,
-        cam = scene.getCamera()!,
-        ctl = scene.getControls()!,
-        pos = new Vector3();
-      switch (type) {
-        case MiiCustomRenderType.Head:
-          // zoom in on head
-          setTimeout(() => {
-            scene.focusCamera(0, true, false);
-            ctl.dollyTo(50);
-            cam.fov = 15;
-            cam.updateProjectionMatrix();
-          }, 300);
-          break;
-        case MiiCustomRenderType.HeadOnly:
-          // hide body from view
-          scn.getObjectByName("body_m")!.visible = false;
-          scn.getObjectByName("hands_m")!.visible = false;
-          scn.getObjectByName("legs_m")!.visible = false;
-          scn.getObjectByName("body_f")!.visible = false;
-          scn.getObjectByName("hands_f")!.visible = false;
-          scn.getObjectByName("legs_f")!.visible = false;
-          // Get the bounding box of the object
-          scene.focusCamera(CameraPosition.MiiHead, true, false);
-          ctl.dollyTo(40);
-          cam.fov = 15;
-          cam.updateProjectionMatrix();
-          break;
-        case MiiCustomRenderType.Body:
-          // default screenshot camera position
-          scene.focusCamera(CameraPosition.MiiFullBody, true, false);
-          ctl.dollyTo(90, false);
-          cam.fov = 15;
-          cam.updateProjectionMatrix();
-          break;
-      }
-
-      parent.append(scene.getRendererElement());
-
-      const renderer = scene.getRenderer();
-      setTimeout(() => {
-        if (useBlob)
-          renderer.domElement.toBlob((blob) => {
-            const image = new Image(
-              renderer.domElement.width,
-              renderer.domElement.height
-            );
-            image.src = URL.createObjectURL(blob!);
-            console.log("Temporary render URL:", image.src);
-            image.onload = () => {
-              resolve(image);
-              scene.shutdown();
-              parent.cleanup();
-            };
-          });
-        else {
-          const url = renderer.domElement.toDataURL("png", 100);
-          const image = new Image(
-            renderer.domElement.width,
-            renderer.domElement.height
-          );
-          image.src = url;
-          image.onload = () => {
-            resolve(image);
-            scene.shutdown();
-            parent.cleanup();
-          };
-        }
-      }, 500);
-    });
-  });
-};
-
 export const getBackground = async (
-  isMiic: boolean
+  extended: boolean
 ): Promise<HTMLImageElement> => {
   let url: string = "";
-  if (isMiic) {
+  if (extended) {
     url = "./assets/images/bg_qr_miic.png";
   } else {
     url = "./assets/images/bg_qr_wiiu.png";
@@ -204,21 +85,90 @@ export function loadImage(url: string): Promise<HTMLImageElement> {
 }
 
 export const QRCodeCanvas = async (
-  mii: string,
+  mii: Mii,
   extendedColors: boolean = true
 ) => {
-  const miiData = new Mii(Buf.from(mii, "base64"));
-  const render = await loadImage(
-    `${Config.renderer.renderFullBodyAltURL}&data=${encodeURIComponent(
-      miiData.encodeStudio().toString("hex")
-    )}&${Config.renderer.hatTypeParam}=${
-      miiData.extHatType + Config.renderer.hatTypeAdd
-    }&${Config.renderer.hatColorParam}=${
-      miiData.extHatColor + Config.renderer.hatColorAdd
-    }`
-  );
+  let render: HTMLImageElement,
+    renderPos = { y: 0, x: 0, width: 0, height: 0 };
+  if (Config.renderer.useRendererServer) {
+    render = await loadImage(
+      `${Config.renderer.renderFullBodyAltURL}&data=${encodeURIComponent(
+        mii.exportHex("studioData")
+      )}&${Config.renderer.hatTypeParam}=${
+        mii.hatType + 1 + Config.renderer.hatTypeAdd
+      }&${Config.renderer.hatColorParam}=${
+        mii.hatFavoriteColor - 1 + Config.renderer.hatColorAdd
+      }`
+    );
+    renderPos = { x: 54, y: -54, width: 714, height: 953 };
+  } else {
+    // TODO
+    // render
+    let mii2 = new Mii(mii.export("studioData"));
+
+    mii2.beardColor = Ver3HairColorTable[ToVer3HairColorTable[mii2.beardColor]];
+    mii2.eyeColor = Ver3EyeColorTable[ToVer3EyeColorTable[mii2.eyeColor]];
+    mii2.eyebrowColor =
+      Ver3HairColorTable[ToVer3HairColorTable[mii2.eyebrowColor]];
+    mii2.facelineColor =
+      Ver3FacelineColorTable[ToVer3FacelineColorTable[mii2.facelineColor]];
+    mii2.glassColor =
+      Ver3GlassColorTable[ToVer3GlassColorTable[mii2.glassColor]];
+    mii2.glassType = ToVer3GlassTypeTable[mii2.glassType];
+    mii2.hairColor = Ver3HairColorTable[ToVer3HairColorTable[mii2.hairColor]];
+    mii2.mouthColor =
+      Ver3MouthColorTable[ToVer3MouthColorTable[mii2.mouthColor]];
+    mii2.facePaintColor = -1;
+    mii2.hatType = -1;
+    mii2.clothesType = -1;
+    mii2.shirtColor = -1;
+    mii2.pantsColor = -1;
+    mii2.shoesColor = -1;
+    mii2.eyeSclera = 0;
+
+    const renderResult = await getMiiIcon(
+      mii2,
+      "qr_code",
+      "all_body_sugar",
+      720,
+      0,
+      true
+    );
+
+    // Load in the image
+    let imageURL: string = renderResult.url;
+    const img = new Image(720, 720);
+    img.src = imageURL;
+    render = await new Promise((resolve) => {
+      img.onload = () => {
+        renderResult.dispose();
+        return resolve(img);
+      };
+    });
+    renderPos = { x: -65, y: -54, width: 952, height: 952 };
+  }
+  console.log("got render");
   const qrCodeSource = await makeQrCodeImage(mii);
   const background = await getBackground(extendedColors);
+
+  let favoriteIcon: HTMLImageElement | undefined = undefined;
+  if (mii.favorite === 1 || mii.special === 1) {
+    console.log("loading favorite icon");
+    favoriteIcon = await new Promise<HTMLImageElement>((resolve) => {
+      var img = new Image();
+      img.onload = function () {
+        resolve(img);
+      };
+
+      if (mii.favorite === 1)
+        img.src =
+          "data:image/svg+xml," + encodeURIComponent(EditorIcons.favorite);
+      if (mii.special === 1)
+        img.src =
+          "data:image/svg+xml," + encodeURIComponent(EditorIcons.special);
+    });
+    console.log("loaded favorite icon");
+  }
 
   const canvas = document.createElement("canvas");
   canvas.width = 1280;
@@ -239,7 +189,13 @@ export const QRCodeCanvas = async (
   ctx.textBaseline = "top";
   ctx.fillStyle = "#cccccc";
   ctx.fillText(`Made with Mii Creator ${Config.version.string}`, 1248, 667);
-  ctx.drawImage(render, 54, -54, 714, 953);
+  ctx.drawImage(
+    render,
+    renderPos.x,
+    renderPos.y,
+    renderPos.width,
+    renderPos.height
+  );
   // qr code container
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
@@ -251,18 +207,25 @@ export const QRCodeCanvas = async (
   ctx.beginPath();
   ctx.roundRect(769, 542, 463, 99, [0, 0, 16, 16]);
   ctx.fill();
+
+  // favorite icon (if exists)
+  if (favoriteIcon) {
+    ctx.drawImage(favoriteIcon, 1172, 480, 102, 102);
+    console.log("drawing favorite icon");
+  }
+
   // mii name
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = '500 38px "NTLG", sans-serif';
-  ctx.fillText(miiData.miiName, 1005, 591);
+  ctx.fillText(mii.nickname, 1005, 591);
   const canvasPngImage = canvas.toDataURL("png", 100);
   return canvasPngImage;
 };
 
 // This recreates the html from the update changelog
-export function createMiiCard(
+export async function createMiiCard(
   parent: Html | HTMLElement,
   name: string,
   username: string,
@@ -271,25 +234,32 @@ export function createMiiCard(
   studioData: string,
   extra: string = ""
 ) {
+  const creditIcon = await getMiiIcon(
+    studioData,
+    "creditIcon",
+    "creditIcon",
+    128
+  );
   new Html("div")
     .class("flex-group")
     .style({
       gap: "0",
       "justify-content": "flex-start",
-      "text-align": "left",
+      "text-align": "left"
     })
     .appendMany(
       new Html("img")
         .attr({
           width: 96,
           draggable: "false",
-          src:
-            Config.renderer.renderHeadshotURLNoParams +
-            `?data=${encodeURIComponent(
-              studioData
-            )}&type=variableiconbody&verifyCharInfo=0&shaderType=switch&width=96&source=credits&characterYRotate=8&bodyType=switch&` +
-            extra,
+          src: creditIcon.url
+          // Config.renderer.renderHeadshotURLNoParams +
+          // `?data=${encodeURIComponent(
+          //   studioData
+          // )}&type=variableiconbody&verifyCharInfo=0&shaderType=switch&width=96&source=credits&characterYRotate=8&bodyType=switch&` +
+          // extra,
         })
+        .on("load", creditIcon.dispose)
         .style({ width: "96px", height: "96px" }),
       new Html("div")
         .class("col")
@@ -299,7 +269,7 @@ export function createMiiCard(
             .appendMany(
               new Html("span").text(name).style({
                 display: "inline",
-                width: "max-content",
+                width: "max-content"
               }),
               AddButtonSounds(
                 new Html("a")
@@ -332,7 +302,7 @@ export function createIconCard(
     .style({
       gap: "0",
       "justify-content": "flex-start",
-      "text-align": "left",
+      "text-align": "left"
     })
     .appendMany(
       new Html("div").html(icon).style({ width: "96px", height: "96px" }),
@@ -344,7 +314,7 @@ export function createIconCard(
             .appendMany(
               new Html("span").text(name).style({
                 display: "inline",
-                width: "max-content",
+                width: "max-content"
               })
             )
             .style({ display: "flex", gap: "8px" }),

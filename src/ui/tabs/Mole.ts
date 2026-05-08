@@ -1,10 +1,13 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function MoleTab(data: TabRenderInit) {
   data.container.append(
@@ -12,19 +15,20 @@ export function MoleTab(data: TabRenderInit) {
       mii: data.mii,
       onChange: data.callback,
       entries: {
-        eyePosition: {
-          label: "Position",
+        mole: {
+          label: __("Mole"),
           items: [
             {
               type: FeatureSetType.Switch,
-              iconOff: "Disable",
-              iconOn: "Enable",
-              property: "moleEnabled",
+              iconOff: __("Disable"),
+              iconOn: __("Enable"),
+              property: "moleType",
               part: RenderPart.Face,
+              isNumber: true
             },
             {
               type: FeatureSetType.Range,
-              property: "moleYPosition",
+              property: "moleY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
@@ -32,11 +36,12 @@ export function MoleTab(data: TabRenderInit) {
               min: 0,
               max: 30,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
-              property: "moleXPosition",
+              property: "moleX",
               iconStart: EditorIcons.positionPushIn,
               iconEnd: EditorIcons.positionPushOut,
               soundStart: "move_together",
@@ -44,6 +49,8 @@ export function MoleTab(data: TabRenderInit) {
               min: 0,
               max: 16,
               part: RenderPart.Face,
+
+              label: data.useAccessibility ? __("Spacing") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -55,10 +62,11 @@ export function MoleTab(data: TabRenderInit) {
               min: 0,
               max: 7,
               part: RenderPart.Face,
-            },
-          ],
-        },
-      },
+              label: data.useAccessibility ? __("Scale") : undefined
+            }
+          ]
+        }
+      }
     })
   );
 }

@@ -1,12 +1,25 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
-import { MiiFavoriteColorLookupTable } from "../../constants/ColorTables";
+import {
+  ForbiddenShirtPantColors,
+  MiiFavoriteColorLookupTable,
+  SwitchMiiColorTable
+} from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import { numToHex } from "../../util/NumberToHexString";
-import { RenderPart } from "../../class/MiiEditor";
+import { BodyUpdateType, RenderPart } from "../../class/MiiEditor";
+import {
+  makeSeparatorGapThinFSI,
+  makeSeparatorGapThinLaptop,
+  MiiSwitchColorTable,
+  rearrangeArray
+} from "../../constants/MiiFeatureTable";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function FavoriteColorTab(data: TabRenderInit) {
   data.container.append(
@@ -15,16 +28,17 @@ export function FavoriteColorTab(data: TabRenderInit) {
       onChange: data.callback,
       entries: {
         favoriteColor: {
-          label: "Favorite Color",
+          label: __("Favorite Color"),
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
             forceRender: true,
             value: k,
             color: numToHex(MiiFavoriteColorLookupTable[k]),
             part: RenderPart.Head,
-          })),
-        },
-      },
+            bodyUpdateType: BodyUpdateType.ClothingUpdate
+          }))
+        }
+      }
     })
   );
 }

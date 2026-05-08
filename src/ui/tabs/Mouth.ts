@@ -1,6 +1,6 @@
 import {
   FeatureSetType,
-  MiiPagedFeatureSet,
+  MiiPagedFeatureSet
 } from "../components/MiiPagedFeatureSet";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -8,73 +8,73 @@ import EditorIcons from "../../constants/EditorIcons";
 import {
   MiiMouthColorTable,
   SwitchMiiColorTable,
+  Ver3MouthColorTable
 } from "../../constants/ColorTables";
 import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
+  makeSeparatorGapThinDesktop,
+  makeSeparatorGapThinLaptop,
+  MiiMouthTable,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
-import type Mii from "../../external/mii-js/mii";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function MouthTab(data: TabRenderInit) {
-  let mii: Mii = data.mii;
-
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
       // hacky workaround for color palette
-      onChange: (newMii, forceRender, renderPart) => {
-        data.callback(newMii, forceRender, renderPart);
-        mii = newMii;
+      onChange: (newMii, forceRender, renderPart, updateType) => {
+        data.callback(newMii, forceRender, renderPart, updateType);
       },
       entries: {
         mouthType: {
-          label: "Type",
-          items: ArrayNum(36).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            icon: data.icons.mouth[k],
-            part: RenderPart.Face,
-          })),
+          label: __("Type"),
+          items: rearrangeArray(
+            ArrayNum(36).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k,
+              icon: data.icons.mouth[k],
+              part: RenderPart.Face
+            })),
+            MiiMouthTable,
+            makeSeparatorGapThinDesktop
+          )
         },
         mouthColor: {
-          label: EditorIcons.color,
-          validationProperty: "trueMouthColor",
-          // EXTREMELY HACKY but works..
-          validationFunction() {
-            if (mii.trueMouthColor > 4) {
-              return mii.trueMouthColor + 5;
-            } else return mii.trueMouthColor;
-          },
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(5).map((k) => ({
               type: FeatureSetType.Icon,
-              value: k,
-              color: MiiMouthColorTable[k],
+              value: Ver3MouthColorTable[k],
+              color: SwitchMiiColorTable[Ver3MouthColorTable[k]],
               part: RenderPart.Face,
-              property: "fflMouthColor",
+              property: "mouthColor"
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
               ArrayNum(100).map((k) => ({
                 type: FeatureSetType.Icon,
-                value: k + 5,
+                value: k,
                 color: SwitchMiiColorTable[k],
-                // icon: `<span style="display:flex;justify-content:center;align-items:center;position:relative;z-index:1;">${k}</span>`,
                 part: RenderPart.Face,
-                property: "extMouthColor",
+                property: "mouthColor"
               })),
-              MiiSwitchColorTable
-            ),
-          ],
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
+            )
+          ]
         },
         mouthPosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
-              property: "mouthYPosition",
+              property: "mouthY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
@@ -82,7 +82,8 @@ export function MouthTab(data: TabRenderInit) {
               min: 0,
               max: 18,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -94,10 +95,11 @@ export function MouthTab(data: TabRenderInit) {
               min: 0,
               max: 8,
               part: RenderPart.Face,
+              label: data.useAccessibility ? __("Scale") : undefined
             },
             {
               type: FeatureSetType.Range,
-              property: "mouthHorizontalStretch",
+              property: "mouthAspect",
               iconStart: EditorIcons.positionStretchIn,
               iconEnd: EditorIcons.positionStretchOut,
               soundStart: "vert_stretch_down",
@@ -105,10 +107,11 @@ export function MouthTab(data: TabRenderInit) {
               min: 0,
               max: 6,
               part: RenderPart.Face,
-            },
-          ],
-        },
-      },
+              label: data.useAccessibility ? __("Stretch") : undefined
+            }
+          ]
+        }
+      }
     })
   );
 }

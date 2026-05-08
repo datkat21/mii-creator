@@ -1,10 +1,12 @@
 import {
   FeatureSetType,
   MiiPagedFeatureSet,
+  type FeatureSetIconItem
 } from "../components/MiiPagedFeatureSet";
 import {
   MiiHairColorTable,
   SwitchMiiColorTable,
+  Ver3HairColorTable
 } from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/Numbers";
 import type { TabRenderInit } from "../../constants/TabRenderType";
@@ -12,67 +14,73 @@ import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
+  makeSeparatorGapThinDesktop,
+  makeSeparatorGapThinLaptop,
+  MiiEyebrowRotationGroups,
+  MiiEyebrowTable,
   MiiSwitchColorTable,
-  rearrangeArray,
+  rearrangeArray
 } from "../../constants/MiiFeatureTable";
-import type Mii from "../../external/mii-js/mii";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function EyebrowTab(data: TabRenderInit) {
-  let mii: Mii = data.mii;
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
-      // hacky workaround for color palette
-      onChange: (newMii, forceRender, renderPart) => {
-        data.callback(newMii, forceRender, renderPart);
-        mii = newMii;
-      },
+      onChange: data.callback,
       entries: {
         eyebrowType: {
-          label: "Type",
-          items: ArrayNum(24).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            icon: data.icons.eyebrows[k],
-            part: RenderPart.Face,
-          })),
+          label: __("Type"),
+          items: rearrangeArray(
+            ArrayNum(24).map(
+              (k) =>
+                ({
+                  type: FeatureSetType.Icon,
+                  value: k,
+                  icon: data.icons.eyebrows[k],
+                  part: RenderPart.Face,
+                  preSelectCallback(tmpMii) {
+                    // new - old
+                    tmpMii.eyebrowRotate +=
+                      MiiEyebrowRotationGroups[k] -
+                      MiiEyebrowRotationGroups[tmpMii.eyebrowType];
+                  }
+                }) as FeatureSetIconItem
+            ),
+            MiiEyebrowTable,
+            makeSeparatorGapThinDesktop
+          )
         },
         eyebrowColor: {
-          label: EditorIcons.color,
-          validationProperty: "trueEyebrowColor",
-          // EXTREMELY HACKY but works..
-          validationFunction() {
-            if (mii.trueEyebrowColor > 7) {
-              return mii.trueEyebrowColor + 8;
-            } else return mii.trueEyebrowColor;
-          },
+          label: data.useAccessibility ? __("Color") : EditorIcons.color,
           items: [
             ...ArrayNum(8).map((k) => ({
               type: FeatureSetType.Icon,
-              value: k,
-              color: MiiHairColorTable[k],
-              part: RenderPart.Face,
-              property: "fflEyebrowColor",
+              value: Ver3HairColorTable[k],
+              color: SwitchMiiColorTable[Ver3HairColorTable[k]],
+              part: RenderPart.Face
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
               ArrayNum(100).map((k) => ({
                 type: FeatureSetType.Icon,
-                value: k + 8,
+                value: k,
                 color: SwitchMiiColorTable[k],
-                part: RenderPart.Face,
-                property: "extEyebrowColor",
+                part: RenderPart.Face
               })),
-              MiiSwitchColorTable
-            ),
-          ],
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
+            )
+          ]
         },
         eyebrowPosition: {
-          label: "Position",
+          label: __("Position"),
           items: [
             {
               type: FeatureSetType.Range,
-              property: "eyebrowYPosition",
+              property: "eyebrowY",
               iconStart: EditorIcons.positionMoveUp,
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
@@ -80,11 +88,12 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 3,
               max: 18,
               part: RenderPart.Face,
-              inverse: true
+              inverse: true,
+              label: data.useAccessibility ? __("Position") : undefined
             },
             {
               type: FeatureSetType.Range,
-              property: "eyebrowSpacing",
+              property: "eyebrowX",
               iconStart: EditorIcons.positionPushIn,
               iconEnd: EditorIcons.positionPushOut,
               soundStart: "move_together",
@@ -92,10 +101,11 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 12,
               part: RenderPart.Face,
+              label: data.useAccessibility ? __("Spacing") : undefined
             },
             {
               type: FeatureSetType.Range,
-              property: "eyebrowRotation",
+              property: "eyebrowRotate",
               iconStart: EditorIcons.positionRotateCW,
               iconEnd: EditorIcons.positionRotateCCW,
               soundStart: "rotate_cw",
@@ -103,7 +113,7 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 11,
               part: RenderPart.Face,
-              inverse: true
+              label: data.useAccessibility ? __("Rotation") : undefined
             },
             {
               type: FeatureSetType.Range,
@@ -115,10 +125,11 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 8,
               part: RenderPart.Face,
+              label: data.useAccessibility ? __("Scale") : undefined
             },
             {
               type: FeatureSetType.Range,
-              property: "eyebrowVerticalStretch",
+              property: "eyebrowAspect",
               iconStart: EditorIcons.positionStretchIn,
               iconEnd: EditorIcons.positionStretchOut,
               soundStart: "vert_stretch_down",
@@ -126,10 +137,11 @@ export function EyebrowTab(data: TabRenderInit) {
               min: 0,
               max: 6,
               part: RenderPart.Face,
-            },
-          ],
-        },
-      },
+              label: data.useAccessibility ? __("Stretch") : undefined
+            }
+          ]
+        }
+      }
     })
   );
 }

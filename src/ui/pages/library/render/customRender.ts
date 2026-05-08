@@ -2,15 +2,15 @@ import Html from "@datkat21/html";
 import type CameraControls from "camera-controls";
 import { Color, Vector3, type Mesh } from "three";
 import { GLTFExporter } from "three/examples/jsm/Addons.js";
-import { Buffer } from "../../../../../node_modules/buffer";
 import {
   CameraPosition,
   Mii3DScene,
-  SetupType,
+  SetupType
 } from "../../../../class/3DScene";
 import { RenderPart } from "../../../../class/MiiEditor";
 import { Config } from "../../../../config";
-import Mii from "../../../../external/mii-js/mii";
+// import Mii from "../../../../external/mii-js/mii";
+import Mii from "../../../../class/MiiData";
 import { AddButtonSounds } from "../../../../util/AddButtonSounds";
 import { downloadLink, saveArrayBuffer } from "../../../../util/downloadLink";
 import { ArrayNum } from "../../../../util/Numbers";
@@ -19,88 +19,103 @@ import {
   FeatureSetType,
   MiiPagedFeatureSet,
   type FeatureSetEntry,
+  type FeatureSetIconItem
 } from "../../../components/MiiPagedFeatureSet";
 import Modal from "../../../components/Modal";
 import { importMiiConfirmation } from "../importDialog";
 import { traverse3DMaterialFix } from "../util/3DModel";
 import { cMaterialName } from "../../../../class/3d/shader/fflShaderConst";
+import { getMiiIcon } from "../../Library";
+import { parseHexOrB64ToUint8Array } from "../../../../external/ffl.js/ffl";
+
+import { _ } from "../../../../util/Lang";
+import { createMiiRender } from "../../../../helper";
+import { ViewType } from "../../../../util/camera";
+import { getFFL } from "../../../../util/FFLLoader";
+import { getAdditionalInfoFromMii } from "../../../../util/IconRendering";
+const __ = _();
 
 enum ExpressionModifier {
   HideNose,
-  HideNoseAndMask,
+  HideNoseAndMask
 }
 
 const expressionTable: {
   name: string;
-  id: string;
+  id: number;
   modifier?: ExpressionModifier;
 }[] = [
-  { name: "Normal", id: "normal" },
-  { name: "Smile", id: "smile" },
-  { name: "Anger", id: "anger" },
-  { name: "Sorrow", id: "sorrow" },
-  { name: "Surprise", id: "surprise" },
-  { name: "Blink", id: "blink" },
-  { name: "Normal (open mouth)", id: "normal_open_mouth" },
-  { name: "Smile (open mouth)", id: "smile_open_mouth" },
-  { name: "Anger (open mouth)", id: "anger_open_mouth" },
-  { name: "Surprise (open mouth)", id: "surprise_open_mouth" },
-  { name: "Sorrow (open mouth)", id: "sorrow_open_mouth" },
-  { name: "Blink (open mouth)", id: "blink_open_mouth" },
-  { name: "Wink (left eye open)", id: "wink_left" },
-  { name: "Wink (right eye open)", id: "wink_right" },
-  { name: "Wink (left eye and mouth open)", id: "wink_left_open_mouth" },
-  { name: "Wink (right eye and mouth open)", id: "wink_right_open_mouth" },
-  { name: "Wink (left eye open and smiling)", id: "like_wink_left" },
-  { name: "Wink (right eye open and smiling)", id: "like_wink_right" },
-  { name: "Frustrated", id: "frustrated" },
-  { name: "Bored", id: "19" },
-  { name: "Bored open mouth", id: "20" },
-  { name: "Sigh mouth straight", id: "21" },
-  { name: "Sigh", id: "22" },
-  { name: "Disgusted mouth straight", id: "23" },
-  { name: "Disgusted", id: "24" },
-  { name: "Love", id: "25" },
-  { name: "Love mouth open", id: "26" },
-  { name: "Determined mouth straight", id: "27" },
-  { name: "Determined", id: "28" },
-  { name: "Cry mouth straight", id: "29" },
-  { name: "Cry", id: "30" },
-  { name: "Big smile mouth straight", id: "31" },
-  { name: "Big smile", id: "32" },
-  { name: "Cheeky", id: "33" },
-  { name: "Resolve eyes funny mouth", id: "35" },
-  { name: "Resolve eyes funny mouth open", id: "36" },
-  { name: "Smug", id: "37" },
-  { name: "Smug mouth open", id: "38" },
-  { name: "Resolve", id: "39" },
-  { name: "Resolve mouth open", id: "40" },
-  { name: "Unbelievable", id: "41" },
-  { name: "Cunning", id: "43" },
-  { name: "Raspberry", id: "45" },
-  { name: "Innocent", id: "47" },
-  { name: "Cat", id: "49", modifier: ExpressionModifier.HideNose },
-  { name: "Dog", id: "51", modifier: ExpressionModifier.HideNose },
-  { name: "Tasty", id: "53" },
-  { name: "Money mouth straight", id: "55" },
-  { name: "Money", id: "56" },
-  { name: "Confused mouth straight", id: "57" },
-  { name: "Confused", id: "58" },
-  { name: "Cheerful mouth straight", id: "59" },
-  { name: "Cheerful", id: "60" },
-  { name: "Blank", id: "61", modifier: ExpressionModifier.HideNoseAndMask },
-  { name: "Grumble mouth straight", id: "63" },
-  { name: "Grumble", id: "64" },
-  { name: "Moved mouth straight", id: "65" },
-  { name: "Moved (aka pleading face)", id: "66" },
-  { name: "Singing mouth small", id: "67" },
-  { name: "Singing", id: "68" },
-  { name: "Stunned", id: "69" },
+  { name: "Normal", id: 0 },
+  { name: "Smile", id: 1 },
+  { name: "Anger", id: 2 },
+  { name: "Sorrow", id: 3 },
+  { name: "Surprise", id: 4 },
+  { name: "Blink", id: 5 },
+  { name: "Normal (open mouth)", id: 6 },
+  { name: "Smile (open mouth)", id: 7 },
+  { name: "Anger (open mouth)", id: 8 },
+  { name: "Surprise (open mouth)", id: 9 },
+  { name: "Sorrow (open mouth)", id: 10 },
+  { name: "Blink (open mouth)", id: 11 },
+  { name: "Wink (left eye open)", id: 12 },
+  { name: "Wink (right eye open)", id: 13 },
+  { name: "Wink (left eye and mouth open)", id: 14 },
+  { name: "Wink (right eye and mouth open)", id: 15 },
+  { name: "Wink (left eye open and smiling)", id: 16 },
+  { name: "Wink (right eye open and smiling)", id: 17 },
+  { name: "Frustrated", id: 18 },
+  { name: "Bored", id: 19 },
+  { name: "Bored open mouth", id: 20 },
+  { name: "Sigh mouth straight", id: 21 },
+  { name: "Sigh", id: 22 },
+  { name: "Disgusted mouth straight", id: 23 },
+  { name: "Disgusted", id: 24 },
+  { name: "Love", id: 25 },
+  { name: "Love mouth open", id: 26 },
+  { name: "Determined mouth straight", id: 27 },
+  { name: "Determined", id: 28 },
+  { name: "Cry mouth straight", id: 29 },
+  { name: "Cry", id: 30 },
+  { name: "Big smile mouth straight", id: 31 },
+  { name: "Big smile", id: 32 },
+  { name: "Cheeky", id: 33 },
+  { name: "Resolve eyes funny mouth", id: 35 },
+  { name: "Resolve eyes funny mouth open", id: 36 },
+  { name: "Smug", id: 37 },
+  { name: "Smug mouth open", id: 38 },
+  { name: "Resolve", id: 39 },
+  { name: "Resolve mouth open", id: 40 },
+  { name: "Unbelievable", id: 41 },
+  { name: "Cunning", id: 43 },
+  { name: "Raspberry", id: 45 },
+  { name: "Innocent", id: 47 },
+  { name: "Cat", id: 49, modifier: ExpressionModifier.HideNose },
+  { name: "Dog", id: 51, modifier: ExpressionModifier.HideNose },
+  { name: "Tasty", id: 53 },
+  { name: "Money mouth straight", id: 55 },
+  { name: "Money", id: 56 },
+  { name: "Confused mouth straight", id: 57 },
+  { name: "Confused", id: 58 },
+  { name: "Cheerful mouth straight", id: 59 },
+  { name: "Cheerful", id: 60 },
+  { name: "Blank", id: 61, modifier: ExpressionModifier.HideNoseAndMask },
+  { name: "Grumble mouth straight", id: 63 },
+  { name: "Grumble", id: 64 },
+  { name: "Moved mouth straight", id: 65 },
+  { name: "Moved (aka pleading face)", id: 66 },
+  { name: "Singing mouth small", id: 67 },
+  { name: "Singing", id: 68 },
+  { name: "Stunned", id: 69 }
 ];
 
 export async function customRender(miiData: Mii) {
   const modal = Modal.modal("Custom Render", "", "body", {
     text: "Cancel",
+    callback(e) {
+      scene.shutdown();
+      icons.forEach((i) => URL.revokeObjectURL(i));
+      parent.cleanup();
+    }
   });
   const body = modal.qs(".modal-body")!.classOn("responsive-row-lg").clear();
   modal.qs(".modal-content")!.styleJs({
@@ -108,6 +123,7 @@ export async function customRender(miiData: Mii) {
     height: "100%",
     maxWidth: "100%",
     maxHeight: "100%",
+    backgroundColor: "var(--container-solid)"
   });
   let parent = new Html("div")
     .style({
@@ -119,7 +135,7 @@ export async function customRender(miiData: Mii) {
       height: "100%",
       overflow: "hidden",
       "justify-content": "center",
-      "align-items": "center",
+      "align-items": "center"
     })
     .appendTo(body);
   let parentBox = new Html("div")
@@ -127,26 +143,33 @@ export async function customRender(miiData: Mii) {
     .appendTo(parent);
   let tabsContent = new Html("div")
     .classOn("tab-content")
-    .style({ flex: "1", height: "100%", overflow: "auto" })
+    .style({ flex: "1", height: "100%", overflow: "auto", gap: "0.5rem" })
     .appendTo(body);
+
+  // Init scene early so its renderer can be used by the expression icons
+  const scene = new Mii3DScene(
+    miiData,
+    parentBox.elm,
+    SetupType.Screenshot,
+    (renderer) => {}
+  );
 
   let configuration = {
     fov: 30,
     pose: 0,
-    expression: "normal",
+    expression: "0",
     renderWidth: 720,
     renderHeight: 720,
-    cameraPosition: 1,
-    animSpeed: 100,
+    animSpeed: 100
   };
 
-  const base64Data = miiData.encodeStudio().toString("hex");
+  const miiDataHex = miiData.exportHex("studioData");
 
   let poseListPerBodyModel: Record<string, number> = {
     wii: 4,
     wiiu: 14,
     switch: 5,
-    miitomo: 16,
+    miitomo: 16
   };
 
   let bodyModelSetting = (await getSetting("bodyModel")) as string;
@@ -163,9 +186,13 @@ export async function customRender(miiData: Mii) {
 
   const e: Record<string, FeatureSetEntry> = {
     camera: {
-      label: "Camera",
-      header:
-        "Use mouse or touch to move the camera around.\nUsing touch, rotate the camera around with one finger, and drag with two fingers to pan. Pinch with two fingers to zoom.\nIf you like this site, please consider sharing it with others and credit me or the site when you post your renders! 🙂",
+      label: __("Camera"),
+      header: new Html("span").html(
+        __(
+          "Use mouse or touch to move the camera around.\nUsing touch, rotate the camera around with one finger, and drag with two fingers to pan. Pinch with two fingers to zoom.\nIf you like this site, <b>PLEASE</b> consider sharing it with others by <b>crediting the site</b> when you post your renders! 😉"
+        )
+      ),
+      headerIsHtml: true,
       items: [
         {
           type: FeatureSetType.Slider,
@@ -174,14 +201,14 @@ export async function customRender(miiData: Mii) {
           iconEnd: "",
           min: 5,
           max: 90,
-          part: RenderPart.Face,
+          part: RenderPart.Face
         },
         {
           type: FeatureSetType.Misc,
           html: new Html("div").class("flex-group", "col").appendMany(
-            new Html("label").text("Position"),
+            new Html("label").text(__("Position")),
             new Html("div").class("flex-group").appendMany(
-              new Html("button").text("Center horizontally").on("click", () => {
+              new Html("button").text(__("Center X")).on("click", () => {
                 const newPosition = scene.focusCamera(
                   CameraPosition.MiiFullBody,
                   true,
@@ -193,7 +220,7 @@ export async function customRender(miiData: Mii) {
                 target.x = newPosition.x;
                 controls.moveTo(target.x, target.y, target.z);
               }),
-              new Html("button").text("Center vertically").on("click", () => {
+              new Html("button").text(__("Center Y")).on("click", () => {
                 const newPosition = scene.focusCamera(
                   CameraPosition.MiiFullBody,
                   true,
@@ -205,21 +232,16 @@ export async function customRender(miiData: Mii) {
                 target.y = newPosition.y;
                 controls.moveTo(target.x, target.y, target.z);
               }),
-              new Html("button").text("Reset").on("click", () => {
-                const newPosition = scene.focusCamera(
-                  CameraPosition.MiiFullBody,
-                  true,
-                  false,
-                  true
-                )!;
-                scene
-                  .getControls()
-                  .moveTo(newPosition.x, newPosition.y, newPosition.z);
+              new Html("button").text(__("Center to body")).on("click", () => {
+                scene.focusCamera(CameraPosition.MiiFullBody, true, false)!;
+              }),
+              new Html("button").text(__("Center to head")).on("click", () => {
+                scene.focusCamera(CameraPosition.MiiHead, true, false)!;
               })
             ),
-            new Html("label").text("Rotate"),
+            new Html("label").text(__("Rotate")),
             new Html("div").class("flex-group").appendMany(
-              new Html("button").text("Up").on("click", () => {
+              new Html("button").text(__("Up")).on("click", () => {
                 scene
                   .getControls()
                   .rotateTo(
@@ -227,7 +249,7 @@ export async function customRender(miiData: Mii) {
                     controls.polarAngle - rotationFactor
                   );
               }),
-              new Html("button").text("Down").on("click", () => {
+              new Html("button").text(__("Down")).on("click", () => {
                 scene
                   .getControls()
                   .rotateTo(
@@ -235,7 +257,7 @@ export async function customRender(miiData: Mii) {
                     controls.polarAngle + rotationFactor
                   );
               }),
-              new Html("button").text("Left").on("click", () => {
+              new Html("button").text(__("Left")).on("click", () => {
                 scene
                   .getControls()
                   .rotateTo(
@@ -243,7 +265,7 @@ export async function customRender(miiData: Mii) {
                     controls.polarAngle
                   );
               }),
-              new Html("button").text("Right").on("click", () => {
+              new Html("button").text(__("Right")).on("click", () => {
                 scene
                   .getControls()
                   .rotateTo(
@@ -251,14 +273,14 @@ export async function customRender(miiData: Mii) {
                     controls.polarAngle
                   );
               }),
-              new Html("button").text("Reset").on("click", () => {
+              new Html("button").text(__("Reset")).on("click", () => {
                 controls.rotateTo(0, Math.PI / 2);
               })
             )
           ),
-          select() {},
-        },
-      ],
+          select() {}
+        }
+      ]
     },
     // TODO
     // scene: {
@@ -282,27 +304,34 @@ export async function customRender(miiData: Mii) {
     //   ],
     // },
     pose: {
-      label: "Pose",
+      label: __("Pose"),
       header: new Html("div").appendMany(
         new Html("span").html(
-          'Change the Body Model option in Settings to get many different options of poses!<br/><br/>Do you like the Mii that does the poses? His name is "dummy".&nbsp;'
+          __(
+            "Change the Body Model option in Settings to get many different options of poses!"
+          ) +
+            "<br/><br/>" +
+            __(
+              'Do you like the Mii that does the poses? His name is "dummy".'
+            ) +
+            "&nbsp;"
         ),
-        new Html("a").text("Click here").on("click", (e) => {
+        new Html("a").text(__("Click here")).on("click", (e) => {
           // goodbye custom render :(
           scene.shutdown();
+          icons.forEach((i) => URL.revokeObjectURL(i));
           parent.cleanup();
           modal.qs("button")?.elm.click();
 
           // easter egg !!!!!
           const mii = new Mii(
-            Buffer.from(
-              "A0EAwAAAAAAAAAAAgP9wmS/5Fhz6rQAAAABkAHUAbQBtAHkAAAAAAAAAAAAAAEBAEgAeARJoYxoHA2YWIRQTZgwAAAEAUkhQTQBpAGkAQwByAGUAYQB0AG8AcgAAAK6gAAAICAAAAAAAAGQA",
-              "base64"
+            parseHexOrB64ToUint8Array(
+              "BAUajXYYt5uiVoD/cJkq8RYY+sFNAGkAaQBDAHIAZQBhAHQAbwByAGQAdQBtAG0AeQAAAAAAAAAAAAAACAAAAAAAQAMACAYDBwMLCAMEEgMNAAAJAGMAAAAACAQACgEAHv///0AABAACFAMTAxMMBAAAAQEKX/8A/wEA"
             )
           );
-          importMiiConfirmation(mii, "Mii Creator (Special Mii)");
+          importMiiConfirmation(mii, __("Mii Creator (Special Mii)"));
         }),
-        new Html("span").html("&nbsp;to obtain him in your library :)")
+        new Html("span").html("&nbsp;" + __("to obtain him in your library :)"))
       ),
       headerIsHtml: true,
       items: ArrayNum(poseCount).map((k) => ({
@@ -315,26 +344,16 @@ export async function customRender(miiData: Mii) {
             : `<img src="assets/images/poses/${bodyModelSetting}/${String(
                 k
               ).padStart(2, "0")}.png" height=120>`,
-        part: RenderPart.Head,
-      })),
+        part: RenderPart.Head
+      }))
     },
     expression: {
-      label: "Expression",
-      items: expressionTable.map((k) => ({
-        type: FeatureSetType.Icon,
-        value: String(k.id),
-        icon: `<img class="lazy" width=128 height=128 data-src="${
-          Config.renderer.renderHeadshotURLNoParams
-        }?width=128&scale=1&data=${encodeURIComponent(base64Data)}&expression=${
-          k.id
-        }&type=fflmakeicon&verifyCharInfo=0" title="${k.name}">`,
-        part: RenderPart.Head,
-      })),
+      label: __("Expression"),
+      items: []
     },
     animation: {
-      label: "Animation",
-      header:
-        "This usually only applies to Miitomo body model which has animations for its poses.",
+      label: __("Animation"),
+      header: __("Control the animation speed."),
       items: [
         {
           type: FeatureSetType.Slider,
@@ -343,11 +362,59 @@ export async function customRender(miiData: Mii) {
           iconStart: "0x",
           iconEnd: "2x",
           min: 0,
-          max: 200,
-        },
-      ],
-    },
+          max: 200
+        }
+      ]
+    }
   };
+
+  let icons: string[] = [];
+
+  expressionTable.forEach(async (k) => {
+    let iconTag;
+
+    if (Config.renderer.useRendererServer) {
+      iconTag = `<img class="lazy" width=128 height=128 data-src="${
+        Config.renderer.renderHeadshotURLNoParams
+      }?width=128&scale=1&data=${encodeURIComponent(miiDataHex)}&expression=${
+        k.id
+      }&type=fflmakeicon&verifyCharInfo=0" title="${k.name}">`;
+    } else {
+      const icon = await createMiiRender({
+        data: miiData.export("studioData"),
+        drawBody: false,
+        type: ViewType.MakeIcon,
+        expression: k.id,
+        module: getFFL(),
+        renderer: scene.getRenderer(),
+        size: 96,
+        additionalInfo: getAdditionalInfoFromMii(miiData)
+      });
+
+      const iconURL = URL.createObjectURL(icon.result as Blob);
+      icons.push(iconURL);
+
+      // const icon = await getMiiIcon(
+      //   miiData,
+      //   "customRender",
+      //   "fflmakeicon",
+      //   128,
+      //   k.id,
+      //   false
+      // ).catch((e) => {
+      //   console.error("oh noes, Icon didnt Load", e);
+      // });
+      iconTag = `<img class="lazy" width=128 height=128 data-src="${iconURL}" title="${k.name}">`;
+    }
+
+    const expressionItem = {
+      type: FeatureSetType.Icon,
+      value: String(k.id),
+      icon: iconTag,
+      part: RenderPart.Head
+    };
+    e["expression"].items.push(expressionItem as FeatureSetIconItem);
+  });
 
   // very hacky way to use feature set to create tabs
   MiiPagedFeatureSet({
@@ -359,7 +426,7 @@ export async function customRender(miiData: Mii) {
       updateConfiguration();
       // console.log("updated", configuration);
       oldConfiguration = Object.assign({}, configuration);
-    },
+    }
   })
     .style({ height: "auto" })
     .appendTo(tabsContent);
@@ -371,7 +438,7 @@ export async function customRender(miiData: Mii) {
 
   let pauseButton = AddButtonSounds(
     new Html("button")
-      .text(playing ? "Pause Animation" : "Pause Animation")
+      .text(playing ? __("Pause Animation") : __("Pause Animation"))
       .on("click", () => {
         if (playing === true) {
           playing = false;
@@ -381,10 +448,10 @@ export async function customRender(miiData: Mii) {
         scene.anim.forEach((anim) => {
           if (playing === true) {
             anim.paused = false;
-            pauseButton.text("Pause Animation");
+            pauseButton.text(__("Pause Animation"));
           } else {
             anim.paused = true;
-            pauseButton.text("Play Animation");
+            pauseButton.text(__("Play Animation"));
           }
         });
       })
@@ -392,14 +459,14 @@ export async function customRender(miiData: Mii) {
   );
 
   new Html("button")
-    .text("Download PNG")
+    .text(__("Save Render"))
     .on("click", finalizeRender)
     .appendTo(tabsContent);
 
-  new Html("button")
-    .text("Download 3D model")
-    .on("click", save3DModel)
-    .appendTo(tabsContent);
+  // new Html("button")
+  //   .text(__("Download 3D model"))
+  //   .on("click", save3DModel)
+  //   .appendTo(tabsContent);
 
   function resize() {
     let { width, height } = parentBox.elm.getBoundingClientRect();
@@ -420,12 +487,6 @@ export async function customRender(miiData: Mii) {
     resize();
   });
 
-  const scene = new Mii3DScene(
-    miiData,
-    parentBox.elm,
-    SetupType.Screenshot,
-    (renderer) => {}
-  );
   controls = scene.getControls();
 
   //@ts-expect-error testing
@@ -456,39 +517,34 @@ export async function customRender(miiData: Mii) {
   let oldConfiguration: any = {
     fov: 30,
     pose: 0,
-    expression: 0,
+    expression: "0",
     renderWidth: 720,
     renderHeight: 720,
-    cameraPosition: 1,
-    animSpeed: 1,
+    animSpeed: 1
   };
 
   function updateConfiguration() {
     scene.getCamera()!.fov = configuration.fov;
     scene.getCamera()!.updateProjectionMatrix();
-    switch (configuration.cameraPosition) {
-      case 0:
-        scene.focusCamera(CameraPosition.MiiHead);
-        break;
-      case 1:
-        scene.focusCamera(CameraPosition.MiiFullBody);
-        break;
-    }
 
     // Only update expression when expression is changed.
     // console.log(oldConfiguration.expression, configuration.expression);
     if (oldConfiguration.expression !== configuration.expression) {
       scene.traverseAddFaceMaterial(
         scene.getHead() as Mesh,
-        `&data=${encodeURIComponent(base64Data)}&expression=${
+        `&data=${encodeURIComponent(miiDataHex)}&expression=${
           configuration.expression
         }&width=896&verifyCharInfo=0`
       );
     }
 
-    const expr = expressionTable.find((e) => e.id === configuration.expression);
+    const expr = expressionTable.find(
+      (e) => e.id === parseInt(configuration.expression as any as string)
+    );
+    // console.log(configuration);
 
-    if (expr)
+    if (expr) {
+      // console.log(expr);
       if (typeof expr.modifier !== "undefined") {
         switch (expr.modifier) {
           case ExpressionModifier.HideNose:
@@ -534,6 +590,7 @@ export async function customRender(miiData: Mii) {
           m.visible = true;
         });
       }
+    }
 
     const pose = "Pose." + String(configuration.pose).padStart(2, "0");
 
@@ -566,16 +623,18 @@ export async function customRender(miiData: Mii) {
       scene.anim.forEach((anim) => {
         if (playing === true) {
           anim.paused = false;
-          pauseButton.text("Pause Animation");
+          pauseButton.text(__("Pause Animation"));
         } else {
           anim.paused = true;
-          pauseButton.text("Play Animation");
+          pauseButton.text(__("Play Animation"));
         }
       });
     }
 
     scene.focusCamera(CameraPosition.MiiFullBody, true, false);
     parentBox.append(scene.getRendererElement());
+
+    scene.resize();
   });
 
   let shouldClose = await getSetting("autoCloseCustomRender");
@@ -589,10 +648,12 @@ export async function customRender(miiData: Mii) {
       image.onload = () => {
         downloadLink(
           image.src,
-          `${miiData.miiName}_all_body_${new Date().toJSON()}.png`
+          // mii custom render file name - e.g. 'Mii_custom_render_2025-03-06T14:40:20.310Z.png'
+          __("%1_custom_render_%2.png", miiData.nickname, new Date().toJSON())
         );
         if (shouldClose) {
           scene.shutdown();
+          icons.forEach((i) => URL.revokeObjectURL(i));
           parent.cleanup();
           modal.qs("button")?.elm.click();
         }
@@ -601,57 +662,53 @@ export async function customRender(miiData: Mii) {
   }
 
   async function save3DModel() {
-    const shaderSetting = await getSetting("shaderType");
-    // const bodyModelHands = await getSetting("bodyModelHands");
+    // todo: ?????
+    alert("This option is only available when using Simple or Toon shader.");
+    // const shaderSetting = await getSetting("shaderType");
 
-    if (shaderSetting === "none") {
-      const result = await Modal.prompt(
-        "Notice",
-        "3D model export looks best when using the Wii U shader, which you aren't using.\nThis may result in incorrect color output. Do you still want to continue?",
-        "body"
-      );
-      if (result === false) return;
-    }
+    // if (shaderSetting === "none") {
+    //   return;
+    // }
 
-    // fix up the materials
-    const mats = await traverse3DMaterialFix(scene);
-    let i = 0;
+    // // fix up the materials
+    // const mats = await traverse3DMaterialFix(scene);
+    // let i = 0;
 
-    const exporter = new GLTFExporter();
-    exporter.parse(
-      scene.getScene(),
-      (gltf) => {
-        console.log("gltf", gltf);
-        if (gltf instanceof ArrayBuffer) {
-          saveArrayBuffer(
-            gltf,
-            `${miiData.miiName}_all_body_${new Date().toJSON()}.glb`
-          );
-        }
-        if (shouldClose) {
-          scene.shutdown();
-          parent.cleanup();
-          modal.qs("button")?.elm.click();
-        } else {
-          // Revert back all materials.
-          i = 0;
-          scene.getScene().traverse((o) => {
-            if ((o as Mesh).isMesh !== true) return;
+    // const exporter = new GLTFExporter();
+    // exporter.parse(
+    //   scene.getScene(),
+    //   (gltf) => {
+    //     console.log("gltf", gltf);
+    //     if (gltf instanceof ArrayBuffer) {
+    //       saveArrayBuffer(
+    //         gltf,
+    //         `${miiData.nickname}_${__("all_body")}_${new Date().toJSON()}.glb`
+    //       );
+    //     }
+    //     if (shouldClose) {
+    //       scene.shutdown();
+    //       parent.cleanup();
+    //       modal.qs("button")?.elm.click();
+    //     } else {
+    //       // Revert back all materials.
+    //       i = 0;
+    //       scene.getScene().traverse((o) => {
+    //         if ((o as Mesh).isMesh !== true) return;
 
-            const m = o as Mesh;
+    //         const m = o as Mesh;
 
-            m.material = mats.get(i);
+    //         m.material = mats.get(i);
 
-            i++;
-          });
-        }
-      },
-      (error) => {
-        console.error("Oops, something went wrong:", error);
-      },
-      {
-        binary: true,
-      }
-    );
+    //         i++;
+    //       });
+    //     }
+    //   },
+    //   (error) => {
+    //     console.error("Oops, something went wrong:", error);
+    //   },
+    //   {
+    //     binary: true
+    //   }
+    // );
   }
 }

@@ -1,24 +1,28 @@
 import type { GLTF } from "three/examples/jsm/Addons.js";
-import Mii from "../external/mii-js/mii";
-import * as THREE from "three";
-import { RandomInt } from "./Numbers";
-import { cMaterialName } from "../class/3d/shader/fflShaderConst";
+// import Mii from "../external/mii-js/mii";
+import Mii from "../class/MiiData";
+import { _THREE } from "./PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 import {
   CharModel,
   convertStudioCharInfoToFFLiCharInfo,
   createCharModel,
-  FFLCharModelDesc,
   FFLCharModelDescDefault,
   FFLiCharInfo,
   FFLModelFlag,
   initCharModelTextures,
-  setMaskTextureHook,
   StudioCharInfo,
-  updateCharModel,
+  updateCharModel
 } from "../external/ffl.js/ffl";
-import { getFFL } from "../main";
-import { getTempRenderer } from "../ui/pages/Library";
-import type { Mii3DScene } from "../class/3DScene";
+import {
+  isShaderMaterial,
+  getShaderMaterialFromShaderType
+} from "../class/3d/shader/ShaderUtils";
+import { getFFL } from "./FFLLoader";
+import { renderTargetToDataTexture } from "./rendertarget";
+import FFLShaderMaterial from "../external/ffl.js/FFLShaderMaterial";
 
 export type GLTFLike = {
   animations: any[];
@@ -30,14 +34,6 @@ export type GLTFLike = {
   userData: any;
 };
 
-function wait(time: number) {
-  return new Promise<void>((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, time);
-  });
-}
-
 export type ModelFlag =
   | "NORMAL"
   | "HAT"
@@ -46,53 +42,92 @@ export type ModelFlag =
   | "NEW_EXPRESSIONS"
   | "NEW_MASK_ONLY";
 
+// async function createOrUpdateCharModel(
+//   rendererRef: THREE.WebGLRenderer,
+//   modelDesc: any,
+//   newStudioData: Uint8Array,
+//   charModelRef?: CharModel
+// ) {
+//   let currentCharModel: CharModel;
+//   if (charModelRef) {
+//     if (!rendererRef)
+//       throw new Error("Missing renderer when trying to update CharModel");
+
+//     currentCharModel = charModelRef;
+
+//     // Create new charinfo data
+//     const studioCharInfo = StudioCharInfo.unpack(newStudioData);
+//     const newCharInfo = FFLiCharInfo.pack(
+//       convertStudioCharInfoToFFLiCharInfo(studioCharInfo)
+//     );
+
+//     // update char model
+//     updateCharModel(currentCharModel, newCharInfo, rendererRef, modelDesc);
+//   } else {
+//     currentCharModel = createCharModel(
+//       newStudioData,
+//       modelDesc,
+//       await getShaderMaterialFromShaderType(),
+//       getFFL(),
+//       false,
+//       await getMaterialOverridesFromShaderType()
+//     );
+//   }
+
+//   return currentCharModel;
+// }
+
 export async function getHeadModel(
   mii: Mii,
-  Mii3DScene: Mii3DScene,
-  modelFlag: ModelFlag,
-  charModelRef?: CharModel,
-  rendererRef?: THREE.WebGLRenderer,
-  descOrExpFlag?: Object | any[] | Uint32Array | null
+  rendererRef: THREE.WebGLRenderer,
+  modelFlag?: ModelFlag,
+  texResolution?: number
 ): Promise<GLTF> {
-  // In the future, this could be hooked up to a custom rendering library (FFL under WASM or a custom asset loader)
-  // For now, this will just return a cube with some FFL shader properties to test if it's working.
-
-  const dataU8 = mii.encodeStudio();
+  const dataU8 = mii.export("studioData");
 
   const modelDesc = FFLCharModelDescDefault;
   modelDesc.resolution = 512;
   modelDesc.allExpressionFlag = new Uint32Array([1, 0, 0]);
-  modelDesc.modelFlag = FFLModelFlag[modelFlag];
+  if (modelFlag) modelDesc.modelFlag = FFLModelFlag[modelFlag];
+  if (texResolution) modelDesc.resolution = texResolution;
 
   let currentCharModel: CharModel | null;
 
   try {
-    if (charModelRef) {
-      if (!rendererRef)
-        throw new Error("Missing renderer when trying to update CharModel");
+    // currentCharModel = await createOrUpdateCharModel(
+    //   rendererRef,
+    //   modelDesc,
+    //   dataU8,
+    //   charModelRef
+    // );
 
-      currentCharModel = charModelRef;
+    currentCharModel = createCharModel(
+      dataU8,
+      modelDesc,
+      (await getShaderMaterialFromShaderType()) as any,
+      getFFL(),
+      false
+      // await getMaterialOverridesFromShaderType()
+    );
 
-      // Create new charinfo data
-      const studioCharInfo = StudioCharInfo.unpack(dataU8);
-      const newCharInfo = FFLiCharInfo.pack(
-        convertStudioCharInfoToFFLiCharInfo(studioCharInfo)
-      );
-
-      // update char model
-      updateCharModel(currentCharModel, newCharInfo, rendererRef, modelDesc);
-    } else {
-      currentCharModel = createCharModel(
-        dataU8,
-        modelDesc,
-        window.LUTShaderMaterial,
-        // window.FFLShaderMaterial,
-        getFFL(),
-        false
-      );
-    }
     // Initialize textures for the new CharModel.
-    initCharModelTextures(currentCharModel, Mii3DScene.getRenderer());
+
+    if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+      window.eyeScleraHack = true;
+    }
+
+    // QUICKLY Replace the material
+    currentCharModel._materialTextureClass = FFLShaderMaterial as any;
+
+    initCharModelTextures(
+      currentCharModel,
+      rendererRef,
+      FFLShaderMaterial as any
+    );
+
+    if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+      window.eyeScleraHack = false;
+    }
   } catch (err) {
     currentCharModel = null;
     alert(`Error creating/updating CharModel: ${err}`);
@@ -102,15 +137,13 @@ export async function getHeadModel(
 
   const asset = {
     extras: {
-      partsTransform: {
-        hatTranslate: [0, 0, 0],
-      },
-    },
+      partsTransform: currentCharModel.partsTransform
+    }
   };
 
   let scene = new THREE.Group();
 
-  scene.add(currentCharModel.meshes);
+  scene.add(currentCharModel.meshes!);
 
   // GLTF-like object so that the code can still handle it sort of like one
   return {
@@ -121,49 +154,69 @@ export async function getHeadModel(
     scene,
     scenes: [scene],
     userData: {},
-    CharModel: currentCharModel,
+    CharModel: currentCharModel
   } as GLTFLike as GLTF;
 }
 
 export type MaskResult = {
   model: CharModel;
-  img: string;
+  img: THREE.DataTexture;
 };
 
 export async function getMaskTex(
   mii: Mii,
-  Mii3DScene: Mii3DScene
+  rendererRef: THREE.WebGLRenderer,
+  expressionFlag: Uint32Array = new Uint32Array([1, 0, 0])
 ): Promise<MaskResult> {
-  // In the future, this could be hooked up to a custom rendering library (FFL under WASM or a custom asset loader)
-  // For now, this will just return a cube with some FFL shader properties to test if it's working.
-
-  const dataU8 = mii.encodeStudio();
+  const dataU8 = mii.export("studioData");
 
   const modelDesc = FFLCharModelDescDefault;
-  modelDesc.resolution = 512;
-  modelDesc.allExpressionFlag = new Uint32Array([1, 0, 0]);
+  modelDesc.resolution = 1024;
+  modelDesc.allExpressionFlag = expressionFlag;
 
   let currentCharModel: CharModel | null;
 
-  var img = "";
+  var img: THREE.DataTexture;
+
+  const shaderMaterial = await getShaderMaterialFromShaderType();
 
   try {
     currentCharModel = createCharModel(
       dataU8,
       modelDesc,
-      window.LUTShaderMaterial,
-      // window.FFLShaderMaterial,
+      // shader doesn't matter here for our purpose
+      shaderMaterial as any,
       getFFL(),
       false
     );
-    
+
     // weird workaround to promisify the texture outcome?
     img = await new Promise((resolve) => {
-      setMaskTextureHook((dataURL: any) => {
-        resolve(dataURL.result);
-      });
       // Initialize textures for the new CharModel.
-      initCharModelTextures(currentCharModel!, Mii3DScene.getRenderer());
+      if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+        window.eyeScleraHack = true;
+      }
+
+      initCharModelTextures(
+        currentCharModel!,
+        rendererRef,
+        FFLShaderMaterial as any
+        // null,
+        // (dataTexture) => {
+        //   resolve(dataTexture);
+        // }
+      );
+
+      if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+        window.eyeScleraHack = false;
+      }
+
+      const target =
+        currentCharModel!._maskTargets[currentCharModel!.expression]!;
+
+      renderTargetToDataTexture(target, rendererRef).then((r) => {
+        resolve(r);
+      });
     });
   } catch (err) {
     currentCharModel = null;

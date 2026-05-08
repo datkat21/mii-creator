@@ -177,3 +177,5 @@ out
 # FFL resource files
 FFLRes*.dat
 AFLRes*.dat
+
+mii-creator-server

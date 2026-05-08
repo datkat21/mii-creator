@@ -1,8 +1,15 @@
 // Configuration file used client-side.
 
+import { _ } from "./util/Lang";
+
 // Settings relating to local rendering.
 const useRendererServer = false; // Allow use of the renderer server (legacy rendering)
-const fflResourcePath = "/FFLResHigh.dat"; // Configure the path for where the resource file is located.
+const fflResourcePath = [
+  "/FFLResLow.dat",
+  "/FFLResMiddle.dat",
+  "/FFLResHigh.dat"
+]; // Configure the path for where the resource file is located.
+const fflResourcesNames = ["Low", "Middle", "High"]; // Configure the path for where the resource file is located.
 
 // Instance of FFL-Testing/Mii Studio API compatible renderer.
 // const baseURL = "http://localhost:5000/miis/image"; // <-- Uncomment this when using local FFL-testing for development
@@ -12,15 +19,18 @@ const newApiParams = true;
 // false if using FFL-Testing-with-hats
 // true if using new FFL-Testing version with headwear
 
-// Origin used for NNID, PNID, and random NNID fetch.
+// Origin used for NNID, and PNID fetch.
 // Details: https://github.com/ariankordi/nwf-mii-cemu-toy/blob/ffl-renderer-proto-integrate/README.md
 const nnidFetchOrigin = "https://mii-unsecure.ariankordi.net";
+
+const __ = _();
 
 export const Config = {
   renderer: {
     baseURL,
     useRendererServer,
     fflResourcePath,
+    fflResourcesNames,
     renderFFLMakeIcon: `${baseURL}.png?shaderType=miitomo&type=fflmakeicon&width=360&verifyCharInfo=0`,
     renderHeadshotURL: `${baseURL}.png?shaderType=wiiu&type=face&width=260&verifyCharInfo=0`,
     renderHeadshotURLNoParams: `${baseURL}.png`,
@@ -36,7 +46,7 @@ export const Config = {
     hatColorAdd: newApiParams ? -1 : 0,
 
     // Enable/disable use of 3D mode in editor only
-    allow3DMode: true,
+    allow3DMode: true
   },
   apis: {
     // For fetching data from various sources.
@@ -46,23 +56,31 @@ export const Config = {
     pnidFetchURL: (pnid: string) =>
       `${nnidFetchOrigin}/mii_data/${pnid}?api_id=1`,
     // Configure Sentry here.
-    useSentry: false,
-    sentryURL: "ENTER_SENTRY_URL_HERE",
+    useSentry: true,
+    // sentryURL: "ENTER_SENTRY_URL_HERE",
+    sentryURL:
+      "https://5671de45addd464980ccd49e08d6d108@app.glitchtip.com/10073"
   },
   mii: {
-    scalingMode: "scaleApply",
+    scalingMode: "scaleApply"
     // ^^ scaleLimit, scaleLimitClampY, scaleApply
   },
   version: {
-    string: "v0.9.3.1",
-    name: "Patch Update",
+    string: "v1.0.0 r1",
+    name:
+      // Current version string name ("Patch Update", "Minor Update", "Major Update")
+      // __("Major Update"),
+      __("BETA"),
 
     // ignore that I'm just writing HTML here
     changelog: `
+    <p style="text-align:center;margin-top:20px;margin-bottom:200px;font-size:32px;color:var(--error-color)">The update changelog hasn't been written yet, so just ignore this for now</p>
+    ` /*
     <h1 style="font-size: 20px;text-align: center;">v0.9.2 - QR Code and MiiC v3 Support</h1>
 
+
     <div class="flex-group">
-      <img draggable="false" width=96 height=96 src="https://i.imgur.com/sMtNF5a.png">
+      <img draggable="false" width=96 height=96 src="./assets/images/update_notice/image.png">
       <div class="col" style="gap:12px">
         <small>Austin☆²¹ / Kat21</small>
         <div>Let's go over the new changes!</div>
@@ -188,6 +206,6 @@ export const Config = {
     </div>
 
     <p style="margin-bottom:0;text-align:center"><strong>You can view this message again in Settings.</strong></p>
-    `,
-  },
+    `*/
+  }
 };

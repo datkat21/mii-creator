@@ -1,39 +1,141 @@
 import localforage from "localforage";
 import { getMusicManager } from "../class/audio/MusicManager";
-import {
-  getSoundManager,
-} from "../class/audio/SoundManager";
-import Modal, { buttonsOkCancel } from "./components/Modal";
+import { getSoundManager } from "../class/audio/SoundManager";
+import Modal, { buttonsOkCancel, closeModal } from "./components/Modal";
 import { Library } from "./pages/Library";
-import Mii from "../external/mii-js/mii";
+import Mii from "../class/MiiData";
 import { MiiEditor } from "../class/MiiEditor";
 import {
-  displayUpdateNotice,
+  // displayUpdateNotice,
   Settings,
-  updateSettings,
+  updateSettings
 } from "./pages/Settings";
-import { getMiiRender, MiiCustomRenderType } from "../util/miiImageUtils";
-import { Buffer } from "../../node_modules/buffer/index";
-import { SelectionLibrary } from "./pages/SelectionLibrary";
-import "../external/mii-frontend/all-kaitai-structs";
-import { getSetting, setSetting } from "../util/SettingsHelper";
-import { Config } from "../config";
-import Html from "@datkat21/html";
-import { AddButtonSounds } from "../util/AddButtonSounds";
 import { customRender } from "./pages/library/render/customRender";
+
+import { _ } from "../util/Lang";
+import { getCurrentLoadingModal, prepareFFL } from "../util/FFLLoader";
+import Html from "@datkat21/html";
+const __ = _();
 
 export async function setupUi() {
   let mm = getMusicManager();
   getSoundManager();
 
+  let shownSessionModal = false;
+  // Check session every 60s
+  setInterval(() => {
+    // console.log("checking session..");
+    fetch("/api/session")
+      .then((e) => {
+        if (!e.ok) {
+          // not ok
+          showSessionModal();
+        }
+      })
+      .catch((e) => {
+        // also not ok
+        showSessionModal();
+      });
+  }, 45_000);
+
+  function showSessionModal() {
+    if (shownSessionModal) return;
+    shownSessionModal = true;
+    Modal.modal(
+      __("Warning"),
+      __("Mii Creator has lost connection to the server. Click OK to reload."),
+      "body",
+      {
+        text: "OK",
+        callback(e) {
+          location.reload();
+        }
+      }
+    );
+  }
+
   updateSettings(true);
 
-  displayUpdateNotice();
+  await prepareFFL().catch((e) => {
+    closeModal(getCurrentLoadingModal());
+    let m = Modal.modal(
+      "Error",
+      "Oops, an error occurred when loading Mii Creator.." +
+        "\n\nLoading will not continue."
+    );
+    m.qs(".modal-body")!.appendMany(
+      new Html("pre").style({ margin: "0" }).text(e.stack),
+      new Html("span").html(
+        'If the error persists, please report this to the developer <a href="mailto:datkat21.yt@gmail.com">kat21\'s e-mail</a>!'
+      )
+    );
+    throw e;
+  });
 
-  if (navigator.userAgent.includes("Firefox") && sessionStorage.getItem("seen-firefox-notice") === null) {
-    sessionStorage.setItem("seen-firefox-notice", "yes");
-    Modal.modal("Notice", "You're using Mii Creator under Firefox. The Firefox browser may have slowdowns.", "body", ...buttonsOkCancel)
+  // displayUpdateNotice();
+
+  function showBrowserWarning() {
+    if (
+      navigator.userAgent.includes("Firefox") &&
+      sessionStorage.getItem("seen-firefox-notice") === null
+    ) {
+      sessionStorage.setItem("seen-firefox-notice", "yes");
+      Modal.modal(
+        __("Warning"),
+        __(
+          "You're using Mii Creator under Firefox. Using the Firefox browser WILL experience slowdowns and lag."
+        ),
+        "body",
+        ...buttonsOkCancel
+      );
+    }
+    if (
+      navigator.userAgent.indexOf("Safari") != -1 &&
+      navigator.userAgent.indexOf("Chrome") == -1 /*&&
+      sessionStorage.getItem("seen-safari-notice") === null*/
+    ) {
+      // sessionStorage.setItem("seen-safari-notice", "yes");
+      Modal.modal(
+        __("Warning"),
+        __(
+          "You're using Mii Creator under Safari. Safari on iOS or iPadOS may experience instability with Mii Creator, causing the page to crash and refresh randomly. Some checks have been enabled to try and prevent the page from crashing right now. You have been warned."
+        ),
+        "body",
+        ...buttonsOkCancel
+      );
+    }
   }
+
+  if (
+    navigator.userAgent.indexOf("Safari") != -1 &&
+    navigator.userAgent.indexOf("Chrome") == -1
+  ) {
+    //@ts-expect-error
+    window.browserMitigations = true;
+    // alert("safari check PASSED");
+  } else {
+    // alert("safari check FAILED");
+  }
+
+  Modal.modal(
+    __("Warning"),
+    __(
+      "You're using a BETA version of Mii Creator. Some features in development have been disabled, and bugs/glitches can occur.\n\n• Special Miis have been changed.\n• QR codes made from this version of Mii Creator can't be scanned back in.\n• Your Mii library now automatically syncs with the server and across devices."
+    ),
+    "body",
+    {
+      text: "Cancel",
+      callback(e) {
+        showBrowserWarning();
+      }
+    },
+    {
+      text: __("OK"),
+      callback() {
+        showBrowserWarning();
+      }
+    }
+  );
 
   // for U theme
   let state: "main" | "edit" = "main";
@@ -77,7 +179,6 @@ export async function setupUi() {
 
   mm.initMusic();
 
-
   if (location.search !== "") {
     const searchParams = new URLSearchParams(location.search);
 
@@ -88,7 +189,7 @@ export async function setupUi() {
         async (data, shutdownProperly) => {
           if (window.parent !== window.self) {
             // In iframe (UNTESTED)
-            const miiData = new Mii(Buffer.from(data, "base64"));
+            const miiData = new Mii(data);
 
             let headshot: string | null = null;
             let headOnly: string | null = null;
@@ -98,36 +199,36 @@ export async function setupUi() {
               if (searchParams.has("renderTypes")) {
                 const renderTypes = searchParams.get("renderTypes")!.split(",");
 
-                if (renderTypes.includes("headshot")) {
-                  headshot = (
-                    await getMiiRender(
-                      miiData,
-                      MiiCustomRenderType.Head,
-                      true,
-                      false
-                    )
-                  ).src;
-                }
-                if (renderTypes.includes("headOnly")) {
-                  headOnly = (
-                    await getMiiRender(
-                      miiData,
-                      MiiCustomRenderType.HeadOnly,
-                      true,
-                      false
-                    )
-                  ).src;
-                }
-                if (renderTypes.includes("fullBody")) {
-                  fullBody = (
-                    await getMiiRender(
-                      miiData,
-                      MiiCustomRenderType.Body,
-                      true,
-                      false
-                    )
-                  ).src;
-                }
+                // if (renderTypes.includes("headshot")) {
+                //   headshot = (
+                //     await getMiiRender(
+                //       miiData,
+                //       MiiCustomRenderType.Head,
+                //       true,
+                //       false
+                //     )
+                //   ).src;
+                // }
+                // if (renderTypes.includes("headOnly")) {
+                //   headOnly = (
+                //     await getMiiRender(
+                //       miiData,
+                //       MiiCustomRenderType.HeadOnly,
+                //       true,
+                //       false
+                //     )
+                //   ).src;
+                // }
+                // if (renderTypes.includes("fullBody")) {
+                //   fullBody = (
+                //     await getMiiRender(
+                //       miiData,
+                //       MiiCustomRenderType.Body,
+                //       true,
+                //       false
+                //     )
+                //   ).src;
+                // }
               }
             }
 
@@ -141,11 +242,11 @@ export async function setupUi() {
                 type: "miic-data-finalize",
                 properSave: shutdownProperly,
                 data,
-                name: miiData.miiName,
-                creator: miiData.creatorName,
+                name: miiData.nickname,
+                creator: miiData.creator,
                 headshot,
                 headOnly,
-                fullBody,
+                fullBody
               },
               searchParams.get("origin")!
             );
@@ -156,56 +257,56 @@ export async function setupUi() {
         searchParams.get("data")!
       );
     } else if (searchParams.has("select")) {
-      const miiData = await SelectionLibrary();
+      alert(__("Selection library is currently not implemented yet"));
+      throw new Error(__("Selection library is currently not implemented yet"));
+      // const miiData = await SelectionLibrary();
 
-      console.log("selection:", miiData);
+      // console.log("selection:", miiData);
 
-      let headshot: string | null = null;
-      let headOnly: string | null = null;
-      let fullBody: string | null = null;
+      // let headshot: string | null = null;
+      // let headOnly: string | null = null;
+      // let fullBody: string | null = null;
 
-      if (searchParams.has("renderTypes")) {
-        const renderTypes = searchParams.get("renderTypes")!.split(",");
+      // if (searchParams.has("renderTypes")) {
+      //   const renderTypes = searchParams.get("renderTypes")!.split(",");
 
-        if (renderTypes.includes("headshot")) {
-          headshot = (
-            await getMiiRender(miiData, MiiCustomRenderType.Head, true, false)
-          ).src;
-        }
-        if (renderTypes.includes("headOnly")) {
-          headOnly = (
-            await getMiiRender(
-              miiData,
-              MiiCustomRenderType.HeadOnly,
-              true,
-              false
-            )
-          ).src;
-        }
-        if (renderTypes.includes("fullBody")) {
-          fullBody = (
-            await getMiiRender(miiData, MiiCustomRenderType.Body, true, false)
-          ).src;
-        }
-      }
+      //   if (renderTypes.includes("headshot")) {
+      //     headshot = (
+      //       await getMiiRender(miiData, MiiCustomRenderType.Head, true, false)
+      //     ).src;
+      //   }
+      //   if (renderTypes.includes("headOnly")) {
+      //     headOnly = (
+      //       await getMiiRender(
+      //         miiData,
+      //         MiiCustomRenderType.HeadOnly,
+      //         true,
+      //         false
+      //       )
+      //     ).src;
+      //   }
+      //   if (renderTypes.includes("fullBody")) {
+      //     fullBody = (
+      //       await getMiiRender(miiData, MiiCustomRenderType.Body, true, false)
+      //     ).src;
+      //   }
+      // }
 
-      window.parent.postMessage(
-        {
-          type: "miic-select",
-          data: miiData.encode(),
-          name: miiData.miiName,
-          creator: miiData.creatorName,
-          headshot,
-          headOnly,
-          fullBody,
-        },
-        location.origin
-      );
+      // window.parent.postMessage(
+      //   {
+      //     type: "miic-select",
+      //     data: miiData.encode(),
+      //     name: miiData.miiName,
+      //     creator: miiData.creatorName,
+      //     headshot,
+      //     headOnly,
+      //     fullBody
+      //   },
+      //   location.origin
+      // );
     } else if (searchParams.has("custom-render-preview")) {
-      const miiData = new Mii(
-        Buffer.from(searchParams.get("custom-render-preview")!, "base64")
-      );
-      customRender(miiData);
+      // const miiData = new Mii(searchParams.get("custom-render-preview")!);
+      // customRender(miiData);
     } else if (searchParams.has("settings")) {
       Settings();
     } else Library();
@@ -261,42 +362,7 @@ export async function setupUi() {
   //@ts-expect-error
   window.soundManager = getSoundManager();
 
-  document.addEventListener("keydown", (e) => {
-    if (document.activeElement === document.body) {
-      if (e.ctrlKey || e.altKey || e.metaKey) return;
-      if (e.code === "KeyS") {
-        Modal.modal(
-          "sound test",
-          "choose a sound",
-          "body",
-          ...Object.keys(getSoundManager().soundBufs).map((k) => ({
-            text: k,
-            callback() {
-              getSoundManager().playSound(k);
-              //@ts-expect-error used for debugging
-              window.lastPlayedSound = k;
-            },
-          }))
-        )
-          .qs(".modal-content")!
-          .style({ "max-width": "unset", "max-height": "unset" });
-      }
-      if (e.code === "KeyD") {
-        // debug key enables debug options
-        window.localforage = localforage;
-        window.Mii = Mii;
-      }
-      if (e.code === "KeyV") {
-        const vol = Number(
-          prompt("Enter volume level from 0-1 (default is 0.35)")
-        );
-
-        if (vol < 0) return;
-        if (vol > 1) return;
-
-        getSoundManager().setVolume(vol);
-        mm.setVolume(vol);
-      }
-    }
-  });
+  // debugging options
+  window.localforage = localforage;
+  // window.Mii = Mii;
 }

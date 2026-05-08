@@ -1,12 +1,26 @@
 import {
   FeatureSetType,
   MiiPagedFeatureSet,
+  type FeatureSetIconItem
 } from "../components/MiiPagedFeatureSet";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import { ArrayNum } from "../../util/Numbers";
 import { RenderPart } from "../../class/MiiEditor";
-import { MiiFavoriteColorLookupTable } from "../../constants/ColorTables";
+import {
+  MiiFavoriteColorLookupTable,
+  SwitchMiiColorTable
+} from "../../constants/ColorTables";
 import { numToHex } from "../../util/NumberToHexString";
+import {
+  makeSeparatorFSI,
+  makeSeparatorGapThinFSI,
+  makeSeparatorGapThinLaptop,
+  MiiSwitchColorTable,
+  rearrangeArray
+} from "../../constants/MiiFeatureTable";
+
+import { _ } from "../../util/Lang";
+const __ = _();
 
 export function ExtHatTab(data: TabRenderInit) {
   data.container.append(
@@ -14,51 +28,87 @@ export function ExtHatTab(data: TabRenderInit) {
       mii: data.mii,
       onChange: data.callback,
       entries: {
-        extHatType: {
-          label: "Hat",
-          header:
-            "Hat type is a CUSTOM property, and will not transfer to any other data formats.",
+        hatType: {
+          label:
+            // hat tab name
+            __("Hat"),
+          header: __(
+            "%1 is a CUSTOM property, and will not transfer to any other data formats.",
+            // Hat type warning label
+            __("Hat type")
+          ),
           items: [
             {
               type: FeatureSetType.Icon,
               forceRender: true,
-              value: 0,
-              icon: '<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g id="eyebrows-24">\n<path id="Vector" d="M25.9999 42.0501C34.8862 42.0501 42.0899 34.8464 42.0899 25.9601C42.0899 17.0739 34.8862 9.87012 25.9999 9.87012C17.1137 9.87012 9.90991 17.0739 9.90991 25.9601C9.90991 34.8464 17.1137 42.0501 25.9999 42.0501Z" fill="var(--icon-head-fill)" stroke="var(--icon-head-stroke)" stroke-width="2.48"/>\n</g>\n</svg>\n',
-              part: RenderPart.Head,
+              value: -1,
+              icon: `<span class="disable-item">${__("Disabled")}</span>`,
+              part: RenderPart.Head
             },
+            makeSeparatorGapThinFSI(),
             ...ArrayNum(10)
               .slice(1)
               .map((k) => ({
                 type: FeatureSetType.Icon as any,
                 forceRender: true,
-                value: k,
+                value: k - 1,
                 icon: data.icons.hat[k - 1],
-                part: RenderPart.Head,
-              })),
-          ],
+                part: RenderPart.Head
+              }))
+          ]
         },
-        extHatColor: {
-          label: "Hat Color",
-          header:
-            "Hat color is a CUSTOM property, and will not transfer to any other data formats.",
+        hatColor: {
+          // hat color tab name
+          label: __("Hat Color"),
+          header: __(
+            "%1 is a CUSTOM property, and will not transfer to any other data formats.",
+            // Hat color warning label
+            __("Hat color")
+          ),
           items: [
             {
               type: FeatureSetType.Icon,
               forceRender: true,
-              value: 0,
-              icon: '<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g id="eyebrows-24">\n<path id="Vector" d="M25.9999 42.0501C34.8862 42.0501 42.0899 34.8464 42.0899 25.9601C42.0899 17.0739 34.8862 9.87012 25.9999 9.87012C17.1137 9.87012 9.90991 17.0739 9.90991 25.9601C9.90991 34.8464 17.1137 42.0501 25.9999 42.0501Z" fill="var(--icon-head-fill)" stroke="var(--icon-head-stroke)" stroke-width="2.48"/>\n</g>\n</svg>\n',
+              value: -1,
+              icon: `<span class="disable-item">${__("Disabled")}</span>`,
               part: RenderPart.Head,
+              property: ["hatFavoriteColor", "hatCommonColor"],
+              selectedCondition: () =>
+                data.mii.hatCommonColor === -1 &&
+                data.mii.hatFavoriteColor === -1
             },
-            ...ArrayNum(12).map((k) => ({
+            makeSeparatorGapThinFSI(),
+            ...(ArrayNum(12).map((k) => ({
               type: FeatureSetType.Icon as any,
               forceRender: true,
-              value: k + 1,
+              value: k,
               color: numToHex(MiiFavoriteColorLookupTable[k]),
               part: RenderPart.Head,
-            })),
-          ],
-        },
-      },
+              property: "hatFavoriteColor",
+              preSelectCallback: (mii) => {
+                mii.hatFavoriteColor = k;
+                mii.hatCommonColor = -1;
+              }
+            })) as FeatureSetIconItem[]),
+            makeSeparatorFSI(),
+            ...rearrangeArray(
+              ArrayNum(100).map((k) => ({
+                type: FeatureSetType.Icon,
+                value: k,
+                color: SwitchMiiColorTable[k],
+                part: RenderPart.Head,
+                property: "hatCommonColor",
+                preSelectCallback: (mii) => {
+                  mii.hatFavoriteColor = -1;
+                  mii.hatCommonColor = k;
+                }
+              })) as FeatureSetIconItem[],
+              MiiSwitchColorTable,
+              makeSeparatorGapThinLaptop
+            )
+          ]
+        }
+      }
     })
   );
 }

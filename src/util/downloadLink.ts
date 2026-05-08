@@ -11,7 +11,7 @@ export function downloadLink(url: string, name: string) {
 }
 
 const link = document.createElement("a");
-function save(blob: Blob, filename: string) {
+export function saveBlob(blob: Blob, filename: string) {
   if (link.href) {
     URL.revokeObjectURL(link.href);
   }
@@ -22,9 +22,9 @@ function save(blob: Blob, filename: string) {
 }
 
 export function saveArrayBuffer(buffer: any, filename: string) {
-  save(new Blob([buffer], { type: "application/octet-stream" }), filename);
+  saveBlob(new Blob([buffer], { type: "application/octet-stream" }), filename);
 }
 
 export function saveString(text: string, filename: string) {
-  save(new Blob([text], { type: "text/plain" }), filename);
+  saveBlob(new Blob([text], { type: "text/plain" }), filename);
 }

@@ -1,4 +1,7 @@
-import * as THREE from "three";
+import { _THREE } from "../../../util/PrepareThree";
+const THREE = _THREE();
+//@ts-expect-error shhh
+import type * as THREE from "three";
 
 export class SparkleParticle {
   scene: any;
@@ -81,7 +84,7 @@ export class SparkleParticle {
       map: this.texture,
       transparent: true,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
+      depthWrite: false
     });
 
     // Create the particle system

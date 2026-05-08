@@ -1,5 +1,5 @@
 import { Config } from "../config";
-import type Mii from "../external/mii-js/mii";
+import type Mii from "./MiiData";
 
 export class Mii2DRenderer {
   #canvas: HTMLCanvasElement;
@@ -44,20 +44,20 @@ export class Mii2DRenderer {
   }
 
   async updateImages() {
-    const headImgURL = `${Config.renderer.renderFFLMakeIcon}&data=${this.mii
-      .encodeStudio()
-      .toString("hex")}&hatType=${this.mii.extHatType}&hatColor=${
-      this.mii.extHatColor
+    const headImgURL = `${Config.renderer.renderFFLMakeIcon}&data=${this.mii.exportHex(
+      "studioData"
+    )}&hatType=${this.mii.hatType}&hatColor=${
+      this.mii.hatCommonColor
     }&miiName=${encodeURIComponent(
-      this.mii.miiName
-    )}&creatorName=${encodeURIComponent(this.mii.creatorName)}`;
+      this.mii.nickname
+    )}&creatorName=${encodeURIComponent(this.mii.creator)}`;
 
     // const bodyImgURL = `./assets/images/2d/m-body-0.png`;
     // const pantImageURL = `./assets/images/2d/m-legs-gray.png`;
 
     this.#headImageFront.src = headImgURL + "&splitMode=front";
     this.#headImageBack.src = headImgURL + "&splitMode=back";
-    this.#bodyImage.src = this.mii.studioAssetUrlBody(); // bodyImgURL;
+    // this.#bodyImage.src = this.mii.studioAssetUrlBody(); // bodyImgURL;
     // this.#pantsImage.src = pantImageURL;
 
     await Promise.all([
@@ -78,7 +78,7 @@ export class Mii2DRenderer {
           console.log("Body image loaded");
           resolve(true);
         };
-      }),
+      })
       // new Promise((resolve) => {
       //   this.#pantsImage.onload = () => {
       //     console.log("Pant image loaded");

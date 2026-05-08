@@ -18,7 +18,7 @@ function makeFrame(params: string, fullscreen: boolean) {
 // UNFINISHED, DO NOT USE YET
 export default {
   configuration: {
-    music: true,
+    music: true
   },
   async editMii(
     data: string = "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn",
@@ -119,5 +119,5 @@ export default {
     ) {
       this.configuration.music = newConfiguration.music;
     }
-  },
+  }
 };

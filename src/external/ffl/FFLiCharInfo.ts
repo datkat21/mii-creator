@@ -1,4 +1,4 @@
-import type Mii from "../mii-js/mii";
+import type Mii from "../../class/MiiData";
 
 export function FFLiiGetEyeRotateOffset(type: number) {
   const ROTATE: number[] = [
@@ -6,7 +6,7 @@ export function FFLiiGetEyeRotateOffset(type: number) {
     4, 3, 4, 4, 3, 4, 4, 4, 3, 3, 3, 4, 4, 3, 3, 3, 4, 4, 3, 3, 3, 3, 3, 3, 3,
     3, 3, 4, 4, 4, 4, 3, 4, 4, 3, 4, 4, 4, 4,
 
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
   ];
   return 32 - ROTATE[type];
 }
@@ -15,7 +15,7 @@ export function FFLiiGetEyebrowRotateOffset(type: number) {
   const ROTATE = [
     6, 6, 5, 7, 6, 7, 6, 7, 4, 7, 6, 8, 5, 5, 6, 6, 7, 7, 6, 6, 5, 6, 7, 5,
 
-    6, 6, 6, 6,
+    6, 6, 6, 6
   ];
   return 32 - ROTATE[type];
 }
@@ -115,74 +115,74 @@ export type FFLiCharInfo = {
 export enum FFLiOriginPosition {
   FFLI_ORIGIN_POSITION_CENTER = 0,
   FFLI_ORIGIN_POSITION_RIGHT = 1,
-  FFLI_ORIGIN_POSITION_LEFT = 2,
+  FFLI_ORIGIN_POSITION_LEFT = 2
 }
 
 export const MiiClassToFFLiCharInfo = (mii: Mii): FFLiCharInfo => ({
-  _112: mii.unknown1,
-  _114: mii.unknown2,
-  authorID: mii.systemId,
+  _112: 0,
+  _114: 0,
+  authorID: mii.authorId,
   birthDay: mii.birthDay,
   birthMonth: mii.birthMonth,
-  birthPlatform: mii.deviceOrigin,
+  birthPlatform: mii.originPlatform,
   build: mii.build,
-  copyable: Number(mii.allowCopying),
-  creatorID: mii.systemId,
-  creatorName: mii.creatorName,
+  copyable: Number(mii.createId),
+  creatorID: mii.createId,
+  creatorName: mii.creator,
   favoriteColor: mii.favoriteColor,
   favoriteMii: Number(mii.favorite),
   fontRegion: 0,
   gender: mii.gender,
   height: mii.height,
   localOnly: 0,
-  miiVersion: mii.version,
-  name: mii.miiName,
+  miiVersion: 3,
+  name: mii.nickname,
   ngWord: 0,
-  pageIndex: mii.pageIndex,
+  pageIndex: 0,
   parts: {
-    beardColor: mii.facialHairColor,
+    beardColor: mii.beardColor,
     beardType: mii.beardType,
     eyebrowColor: mii.eyebrowColor,
-    eyebrowPositionY: mii.eyebrowYPosition,
-    eyebrowRotate: mii.eyebrowRotation,
+    eyebrowPositionY: mii.eyebrowY,
+    eyebrowRotate: mii.eyebrowRotate,
     eyebrowScale: mii.eyebrowScale,
-    eyebrowScaleY: mii.eyebrowYPosition,
-    eyebrowSpacingX: mii.eyebrowSpacing,
+    eyebrowScaleY: mii.eyebrowAspect,
+    eyebrowSpacingX: mii.eyebrowX,
     eyebrowType: mii.eyebrowType,
     eyeColor: mii.eyeColor,
-    eyePositionY: mii.eyeYPosition,
-    eyeRotate: mii.eyeRotation,
+    eyePositionY: mii.eyeY,
+    eyeRotate: mii.eyeRotate,
     eyeScale: mii.eyeScale,
-    eyeScaleY: mii.eyeVerticalStretch,
-    eyeSpacingX: mii.eyeSpacing,
+    eyeScaleY: mii.eyeAspect,
+    eyeSpacingX: mii.eyeX,
     eyeType: mii.eyeType,
-    faceLine: mii.wrinklesType,
-    facelineColor: mii.skinColor,
-    faceMakeup: mii.makeupType,
-    faceType: mii.faceType,
-    glassColor: mii.glassesColor,
-    glassPositionY: mii.glassesYPosition,
-    glassScale: mii.glassesScale,
-    glassType: mii.glassesType,
+    faceLine: mii.facelineWrinkle,
+    facelineColor: mii.facelineColor,
+    faceMakeup: mii.facelineMake,
+    faceType: mii.facelineType,
+    glassColor: mii.glassColor,
+    glassPositionY: mii.glassY,
+    glassScale: mii.glassScale,
+    glassType: mii.glassType,
     hairColor: mii.hairColor,
-    hairDir: Number(mii.flipHair),
+    hairDir: Number(mii.hairFlip),
     hairType: mii.hairType,
-    molePositionX: mii.moleXPosition,
-    molePositionY: mii.moleYPosition,
+    molePositionX: mii.moleX,
+    molePositionY: mii.moleY,
     moleScale: mii.moleScale,
-    moleType: Number(mii.moleEnabled),
+    moleType: Number(mii.moleType),
     mouthColor: mii.mouthColor,
-    mouthPositionY: mii.mouthYPosition,
+    mouthPositionY: mii.mouthY,
     mouthScale: mii.mouthScale,
-    mouthScaleY: mii.mouthHorizontalStretch,
+    mouthScaleY: mii.mouthAspect,
     mouthType: mii.mouthType,
-    mustachePositionY: mii.mustacheYPosition,
+    mustachePositionY: mii.mustacheY,
     mustacheScale: mii.mustacheScale,
     mustacheType: mii.mustacheType,
-    nosePositionY: mii.noseYPosition,
+    nosePositionY: mii.noseY,
     noseScale: mii.noseScale,
-    noseType: mii.noseType,
+    noseType: mii.noseType
   },
-  regionMove: mii.regionLock,
-  slotIndex: mii.slotIndex,
+  regionMove: mii.regionMove,
+  slotIndex: 0
 });
